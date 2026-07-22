@@ -1,0 +1,93 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { requireOwner } from "@/lib/auth";
+import { automationSchema, normalizeKeyword } from "@/lib/domain";
+import { isDemoMode } from "@/lib/env";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { saveDemoAutomation, demoStore } from "@/server/demo-store";
+
+export interface AutomationActionState {
+  error?: string;
+  fields?: Record<string, string[]>;
+}
+
+export async function saveAutomation(_state: AutomationActionState, formData: FormData): Promise<AutomationActionState> {
+  const owner = await requireOwner();
+  const parsed = automationSchema.safeParse({
+    id: formData.get("id") || undefined,
+    name: formData.get("name") ?? "",
+    mediaId: formData.get("mediaId") ?? "",
+    keyword: formData.get("keyword") ?? "",
+    publicReply: formData.get("publicReply") ?? "",
+    dmMessage: formData.get("dmMessage") ?? "",
+    destinationUrl: formData.get("destinationUrl") ?? "",
+    intent: formData.get("intent") ?? "draft",
+  });
+  if (!parsed.success) return { error: "Revise os campos destacados.", fields: parsed.error.flatten().fieldErrors };
+
+  const input = parsed.data;
+  if (isDemoMode) {
+    const duplicate = demoStore().automations.find((item) => item.id !== input.id && item.mediaId === input.mediaId && item.keywordNormalized === normalizeKeyword(input.keyword) && item.status !== "deleted");
+    if (duplicate) return { error: "Já existe uma automação com essa palavra-chave neste Reel." };
+    const saved = saveDemoAutomation({ ...input, status: input.intent });
+    revalidatePath("/dashboard", "layout");
+    redirect(`/automations/${saved.id}?saved=1`);
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const connectionResult = await supabase.from("instagram_connections").select("id,status").eq("owner_id", owner.id).maybeSingle();
+  if (!connectionResult.data) return { error: "Conecte uma conta do Instagram antes de salvar." };
+  if (input.intent === "active" && connectionResult.data.status !== "connected") return { error: "A conexão precisa estar ativa para publicar a automação." };
+
+  const payload = {
+    owner_id: owner.id,
+    connection_id: connectionResult.data.id,
+    media_id: input.mediaId || null,
+    name: input.name,
+    keyword: input.keyword,
+    keyword_normalized: normalizeKeyword(input.keyword),
+    public_reply: input.publicReply,
+    dm_message: input.dmMessage,
+    destination_url: input.destinationUrl,
+    status: input.intent,
+  };
+  const result = input.id
+    ? await supabase.from("automations").update(payload).eq("id", input.id).eq("owner_id", owner.id).select("id").single()
+    : await supabase.from("automations").insert(payload).select("id").single();
+  if (result.error) return { error: result.error.code === "23505" ? "Já existe uma automação com essa palavra-chave neste Reel." : "Não foi possível salvar a automação." };
+  revalidatePath("/dashboard", "layout");
+  redirect(`/automations/${result.data.id}?saved=1`);
+}
+
+export async function setAutomationStatus(formData: FormData) {
+  const owner = await requireOwner();
+  const id = String(formData.get("id") ?? "");
+  const status = String(formData.get("status") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id) || !["active", "paused"].includes(status)) return;
+  if (isDemoMode) {
+    const item = demoStore().automations.find((automation) => automation.id === id);
+    if (item) { item.status = status as "active" | "paused"; item.updatedAt = new Date().toISOString(); }
+  } else {
+    const supabase = await createSupabaseServerClient();
+    await supabase.from("automations").update({ status }).eq("id", id).eq("owner_id", owner.id);
+  }
+  revalidatePath("/dashboard", "layout");
+}
+
+export async function deleteAutomation(formData: FormData) {
+  const owner = await requireOwner();
+  const id = String(formData.get("id") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+  const timestamp = new Date().toISOString();
+  if (isDemoMode) {
+    const item = demoStore().automations.find((automation) => automation.id === id);
+    if (item) { item.status = "deleted"; item.deletedAt = timestamp; item.updatedAt = timestamp; }
+  } else {
+    const supabase = await createSupabaseServerClient();
+    await supabase.from("automations").update({ status: "deleted", deleted_at: timestamp }).eq("id", id).eq("owner_id", owner.id);
+  }
+  revalidatePath("/dashboard", "layout");
+  redirect("/automations?deleted=1");
+}

@@ -1,0 +1,52 @@
+import { expect, test } from "@playwright/test";
+
+test("navigates through the demo dashboard", async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
+  await page.goto("/dashboard");
+  await expect(page.getByRole("heading", { name: /Comentários que viram/ })).toBeVisible();
+  await expect(page.getByRole("main").getByText("Modo demonstração", { exact: true })).toBeVisible();
+  await page.getByRole("link", { name: /Nova automação/ }).first().click();
+  await expect(page.getByRole("heading", { name: "Do comentário ao direct." })).toBeVisible();
+  await expect(page.getByText("Correspondência exata", { exact: false })).toBeVisible();
+  expect(consoleErrors).toEqual([]);
+});
+
+test("shows responsive navigation on a small viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/automations");
+  await expect(page.getByRole("navigation", { name: "Navegação principal" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Automações" })).toBeVisible();
+});
+
+test("explores Radar evidence and creates a reviewable draft", async ({ page }) => {
+  await page.goto("/radar");
+  await expect(page.getByRole("heading", { name: /O que sua audiência/ })).toBeVisible();
+  await expect(page.getByText("Caixa de oportunidades", { exact: true })).toBeVisible();
+  await page.getByText(/Ver \d+ evidências?/).first().click();
+  await expect(page.locator(".evidence-list blockquote").first()).toBeVisible();
+  await page.getByRole("button", { name: /Criar rascunho/ }).first().click();
+  await expect(page.getByText(/Rascunho criado pelo Radar/)).toBeVisible();
+  await expect(page.getByLabel("Palavra-chave")).not.toHaveValue("");
+});
+
+test("follows the Instagram connection guide and persists progress", async ({ page }) => {
+  await page.goto("/connection-guide");
+  await expect(page.getByRole("heading", { name: /Da conta profissional/ })).toBeVisible();
+  await expect(page.getByText("8 etapas verificáveis", { exact: true })).toBeVisible();
+  await expect(page.getByText("Valid OAuth Redirect URI", { exact: true }).first()).toBeVisible();
+  await page.getByRole("button", { name: "Marcar como concluída" }).first().click();
+  await expect(page.getByRole("button", { name: "Etapa concluída" }).first()).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Etapa concluída" }).first()).toBeVisible();
+  await expect(page.getByText("1 de 8 etapas", { exact: true })).toBeVisible();
+});
+
+test("unknown tracking tokens never redirect", async ({ request }) => {
+  const response = await request.get("/r/AAAAAAAAAAAAAAAAAAAAAA", { maxRedirects: 0 });
+  expect(response.status()).toBe(404);
+  const head = await request.head("/r/AAAAAAAAAAAAAAAAAAAAAA");
+  expect(head.status()).toBe(204);
+});

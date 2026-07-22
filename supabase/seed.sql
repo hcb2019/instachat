@@ -1,0 +1,2 @@
+-- O modo demonstração usa fixtures em src/server/demo-store.ts.
+-- Para testar Auth local, crie somente o OWNER_EMAIL no Studio local antes de desativar DEMO_MODE.

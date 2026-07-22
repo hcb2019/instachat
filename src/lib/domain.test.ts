@@ -1,0 +1,31 @@
+import { describe, expect, it } from "vitest";
+import { automationSchema, formatPercent, keywordMatches, normalizeKeyword } from "@/lib/domain";
+
+describe("keyword normalization", () => {
+  it("normaliza caixa, unicode e espaços", () => {
+    expect(normalizeKeyword("  GUIA   RÁPIDO  ")).toBe("guia rápido");
+    expect(keywordMatches("  １９９１ ", "1991")).toBe(true);
+  });
+
+  it("mantém pontuação relevante", () => {
+    expect(keywordMatches("1991!", "1991")).toBe(false);
+  });
+});
+
+describe("automation validation", () => {
+  it("permite rascunho incompleto", () => {
+    expect(automationSchema.safeParse({ name: "", mediaId: "", keyword: "", publicReply: "", dmMessage: "", destinationUrl: "", intent: "draft" }).success).toBe(true);
+  });
+
+  it("exige todos os campos e HTTPS na ativação", () => {
+    const invalid = automationSchema.safeParse({ name: "A", mediaId: "id", keyword: "x", publicReply: "ok", dmMessage: "ok", destinationUrl: "http://example.com", intent: "active" });
+    expect(invalid.success).toBe(false);
+    const valid = automationSchema.safeParse({ name: "A", mediaId: "id", keyword: "x", publicReply: "ok", dmMessage: "ok", destinationUrl: "https://example.com", intent: "active" });
+    expect(valid.success).toBe(true);
+  });
+
+  it("calcula taxas sem divisão por zero", () => {
+    expect(formatPercent(0, 0)).toBe("0%");
+    expect(formatPercent(1, 4)).toBe("25%");
+  });
+});
