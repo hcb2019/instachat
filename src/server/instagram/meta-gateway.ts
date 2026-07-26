@@ -54,9 +54,12 @@ export class MetaInstagramGateway implements InstagramGateway {
     await metaFetch(`/${encodeURIComponent(userId)}/subscribed_apps?subscribed_fields=comments`, { method: "POST", accessToken });
   }
 
-  async listReels(userId: string, accessToken: string) {
+  async listReels(_userId: string, accessToken: string) {
     const items: Array<{ externalId: string; caption: string; permalink: string; thumbnailUrl: string | null; publishedAt: string }> = [];
-    let path: string | null = `/${encodeURIComponent(userId)}/media?fields=id,caption,media_product_type,media_type,permalink,thumbnail_url,timestamp&limit=50`;
+    // Instagram Login resolves the authenticated professional account through
+    // "me". An explicit account ID on graph.instagram.com can be interpreted as
+    // an object without the media edge and returns Meta error 2500.
+    let path: string | null = "/me/media?fields=id,caption,media_product_type,media_type,permalink,thumbnail_url,timestamp&limit=50";
     while (path && items.length < 250) {
       const data: { data: Array<{ id: string; caption?: string; media_product_type?: string; permalink: string; thumbnail_url?: string; timestamp: string }>; paging?: { next?: string } } = await metaFetch(path, { accessToken });
       for (const item of data.data) if (item.media_product_type === "REELS") items.push({ externalId: item.id, caption: item.caption ?? "Reel sem legenda", permalink: item.permalink, thumbnailUrl: item.thumbnail_url ?? null, publishedAt: item.timestamp });
