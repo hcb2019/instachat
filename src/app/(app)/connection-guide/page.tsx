@@ -29,22 +29,22 @@ const steps: IntegrationGuideStep[] = [
     reference: { label: "Instagram API with Instagram Login — Meta", href: "https://www.postman.com/meta/instagram/folder/23987686-98bfade9-3736-4738-8b4a-f56d6534f6de" }, illustration: "app",
   },
   {
-    id: "oauth", number: "03", phase: "meta", title: "Cadastre as URLs do login", duration: "5 min", location: "Instagram › API setup › Business login",
-    summary: "A URL precisa coincidir exatamente com a enviada pelo InstaChat, incluindo HTTPS, domínio, caminho e presença ou ausência da barra final.",
-    tasks: ["Abra a configuração de Business Login for Instagram.", "Em Valid OAuth Redirect URIs, adicione a URL de callback abaixo.", "Cadastre também as URLs de desautorização e exclusão de dados.", "Salve, recarregue a página e confirme que as três URLs continuam cadastradas."],
-    checks: ["Callback OAuth salvo", "Desautorização cadastrada", "Exclusão de dados cadastrada"],
-    warning: "Use o domínio definitivo HTTPS. localhost serve para a demonstração do painel, mas não para a conexão real da Meta.",
+    id: "instagram-api-setup", number: "03", phase: "meta", title: "Abra a configuração correta da API", duration: "5–10 min", location: "Casos de uso › Personalizar › API do Instagram",
+    summary: "A tela correta mostra Instagram App ID, Instagram App Secret e quatro blocos numerados. Use essa área — não o Auxiliar de integração e não a configuração com Facebook Login.",
+    tasks: ["No painel do app, clique em Personalizar o caso de uso.", "No menu da API do Instagram, abra a opção de configuração com login do Instagram.", "Confirme que aparecem as permissões instagram_business_* e o domínio graph.instagram.com.", "Clique em Add all required permissions.", "Em Permissões e recursos, adicione também instagram_business_manage_insights para habilitar o Radar.", "Copie o Instagram App ID; revele o Instagram App Secret somente quando for configurar a Vercel."],
+    checks: ["Tela com credenciais do Instagram aberta", "Permissões obrigatórias adicionadas", "manage_insights disponível"],
+    warning: "Se a tela mostrar instagram_basic, pages_read_engagement ou pages_show_list, você abriu o fluxo com Facebook Login. Volte e escolha a outra opção.",
     action: { label: "Abrir o painel de aplicativos da Meta", href: "https://developers.facebook.com/apps/", external: true },
-    reference: { label: "Documentação oficial do login", href: "https://www.postman.com/meta/instagram/folder/23987686-98bfade9-3736-4738-8b4a-f56d6534f6de" }, illustration: "oauth",
+    reference: { label: "Instagram API with Instagram Login — Meta", href: "https://www.postman.com/meta/instagram/folder/23987686-98bfade9-3736-4738-8b4a-f56d6534f6de" }, illustration: "oauth",
   },
   {
-    id: "webhook", number: "04", phase: "meta", title: "Configure o webhook de comentários", duration: "10 min", location: "Instagram › Webhooks",
-    summary: "O webhook avisa o InstaChat quando um comentário novo chega. A Meta fará um challenge de verificação antes de aceitar o endereço.",
-    tasks: ["No produto Instagram, abra Webhooks/Configure webhooks.", "Cole a Callback URL mostrada abaixo.", "Use exatamente o mesmo valor de META_WEBHOOK_VERIFY_TOKEN configurado no servidor.", "Clique em verificar e salvar.", "Assine o campo comments. live_comments é opcional e não faz parte deste MVP."],
-    checks: ["Challenge aprovado", "Campo comments assinado", "Endpoint HTTPS público"],
-    warning: "O Verify Token não é o App Secret. Crie uma frase aleatória exclusiva; o App Secret nunca deve ser colado nesse campo.",
-    action: { label: "Abrir o painel de webhooks da Meta", href: "https://developers.facebook.com/apps/", external: true },
-    reference: { label: "Comentários e webhooks — Meta", href: `${META_DOCS}?entity=request-23987686-5216d45b-1e24-4bff-bdc8-e1bf15358477` }, illustration: "webhook",
+    id: "test-account", number: "04", phase: "meta", title: "Adicione sua conta como testadora", duration: "5–15 min", location: "Funções do app e API setup",
+    summary: "Enquanto o app usa Standard Access, a conta profissional precisa estar associada ao app. A própria tela da Meta pede que a função de Testador do Instagram seja atribuída antes de clicar em Adicionar conta.",
+    tasks: ["Abra Funções do app › Funções e adicione a pessoa administradora quando necessário.", "Adicione o perfil profissional como Testador do Instagram.", "Entre no Instagram com esse perfil, abra Apps e sites › Convites de teste e aceite o convite.", "Volte para Configuração da API com login do Instagram.", "No bloco 2, Gerar tokens de acesso, clique em Adicionar conta e conclua o login.", "Se gerar um token manual, use-o somente para testes na Meta; o InstaChat obterá e armazenará seu próprio token pelo OAuth."],
+    checks: ["Função de testador adicionada", "Convite aceito no Instagram", "Conta aparece no bloco Gerar tokens"],
+    warning: "Não cole o token manual em código, GitHub ou variáveis públicas. Para o uso normal, o botão Conectar Instagram do InstaChat fará a autorização.",
+    action: { label: "Abrir funções e contas do aplicativo", href: "https://developers.facebook.com/apps/", external: true },
+    reference: { label: "Access Levels — documentação oficial", href: `${META_DOCS}?entity=request-23987686-26e7999c-fc7e-44c8-8f71-ab2de8d35c32` }, illustration: "connect",
   },
   {
     id: "environment", number: "05", phase: "instachat", title: "Configure os segredos do deploy", duration: "10 min", location: "Vercel/Supabase › Environment Variables",
@@ -56,31 +56,31 @@ const steps: IntegrationGuideStep[] = [
     reference: { label: "Boas práticas da Plataforma Meta", href: "https://developers.facebook.com/terms/" }, illustration: "environment",
   },
   {
-    id: "test-account", number: "06", phase: "meta", title: "Libere a conta de teste", duration: "5–15 min", location: "Meta App Dashboard › Roles/API setup",
-    summary: "Enquanto o app estiver em desenvolvimento, apenas contas adicionadas ao app e com as permissões corretas conseguirão concluir o login.",
-    tasks: ["Adicione o administrador/desenvolvedor ao app quando necessário.", "Na configuração da Instagram API, adicione a conta profissional que será usada no teste.", "Entre no Instagram com essa conta e aceite qualquer convite pendente do app.", "Garanta que essa pessoa também controla a conta profissional escolhida.", "Mantenha o app em Development enquanto testa sua própria conta."],
-    checks: ["Pessoa tem função no app", "Conta profissional adicionada", "Convite aceito"],
-    warning: "Standard Access atende contas que você possui ou administra e adicionou ao App Dashboard. Contas de clientes exigem Advanced Access.",
-    action: { label: "Abrir funções e contas do aplicativo", href: "https://developers.facebook.com/apps/", external: true },
-    reference: { label: "Access Levels — documentação oficial", href: `${META_DOCS}?entity=request-23987686-26e7999c-fc7e-44c8-8f71-ab2de8d35c32` }, illustration: "connect",
+    id: "callbacks", number: "06", phase: "meta", title: "Configure webhook e login do Instagram", duration: "10–15 min", location: "API setup with Instagram login › blocos 3 e 4",
+    summary: "No bloco 3 ficam a URL do webhook e o Verify Token. No bloco 4, o botão Configurar abre as URLs do login da empresa no Instagram.",
+    tasks: ["No bloco 3, Configurar webhooks, cole a Callback URL abaixo.", "Em Verificar token, cole exatamente o valor de META_WEBHOOK_VERIFY_TOKEN salvo na Vercel.", "Deixe desativada a opção de certificado de cliente e clique em Verificar e salvar.", "Assine o campo comments; live_comments é opcional.", "No bloco 4, Configurar o login da empresa no Instagram, clique em Configurar.", "Cadastre as URLs de OAuth, desautorização e exclusão de dados mostradas abaixo."],
+    checks: ["Webhook verificado", "Campo comments assinado", "URLs do Instagram Business Login salvas"],
+    warning: "A própria Meta informa que o app precisa estar Publicado para receber webhooks reais. Você pode cadastrar os endereços agora, mas os eventos só serão validados ponta a ponta após a etapa 7.",
+    action: { label: "Abrir a configuração da API do Instagram", href: "https://developers.facebook.com/apps/", external: true },
+    reference: { label: "Comentários e webhooks — Meta", href: `${META_DOCS}?entity=request-23987686-5216d45b-1e24-4bff-bdc8-e1bf15358477` }, illustration: "webhook",
   },
   {
-    id: "connect-and-test", number: "07", phase: "validate", title: "Conecte e faça o teste controlado", duration: "10–20 min", location: "InstaChat e Instagram",
+    id: "publish", number: "07", phase: "publish", title: "Publique o app no nível certo", duration: "Variável", location: "Meta App Dashboard › Publicar",
+    summary: "O status Publicado libera webhooks reais. Standard Access atende somente suas contas e testadores; contas de clientes continuam exigindo Advanced Access e App Review.",
+    tasks: ["Revise nome, ícone, domínio, política de privacidade, exclusão de dados e e-mail de contato.", "Para uso próprio ou template, mantenha Standard Access e somente contas que você administra/adicionou ao app.", "Abra Publicar no menu lateral e resolva qualquer requisito indicado pela Meta.", "Altere o status para Publicado.", "Para SaaS, não abra a terceiros ainda: prepare verificação empresarial, App Review e Advanced Access para basic, manage_comments e manage_insights."],
+    checks: ["Documentos públicos acessíveis", "Status Publicado", "Nível de acesso entendido"],
+    warning: "Publicado não significa aprovado para qualquer cliente. Sem Advanced Access, apenas contas próprias, administradas ou associadas ao app poderão autorizar.",
+    action: { label: "Abrir o painel de publicação da Meta", href: "https://developers.facebook.com/apps/", external: true },
+    reference: { label: "App Review — Meta for Developers", href: "https://developers.facebook.com/docs/app-review/" }, illustration: "review",
+  },
+  {
+    id: "connect-and-test", number: "08", phase: "validate", title: "Conecte e faça o teste controlado", duration: "10–20 min", location: "InstaChat e Instagram",
     summary: "O login concede acesso; o teste confirma o ciclo inteiro: Reel, webhook, correspondência, resposta pública, DM e clique.",
-    tasks: ["No InstaChat, abra Integração e clique em Conectar Instagram.", "Na tela do Instagram, escolha a conta profissional e conceda os três escopos solicitados.", "Volte ao InstaChat e confirme status Conectada e Reels sincronizados.", "Crie uma automação de teste com palavra exclusiva e mantenha-a ativa.", "Com uma segunda conta, comente exatamente a palavra no Reel.", "Confira resposta pública, Solicitações do Direct, Histórico do InstaChat e clique rastreado."],
+    tasks: ["No InstaChat, abra Integração e clique em Conectar Instagram.", "Na tela oficial do Instagram, escolha a conta profissional e conceda os três escopos solicitados.", "Volte ao InstaChat e confirme status Conectada e Reels sincronizados.", "Crie uma automação de teste com palavra exclusiva e mantenha-a ativa.", "Com uma segunda conta, comente exatamente a palavra no Reel.", "Confira resposta pública, Solicitações do Direct, Histórico do InstaChat e clique rastreado."],
     checks: ["OAuth concluiu", "Reels sincronizados", "Webhook recebido", "Resposta pública e DM confirmadas"],
     warning: "Não teste comentando com a própria conta profissional: comentários próprios são ignorados para impedir loops.",
     action: { label: "Abrir a integração no InstaChat", href: "/settings" },
     reference: { label: "Private Replies — Meta", href: "https://www.postman.com/meta/instagram/request/23987686-189d7215-22b3-403f-b2f5-a46c7e66a514" }, illustration: "test",
-  },
-  {
-    id: "publish", number: "08", phase: "publish", title: "Escolha como disponibilizar", duration: "Variável", location: "Meta App Review e GitHub",
-    summary: "Publicar o código no GitHub e operar um SaaS são modelos diferentes. O nível de acesso e a responsabilidade pelos dados mudam.",
-    tasks: ["Template GitHub: cada pessoa faz deploy e cria o próprio Meta App; publique apenas .env.example, nunca credenciais.", "Uso próprio: mantenha Standard Access e somente contas administradas por você.", "SaaS: solicite Advanced Access para basic, manage_comments e manage_insights.", "Prepare política de privacidade, exclusão de dados, termos, domínio verificado e screencast mostrando cada permissão em uso.", "Conclua verificação empresarial e Data Use Checkup quando solicitado pela Meta.", "Antes de abrir a terceiros, execute novo threat model, multi-tenancy, cobrança e suporte operacional."],
-    checks: ["Modelo de distribuição escolhido", "Documentos públicos revisados", "App Review planejado quando necessário"],
-    warning: "Colocar o app em modo Live não substitui Advanced Access. Sem aprovação, pessoas fora das funções/contas autorizadas não conseguirão usar as permissões avançadas.",
-    action: { label: "Abrir documentação do App Review", href: "https://developers.facebook.com/docs/app-review/", external: true },
-    reference: { label: "App Review — Meta for Developers", href: "https://developers.facebook.com/docs/app-review/" }, illustration: "review",
   },
 ];
 
@@ -162,6 +162,30 @@ function MetaAppCreationWalkthrough() {
   </section>;
 }
 
+function InstagramApiSetupWalkthrough() {
+  return <section className="instagram-setup-map" aria-labelledby="instagram-setup-title">
+    <header>
+      <div><p className="eyebrow">Como reconhecer a tela certa</p><h3 id="instagram-setup-title">Procure estes quatro blocos numerados</h3><p>O menu da Meta corta o final dos nomes. Em vez de adivinhar pelo menu, confirme pelo conteúdo exibido à direita.</p></div>
+      <div className="instagram-setup-proof"><CheckCircle2 size={18} /><span><strong>Você está no lugar certo quando vê:</strong><code>Instagram App ID</code><code>instagram_business_basic</code><code>graph.instagram.com</code></span></div>
+    </header>
+    <div className="instagram-menu-guide">
+      <article className="correct"><span><Check size={16} /></span><div><small>Use esta opção</small><strong>Configuração da API com login do Instagram</strong><p>Mostra as credenciais específicas do Instagram e os blocos Permissões, Tokens, Webhooks e Login da empresa.</p></div></article>
+      <article><span><AlertTriangle size={16} /></span><div><small>Pule esta opção</small><strong>Auxiliar de integração de API</strong><p>Serve apenas para testar manualmente chamadas com um access token. O InstaChat não precisa dessa tela.</p></div></article>
+      <article><span><AlertTriangle size={16} /></span><div><small>Não use neste projeto</small><strong>Configuração com Facebook Login</strong><p>Mostra permissões <code>instagram_basic</code> e <code>pages_*</code>, exige uma Página do Facebook e usa outro OAuth.</p></div></article>
+    </div>
+    <div className="instagram-setup-sequence">
+      <article><span>1</span><div><strong>Permissões obrigatórias</strong><p>Clique em <b>Add all required permissions</b>. A Meta pode incluir <code>instagram_business_manage_messages</code> nesse pacote, mas o InstaChat não solicita mensagens gerais no login. Depois, adicione <code>instagram_business_manage_insights</code> para o Radar.</p></div></article>
+      <article><span>2</span><div><strong>Gerar tokens de acesso</strong><p>Primeiro adicione e aceite a função de Testador do Instagram. Depois clique em <b>Adicionar conta</b>. O token manual é apenas para testes.</p></div></article>
+      <article><span>3</span><div><strong>Configurar webhooks</strong><p>Informe a URL de callback, o Verify Token e deixe o certificado de cliente desligado. Assine o campo <code>comments</code>.</p></div></article>
+      <article><span>4</span><div><strong>Login da empresa no Instagram</strong><p>Clique em <b>Configurar</b> e cadastre as URLs de OAuth, desautorização e exclusão de dados do InstaChat.</p></div></article>
+    </div>
+    <div className="instagram-credential-map">
+      <AlertTriangle size={18} />
+      <div><strong>Copie as credenciais do topo desta tela</strong><p>O valor exibido como <b>ID do app do Instagram</b> vai em <code>META_APP_ID</code>. A <b>Chave secreta do app do Instagram</b> vai em <code>META_APP_SECRET</code>. Nunca publique nem envie a chave secreta em prints.</p></div>
+    </div>
+  </section>;
+}
+
 function UrlField({ label, value }: { label: string; value: string }) {
   return <div className="guide-url-field"><span>{label}</span><code>{value}</code><CopyValue value={value} /></div>;
 }
@@ -201,8 +225,8 @@ export default async function ConnectionGuidePage() {
       <div className="guide-step-main"><header><div><PhaseBadge phase={step.phase} /><h2>{step.title}</h2><p>{step.summary}</p></div><div className="guide-step-meta"><span><Clock3 size={15} /> {step.duration}</span><span><Globe2 size={15} /> Onde: {step.location}</span><a className="guide-step-action" href={step.action.href} target={step.action.external ? "_blank" : undefined} rel={step.action.external ? "noopener noreferrer" : undefined}>{step.action.label}{step.action.external ? <ExternalLink size={15} /> : <ArrowRight size={15} />}</a></div></header>
         <div className="guide-step-grid"><div><h3>O que fazer</h3><ol>{step.tasks.map((task) => <li key={task}><span>{task}</span></li>)}</ol></div><div className="guide-step-side"><MetaIllustration kind={step.illustration} /><div className="guide-verification"><h3>Antes de avançar</h3>{step.checks.map((check) => <p key={check}><Check size={12} /> {check}</p>)}</div></div></div>
         {step.id === "meta-app" && <MetaAppCreationWalkthrough />}
-        {step.id === "oauth" && <div className="guide-url-stack"><UrlField label="Valid OAuth Redirect URI" value={urls.oauth} /><UrlField label="Deauthorize Callback URL" value={urls.deauthorize} /><UrlField label="Data Deletion Request URL" value={urls.deletion} /><UrlField label="Privacy Policy URL" value={urls.privacy} /></div>}
-        {step.id === "webhook" && <div className="guide-url-stack"><UrlField label="Callback URL" value={urls.webhook} /><div className="guide-token-hint"><KeyRound size={15} /><span>Crie o valor de <code>META_WEBHOOK_VERIFY_TOKEN</code> no seu gerenciador de segredos e cole o mesmo texto na Meta.</span></div></div>}
+        {step.id === "instagram-api-setup" && <InstagramApiSetupWalkthrough />}
+        {step.id === "callbacks" && <><div className="guide-url-stack"><UrlField label="URL de callback do webhook" value={urls.webhook} /><div className="guide-token-hint"><KeyRound size={15} /><span>Em <strong>Verificar token</strong>, cole exatamente o valor de <code>META_WEBHOOK_VERIFY_TOKEN</code> salvo na Vercel. Deixe o certificado de cliente desligado.</span></div></div><div className="guide-url-stack"><UrlField label="Valid OAuth Redirect URI" value={urls.oauth} /><UrlField label="Deauthorize Callback URL" value={urls.deauthorize} /><UrlField label="Data Deletion Request URL" value={urls.deletion} /><UrlField label="Privacy Policy URL" value={urls.privacy} /></div></>}
         {step.id === "environment" && <div className="environment-map"><div><span>Variável</span><span>Origem</span></div>{[["META_APP_ID", "Instagram App ID"], ["META_APP_SECRET", "Instagram App Secret"], ["META_WEBHOOK_VERIFY_TOKEN", "Você cria"], ["META_GRAPH_API_VERSION", "Versão estável do dashboard"], ["APP_ORIGIN", "Seu domínio HTTPS"], ["DEMO_MODE", "false"]].map(([key, source]) => <div key={key}><code>{key}</code><span>{source}</span><CopyValue value={key!} label="Copiar nome" /></div>)}</div>}
         {step.id === "connect-and-test" && <div className="test-flow" aria-label="Fluxo do teste"><span><MessageCircle size={16} /> Segunda conta comenta</span><ChevronRight size={15} /><span><Radio size={16} /> Webhook chega</span><ChevronRight size={15} /><span><AtSign size={16} /> Resposta + DM</span><ChevronRight size={15} /><span><CheckCircle2 size={16} /> Histórico confirma</span></div>}
         <div className="guide-step-footer">{step.warning && <p><AlertTriangle size={14} /><span>{step.warning}</span></p>}<div><a href={step.reference?.href} target="_blank" rel="noopener noreferrer">{step.reference?.label}<ExternalLink size={13} /></a><StepComplete id={step.id} /></div></div>

@@ -44,6 +44,12 @@ test("follows the Instagram connection guide and persists progress", async ({ pa
   await expect(page.getByRole("link", { name: "Abrir a criação de aplicativo na Meta" })).toHaveAttribute("href", "https://developers.facebook.com/apps/creation/");
   await expect(page.getByText("Gerenciar mensagens e conteúdo no Instagram", { exact: true }).first()).toBeVisible();
   await expect(page.getByText(/Não use.*App ID e o App Secret genéricos/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Procure estes quatro blocos numerados" })).toBeVisible();
+  await expect(page.getByText("Auxiliar de integração de API", { exact: true })).toBeVisible();
+  await expect(page.getByText("Não use neste projeto", { exact: true })).toBeVisible();
+  await expect(page.getByText("instagram_business_basic", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("ID do app do Instagram", { exact: true })).toBeVisible();
+  await expect(page.getByText("URL de callback do webhook", { exact: true })).toBeVisible();
   await expect(page.getByText("Valid OAuth Redirect URI", { exact: true }).first()).toBeVisible();
   await page.getByRole("button", { name: "Marcar como concluída" }).first().click();
   await expect(page.getByRole("button", { name: "Etapa concluída" }).first()).toBeVisible();
