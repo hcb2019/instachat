@@ -40,8 +40,13 @@ export async function POST(request: Request) {
     if (request.headers.get("accept")?.includes("text/html")) return settingsRedirect("success", reels.length);
     return Response.json({ synced: reels.length });
   } catch (error) {
-    const diagnostic = error instanceof MetaApiError
-      ? `Meta (${error.code ?? error.status}): ${error.message}`
+    const unsupportedMedia = error instanceof MetaApiError
+      && error.code === "2500"
+      && error.message.toLowerCase().includes("/media");
+    const diagnostic = unsupportedMedia
+      ? "A Meta autenticou a conta, mas não liberou a leitura das mídias para este token. No painel da Meta, adicione a permissão instagram_business_basic e depois clique em “Reautorizar Instagram” no InstaChat."
+      : error instanceof MetaApiError
+        ? `Meta (${error.code ?? error.status}): ${error.message}`
       : error instanceof Error
         ? error.message
         : "Falha desconhecida.";

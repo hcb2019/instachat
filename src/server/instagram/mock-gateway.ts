@@ -2,7 +2,14 @@ import type { InstagramGateway } from "@/server/instagram/types";
 import { demoStore } from "@/server/demo-store";
 
 export class MockInstagramGateway implements InstagramGateway {
-  async exchangeCode() { return { accessToken: "demo-token", userId: demoStore().connection.instagramUserId, expiresIn: 5_184_000 }; }
+  async exchangeCode() {
+    return {
+      accessToken: "demo-token",
+      userId: demoStore().connection.instagramUserId,
+      expiresIn: 5_184_000,
+      permissions: ["instagram_business_basic", "instagram_business_manage_comments", "instagram_business_manage_insights"],
+    };
+  }
   async getProfile() { return { userId: demoStore().connection.instagramUserId, username: demoStore().connection.username }; }
   async subscribeToComments() {}
   async listReels() { return demoStore().media.map((item) => ({ externalId: item.externalId, caption: item.caption, permalink: item.permalink, thumbnailUrl: item.thumbnailUrl, publishedAt: item.publishedAt })); }

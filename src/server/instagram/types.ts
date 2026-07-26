@@ -13,6 +13,7 @@ export interface InstagramTokenResult {
   accessToken: string;
   userId: string;
   expiresIn: number | null;
+  permissions: string[] | null;
 }
 
 export interface InstagramGateway {

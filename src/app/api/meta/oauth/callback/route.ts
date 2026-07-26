@@ -15,6 +15,9 @@ export async function GET(request: NextRequest) {
   try {
     const gateway = instagramGateway();
     const token = await gateway.exchangeCode(code, `${env.APP_ORIGIN}/api/meta/oauth/callback`);
+    if (token.permissions && !token.permissions.includes("instagram_business_basic")) {
+      return NextResponse.redirect(`${env.APP_ORIGIN}/settings?error=missing_basic`);
+    }
     const profile = await gateway.getProfile(token.accessToken);
     await gateway.subscribeToComments(profile.userId, token.accessToken);
     const encrypted = encryptSecret(token.accessToken);

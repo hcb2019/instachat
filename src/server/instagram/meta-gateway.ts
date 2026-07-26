@@ -54,8 +54,13 @@ export class MetaInstagramGateway implements InstagramGateway {
     const body = new URLSearchParams({ client_id: env.META_APP_ID, client_secret: env.META_APP_SECRET, grant_type: "authorization_code", redirect_uri: redirectUri, code });
     const response = await fetch("https://api.instagram.com/oauth/access_token", { method: "POST", body, redirect: "error", signal: AbortSignal.timeout(12_000) });
     if (!response.ok) throw new MetaApiError("Não foi possível concluir o OAuth.", response.status);
-    const data = await response.json() as { access_token: string; user_id: number; expires_in?: number };
-    return { accessToken: data.access_token, userId: String(data.user_id), expiresIn: data.expires_in ?? null };
+    const data = await response.json() as { access_token: string; user_id: number; expires_in?: number; permissions?: string[] };
+    return {
+      accessToken: data.access_token,
+      userId: String(data.user_id),
+      expiresIn: data.expires_in ?? null,
+      permissions: Array.isArray(data.permissions) ? data.permissions : null,
+    };
   }
 
   getProfile(accessToken: string) {
