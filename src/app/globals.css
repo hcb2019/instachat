@@ -408,6 +408,51 @@ h1, h2, h3, p { margin-top: 0; }
 .meta-window-row b { width: 16px; height: 16px; display: grid; place-items: center; color: #3568c8; background: #e7eefc; border-radius: 4px; font-size: 7px; }
 .meta-window-row svg { color: var(--green); }
 .illustration-environment .meta-window-row:nth-child(3) { filter: blur(1.8px); user-select: none; }
+.meta-creation-walkthrough { margin: 0 27px 22px; overflow: hidden; border: 1px solid #cfd8e6; border-radius: 13px; background: #f2f6fb; }
+.meta-creation-walkthrough > header { padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 25px; background: #e5edf7; border-bottom: 1px solid #ccd7e5; }
+.meta-creation-walkthrough > header h3 { margin: 2px 0 6px; font-size: 22px; letter-spacing: -.035em; }
+.meta-creation-walkthrough > header > div:first-child > p:last-child { max-width: 680px; margin: 0; color: #596473; font-size: 13px; line-height: 1.55; }
+.meta-correct-choice { max-width: 350px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 9px; color: #235a38; background: #e0efe4; border: 1px solid #bdd7c4; border-radius: 9px; }
+.meta-correct-choice svg { flex: none; margin-top: 2px; }
+.meta-correct-choice span, .meta-correct-choice small, .meta-correct-choice strong { display: block; }
+.meta-correct-choice small { margin-bottom: 2px; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; font-weight: 800; }
+.meta-correct-choice strong { font-size: 13px; line-height: 1.35; }
+.meta-creation-screens { padding: 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.meta-creation-screens > article { min-width: 0; padding: 18px; display: flex; flex-direction: column; background: #fff; border: 1px solid #d7dfe9; border-radius: 10px; box-shadow: 0 5px 14px rgba(42,61,82,.04); }
+.meta-creation-screens > article.meta-screen-important { border: 2px solid #5791cd; box-shadow: 0 0 0 3px rgba(59,120,182,.1); }
+.meta-creation-screens > article.meta-screen-finish { color: #f7f3eb; background: #282b30; border-color: #282b30; }
+.meta-screen-heading { margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+.meta-screen-heading > span { width: 32px; height: 32px; display: grid; place-items: center; flex: none; color: white; background: #2473b8; border-radius: 50%; font-size: 13px; font-weight: 850; }
+.meta-screen-heading small { color: #69788a; font-size: 10px; font-weight: 760; }
+.meta-screen-heading h4 { margin: 2px 0 0; font-size: 17px; }
+.meta-screen-finish .meta-screen-heading small { color: #aeb8c6; }
+.meta-fill-map { margin: 0; display: grid; gap: 8px; }
+.meta-fill-map > div { padding: 10px 11px; background: #f5f7fa; border: 1px solid #d8dee7; border-radius: 7px; }
+.meta-fill-map dt { color: #657181; font-size: 10px; font-weight: 760; }
+.meta-fill-map dd { margin: 4px 0; color: #27384a; font-size: 13px; font-weight: 750; }
+.meta-fill-map small { color: #697584; font-size: 10px; line-height: 1.4; }
+.meta-creation-screens ol { margin: 0; padding-left: 20px; color: #4d5967; font-size: 12px; line-height: 1.55; }
+.meta-creation-screens ol li + li { margin-top: 6px; }
+.meta-do-dont { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.meta-do-dont p { margin: 0; padding: 8px; display: flex; align-items: center; gap: 6px; border-radius: 6px; font-size: 10px; font-weight: 750; }
+.meta-do-dont p:first-child { color: #2e6741; background: #e4f0e6; }
+.meta-do-dont p:last-child { color: #805d22; background: #f8edcf; }
+.meta-screen-next { margin: auto 0 0; padding-top: 14px; display: flex; align-items: flex-start; gap: 7px; color: #2b6498; font-size: 11px; line-height: 1.45; }
+.meta-screen-next svg { flex: none; margin-top: 1px; }
+.meta-route-answer { padding: 10px; color: #335f40; background: #e4efe5; border-radius: 7px; }
+.meta-route-answer.advanced { margin-top: 7px; color: #795e2d; background: #f5ead0; }
+.meta-route-answer strong { font-size: 11px; }
+.meta-route-answer p { margin: 4px 0 0; font-size: 10px; line-height: 1.5; }
+.meta-empty-state { padding: 14px; display: flex; align-items: flex-start; gap: 9px; color: #4f5e6d; background: #f5f7fa; border: 1px solid #dce2e9; border-radius: 8px; }
+.meta-empty-state svg { flex: none; color: var(--green); }
+.meta-empty-state p { margin: 0; font-size: 12px; line-height: 1.5; }
+.meta-review-list { margin: 0; padding: 0; display: grid; gap: 8px; list-style: none; }
+.meta-review-list li { display: flex; align-items: flex-start; gap: 7px; color: #4c5865; font-size: 11px; line-height: 1.45; }
+.meta-review-list svg { flex: none; color: var(--green); }
+.meta-screen-finish ol { color: #d5dbe3; }
+.meta-credential-warning { margin-top: 14px; padding: 11px; display: flex; align-items: flex-start; gap: 8px; color: #f4cf8e; background: #3c3a34; border-radius: 7px; }
+.meta-credential-warning svg { flex: none; }
+.meta-credential-warning p { margin: 0; font-size: 11px; line-height: 1.5; }
 .guide-verification { padding: 13px; background: #edf2e8; border-radius: 9px; }
 .guide-verification h3 { color: var(--green); }
 .guide-verification p { margin: 8px 0 0; display: flex; align-items: center; gap: 7px; color: #405a44; font-size: 12px; }
@@ -574,6 +619,9 @@ h1, h2, h3, p { margin-top: 0; }
   .guide-step-action { width: 100%; }
   .guide-step-grid { padding: 20px; }
   .guide-step-side { grid-template-columns: 1fr; }
+  .meta-creation-walkthrough > header { align-items: flex-start; flex-direction: column; }
+  .meta-correct-choice { max-width: none; }
+  .meta-creation-screens { grid-template-columns: 1fr; }
   .guide-url-stack, .environment-map { margin-left: 20px; margin-right: 20px; }
   .guide-url-field { grid-template-columns: 1fr auto; }
   .guide-url-field > span { grid-column: 1 / -1; }
@@ -615,6 +663,11 @@ h1, h2, h3, p { margin-top: 0; }
   .guide-step { display: block; }
   .guide-step > aside { display: none; }
   .guide-step-main > header { padding: 20px; }
+  .meta-creation-walkthrough { margin-left: 14px; margin-right: 14px; }
+  .meta-creation-walkthrough > header { padding: 17px; }
+  .meta-creation-screens { padding: 8px; }
+  .meta-creation-screens > article { padding: 16px; }
+  .meta-do-dont { grid-template-columns: 1fr; }
   .guide-step-footer { padding: 13px 20px; }
   .guide-step-footer > div { align-items: flex-start; flex-direction: column; }
   .guide-url-field { grid-template-columns: minmax(0, 1fr) auto; }

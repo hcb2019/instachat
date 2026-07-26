@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, AtSign, BookOpen, Boxes, Check, CheckCircle2, ChevronRight, CircleHelp, Clock3, Code2, ExternalLink, FileKey2, Globe2, KeyRound, LockKeyhole, MessageCircle, Radio, Rocket, ShieldCheck, TestTube2, UserRoundCheck, Webhook } from "lucide-react";
+import { AlertTriangle, ArrowRight, AtSign, BookOpen, Boxes, Check, CheckCircle2, ChevronRight, CircleHelp, Clock3, Code2, ExternalLink, FileKey2, Globe2, KeyRound, LockKeyhole, MessageCircle, MousePointerClick, Radio, Rocket, ShieldCheck, TestTube2, UserRoundCheck, Webhook } from "lucide-react";
 import { Badge, Card } from "@/components/ui";
 import { CopyValue, GuideProgress, GuideRouteChoice, StepComplete } from "@/features/integration-guide/guide-client";
 import { env, isDemoMode } from "@/lib/env";
@@ -21,12 +21,12 @@ const steps: IntegrationGuideStep[] = [
   },
   {
     id: "meta-app", number: "02", phase: "meta", title: "Crie o aplicativo na Meta", duration: "10–15 min", location: "Meta for Developers",
-    summary: "Cada instalação do template deve ter seu próprio Meta App. Se você operar um SaaS, todos os clientes usarão o Meta App da sua empresa.",
-    tasks: ["Acesse Meta for Developers com uma conta autorizada a administrar o negócio.", "Abra Meus Apps e escolha Criar app.", "Escolha o caso de uso relacionado ao Instagram; se o painel pedir um tipo de app, use Business.", "Informe nome público, e-mail de contato e associe um portfólio empresarial quando a Meta solicitar.", "No painel do app, adicione Instagram API e selecione API setup with Instagram login."],
-    checks: ["App criado", "Instagram API adicionada", "Instagram Login selecionado"],
-    warning: "Não escolha o fluxo antigo “Instagram API with Facebook Login”; ele exige Página do Facebook e usa escopos diferentes.",
-    action: { label: "Abrir Meus Apps na Meta", href: "https://developers.facebook.com/apps/", external: true },
-    reference: { label: "Abrir Meus Apps na Meta", href: "https://developers.facebook.com/apps/" }, illustration: "app",
+    summary: "A Meta apresenta cinco telas antes de criar o aplicativo. Abaixo você verá exatamente o que preencher, qual cartão selecionar e quando apenas clicar em Avançar.",
+    tasks: ["Abra o criador de aplicativos da Meta e faça login com a conta que administra seu negócio.", "Preencha o nome e um e-mail que você consulta regularmente.", "Selecione somente o caso de uso “Gerenciar mensagens e conteúdo no Instagram”.", "Escolha seu portfólio empresarial ou use a opção de continuar sem um, conforme explicado abaixo.", "Revise o resumo, crie o aplicativo e abra “Personalizar o caso de uso”."],
+    checks: ["Caso de uso correto selecionado", "Aplicativo criado", "API setup with Instagram login aberto"],
+    warning: "Não selecione Messenger nem WhatsApp. Depois da criação, não cole as URLs em “Login do Facebook para Empresas”; use a seção “API setup with Instagram login”.",
+    action: { label: "Abrir a criação de aplicativo na Meta", href: "https://developers.facebook.com/apps/creation/", external: true },
+    reference: { label: "Instagram API with Instagram Login — Meta", href: "https://www.postman.com/meta/instagram/folder/23987686-98bfade9-3736-4738-8b4a-f56d6534f6de" }, illustration: "app",
   },
   {
     id: "oauth", number: "03", phase: "meta", title: "Cadastre as URLs do login", duration: "5 min", location: "Instagram › API setup › Business login",
@@ -99,6 +99,69 @@ function MetaIllustration({ kind }: { kind: IntegrationGuideStep["illustration"]
   return <figure className={`meta-illustration illustration-${kind}`}><figcaption><span><Icon size={14} /></span>{content.title}<i>Ilustração</i></figcaption><div className="meta-window"><div className="meta-window-nav"><span /><span /><span /></div>{content.rows.map((row, index) => <div className="meta-window-row" key={row}><b>{index + 1}</b><span>{row}</span>{index === content.rows.length - 1 && <CheckCircle2 size={14} />}</div>)}</div></figure>;
 }
 
+function MetaAppCreationWalkthrough() {
+  return <section className="meta-creation-walkthrough" aria-labelledby="meta-creation-title">
+    <header>
+      <div><p className="eyebrow">As telas que você verá na Meta</p><h3 id="meta-creation-title">Preencha exatamente nesta ordem</h3><p>Os nomes abaixo correspondem às telas atuais mostradas nos seus prints. A aparência pode mudar um pouco, mas os textos que você deve procurar são estes.</p></div>
+      <div className="meta-correct-choice"><CheckCircle2 size={19} /><span><small>Opção correta</small><strong>Gerenciar mensagens e conteúdo no Instagram</strong></span></div>
+    </header>
+    <div className="meta-creation-screens">
+      <article>
+        <div className="meta-screen-heading"><span>1</span><div><small>Tela “Detalhes do app”</small><h4>Nome e contato</h4></div></div>
+        <dl className="meta-fill-map">
+          <div><dt>Nome do app</dt><dd>InstaChat</dd><small>Pode usar o nome da sua instalação ou empresa.</small></div>
+          <div><dt>Email de contato do app</dt><dd>seu-email@exemplo.com</dd><small>Use um endereço real que você consulte regularmente.</small></div>
+        </dl>
+        <p className="meta-screen-next"><MousePointerClick size={15} /><span>Depois clique em <strong>Avançar</strong>.</span></p>
+      </article>
+
+      <article className="meta-screen-important">
+        <div className="meta-screen-heading"><span>2</span><div><small>Tela “Casos de uso”</small><h4>Escolha Instagram</h4></div></div>
+        <ol>
+          <li>No filtro à esquerda, clique em <strong>Business Messaging</strong>.</li>
+          <li>Marque o cartão <strong>Gerenciar mensagens e conteúdo no Instagram</strong>.</li>
+          <li>Confirme que a caixa no canto direito do cartão ficou selecionada.</li>
+        </ol>
+        <div className="meta-do-dont"><p><Check size={14} /> Escolha Instagram</p><p><AlertTriangle size={14} /> Não escolha Messenger ou WhatsApp</p></div>
+        <p className="meta-screen-next"><MousePointerClick size={15} /><span>Clique em <strong>Avançar</strong>.</span></p>
+      </article>
+
+      <article>
+        <div className="meta-screen-heading"><span>3</span><div><small>Tela “Empresa”</small><h4>Portfólio empresarial</h4></div></div>
+        <div className="meta-route-answer"><strong>Para sua própria conta</strong><p>Selecione um portfólio que você controla. Se ainda não tiver nenhum, escolha <em>“Ainda não quero me conectar a um portfólio empresarial”</em>; você poderá adicionar depois.</p></div>
+        <div className="meta-route-answer advanced"><strong>Para atender clientes</strong><p>Selecione ou crie o portfólio da empresa que será dona do SaaS. Ele precisará ser verificado antes do Advanced Access.</p></div>
+        <p className="meta-screen-next"><MousePointerClick size={15} /><span>Selecione uma opção e clique em <strong>Avançar</strong>.</span></p>
+      </article>
+
+      <article>
+        <div className="meta-screen-heading"><span>4</span><div><small>Tela “Requisitos”</small><h4>Pode aparecer vazia</h4></div></div>
+        <div className="meta-empty-state"><CheckCircle2 size={18} /><p>Se aparecer <strong>“Nenhum requisito identificado”</strong>, está tudo certo. Você não precisa preencher nada nessa tela.</p></div>
+        <p className="meta-screen-next"><MousePointerClick size={15} /><span>Clique em <strong>Avançar</strong>.</span></p>
+      </article>
+
+      <article>
+        <div className="meta-screen-heading"><span>5</span><div><small>Tela “Visão geral”</small><h4>Revise antes de criar</h4></div></div>
+        <ul className="meta-review-list">
+          <li><Check size={14} /> Nome e e-mail estão corretos.</li>
+          <li><Check size={14} /> O caso de uso é “Gerenciar mensagens e conteúdo no Instagram”.</li>
+          <li><Check size={14} /> O portfólio escolhido é o seu — ou você decidiu adicionar depois.</li>
+        </ul>
+        <p className="meta-screen-next"><MousePointerClick size={15} /><span>Clique no botão verde <strong>Criar aplicativo</strong>. A Meta pode pedir sua senha novamente.</span></p>
+      </article>
+
+      <article className="meta-screen-finish">
+        <div className="meta-screen-heading"><span>6</span><div><small>Primeira tela do novo app</small><h4>Abra a configuração certa</h4></div></div>
+        <ol>
+          <li>No painel, clique em <strong>Personalizar o caso de uso “Gerenciar mensagens e conteúdo no Instagram”</strong>.</li>
+          <li>Abra <strong>API setup with Instagram login</strong>.</li>
+          <li>É nessa área que você encontrará o <strong>Instagram App ID</strong> e o <strong>Instagram App Secret</strong>.</li>
+        </ol>
+        <div className="meta-credential-warning"><AlertTriangle size={17} /><p>Use as credenciais da seção Instagram. <strong>Não use</strong> o App ID e o App Secret genéricos de “Configurações do app › Básico”.</p></div>
+      </article>
+    </div>
+  </section>;
+}
+
 function UrlField({ label, value }: { label: string; value: string }) {
   return <div className="guide-url-field"><span>{label}</span><code>{value}</code><CopyValue value={value} /></div>;
 }
@@ -137,6 +200,7 @@ export default async function ConnectionGuidePage() {
       <aside><span>{step.number}</span><i /></aside>
       <div className="guide-step-main"><header><div><PhaseBadge phase={step.phase} /><h2>{step.title}</h2><p>{step.summary}</p></div><div className="guide-step-meta"><span><Clock3 size={15} /> {step.duration}</span><span><Globe2 size={15} /> Onde: {step.location}</span><a className="guide-step-action" href={step.action.href} target={step.action.external ? "_blank" : undefined} rel={step.action.external ? "noopener noreferrer" : undefined}>{step.action.label}{step.action.external ? <ExternalLink size={15} /> : <ArrowRight size={15} />}</a></div></header>
         <div className="guide-step-grid"><div><h3>O que fazer</h3><ol>{step.tasks.map((task) => <li key={task}><span>{task}</span></li>)}</ol></div><div className="guide-step-side"><MetaIllustration kind={step.illustration} /><div className="guide-verification"><h3>Antes de avançar</h3>{step.checks.map((check) => <p key={check}><Check size={12} /> {check}</p>)}</div></div></div>
+        {step.id === "meta-app" && <MetaAppCreationWalkthrough />}
         {step.id === "oauth" && <div className="guide-url-stack"><UrlField label="Valid OAuth Redirect URI" value={urls.oauth} /><UrlField label="Deauthorize Callback URL" value={urls.deauthorize} /><UrlField label="Data Deletion Request URL" value={urls.deletion} /><UrlField label="Privacy Policy URL" value={urls.privacy} /></div>}
         {step.id === "webhook" && <div className="guide-url-stack"><UrlField label="Callback URL" value={urls.webhook} /><div className="guide-token-hint"><KeyRound size={15} /><span>Crie o valor de <code>META_WEBHOOK_VERIFY_TOKEN</code> no seu gerenciador de segredos e cole o mesmo texto na Meta.</span></div></div>}
         {step.id === "environment" && <div className="environment-map"><div><span>Variável</span><span>Origem</span></div>{[["META_APP_ID", "Instagram App ID"], ["META_APP_SECRET", "Instagram App Secret"], ["META_WEBHOOK_VERIFY_TOKEN", "Você cria"], ["META_GRAPH_API_VERSION", "Versão estável do dashboard"], ["APP_ORIGIN", "Seu domínio HTTPS"], ["DEMO_MODE", "false"]].map(([key, source]) => <div key={key}><code>{key}</code><span>{source}</span><CopyValue value={key!} label="Copiar nome" /></div>)}</div>}
