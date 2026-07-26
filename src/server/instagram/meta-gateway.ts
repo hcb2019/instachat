@@ -16,9 +16,14 @@ function safeMetaMessage(message?: string) {
     .slice(0, 300);
 }
 
-async function metaFetch<T>(path: string, options: RequestInit & { accessToken?: string }, attempt = 1): Promise<T> {
-  const { accessToken, ...init } = options;
-  const response = await fetch(`https://graph.instagram.com/${env.META_GRAPH_API_VERSION}${path}`, {
+type MetaFetchOptions = RequestInit & { accessToken?: string; unversioned?: boolean };
+
+async function metaFetch<T>(path: string, options: MetaFetchOptions, attempt = 1): Promise<T> {
+  const { accessToken, unversioned = false, ...init } = options;
+  const endpoint = unversioned
+    ? `https://graph.instagram.com${path}`
+    : `https://graph.instagram.com/${env.META_GRAPH_API_VERSION}${path}`;
+  const response = await fetch(endpoint, {
     ...init,
     redirect: "error",
     signal: AbortSignal.timeout(12_000),
@@ -34,6 +39,13 @@ async function metaFetch<T>(path: string, options: RequestInit & { accessToken?:
     return metaFetch<T>(path, options, attempt + 1);
   }
   throw error;
+}
+
+function isUnsupportedMediaEdge(error: unknown) {
+  return error instanceof MetaApiError
+    && error.code === "2500"
+    && error.message.toLowerCase().includes("path components")
+    && error.message.toLowerCase().includes("/media");
 }
 
 export class MetaInstagramGateway implements InstagramGateway {
@@ -60,8 +72,16 @@ export class MetaInstagramGateway implements InstagramGateway {
     // "me". An explicit account ID on graph.instagram.com can be interpreted as
     // an object without the media edge and returns Meta error 2500.
     let path: string | null = "/me/media?fields=id,caption,media_product_type,media_type,permalink,thumbnail_url,timestamp&limit=50";
+    let unversioned = false;
     while (path && items.length < 250) {
-      const data: { data: Array<{ id: string; caption?: string; media_product_type?: string; permalink: string; thumbnail_url?: string; timestamp: string }>; paging?: { next?: string } } = await metaFetch(path, { accessToken });
+      let data: { data: Array<{ id: string; caption?: string; media_product_type?: string; permalink: string; thumbnail_url?: string; timestamp: string }>; paging?: { next?: string } };
+      try {
+        data = await metaFetch(path, { accessToken, unversioned });
+      } catch (error) {
+        if (unversioned || items.length > 0 || !isUnsupportedMediaEdge(error)) throw error;
+        unversioned = true;
+        data = await metaFetch(path, { accessToken, unversioned: true });
+      }
       for (const item of data.data) if (item.media_product_type === "REELS") items.push({ externalId: item.id, caption: item.caption ?? "Reel sem legenda", permalink: item.permalink, thumbnailUrl: item.thumbnail_url ?? null, publishedAt: item.timestamp });
       path = data.paging?.next ? normalizeMetaPagingPath(data.paging.next, env.META_GRAPH_API_VERSION) : null;
     }
