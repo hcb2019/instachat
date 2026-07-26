@@ -19,6 +19,57 @@ describe("Meta webhooks", () => {
     expect(parseCommentEvents(payload)).toEqual([{ instagramUserId: "ig-owner", commentId: "comment-1", mediaId: "reel-1", mediaProductType: "REELS", commenterScopedId: "person-1", commenterUsername: "maria", text: "1991", isSelf: false }]);
   });
 
+  it("accepts the direct comment payload sent by the current Instagram API", () => {
+    const directPayload = JSON.stringify({
+      object: "instagram",
+      entry: [{
+        id: "ig-owner",
+        field: "comments",
+        value: {
+          id: "comment-2",
+          text: "QUERO",
+          from: { username: "Maria.Silva" },
+          media: { id: "reel-2", media_product_type: "REELS" },
+        },
+      }],
+    });
+
+    expect(parseCommentEvents(directPayload)).toEqual([{
+      instagramUserId: "ig-owner",
+      commentId: "comment-2",
+      mediaId: "reel-2",
+      mediaProductType: "REELS",
+      commenterScopedId: "username:maria.silva",
+      commenterUsername: "Maria.Silva",
+      text: "QUERO",
+      isSelf: false,
+    }]);
+  });
+
+  it("identifies comments made by the connected account", () => {
+    const selfPayload = JSON.stringify({
+      object: "instagram",
+      entry: [{
+        id: "ig-owner",
+        changes: [{
+          field: "comments",
+          value: {
+            id: "comment-self",
+            text: "quero",
+            from: {
+              id: "ig-owner",
+              username: "hernando.ia",
+              self_ig_scoped_id: "ig-owner",
+            },
+            media: { id: "reel-1", media_product_type: "REELS" },
+          },
+        }],
+      }],
+    });
+
+    expect(parseCommentEvents(selfPayload)[0]?.isSelf).toBe(true);
+  });
+
   it("rejects malformed payloads", () => {
     expect(() => parseCommentEvents(JSON.stringify({ object: "other", entry: [] }))).toThrow();
   });
