@@ -1,35 +1,53 @@
-# Configuração da Meta — etapa dependente do proprietário
+# Configuração atual da Meta
 
-O aplicativo inclui uma versão interativa e atualizada deste roteiro em `/connection-guide`, com checklist, URLs copiáveis, ilustrações e diagnóstico de erros. As labels do App Dashboard podem mudar; confirme sempre nos links oficiais indicados no próprio guia.
+O guia interativo em `/connection-guide` é a fonte principal para configurar o Instagram. Ele acompanha o fluxo atual de criação do aplicativo e a tela "Configuração da API com login do Instagram".
 
-1. Crie um app do tipo Business no Meta for Developers.
-2. Adicione **Instagram API with Instagram Login**.
-3. Use uma conta Instagram profissional Business ou Creator administrada por você.
-4. Configure o callback OAuth: `https://SEU_DOMINIO/api/meta/oauth/callback`.
-5. Solicite somente `instagram_business_basic`, `instagram_business_manage_comments` e `instagram_business_manage_insights`.
-6. Configure o callback de webhook: `https://SEU_DOMINIO/api/meta/webhook` e o mesmo `META_WEBHOOK_VERIFY_TOKEN` do ambiente.
-7. Assine o campo `comments`. O callback OAuth também chama `/{ig_user_id}/subscribed_apps`.
-8. Adicione sua conta como tester/conta administrada pelo app para usar Standard Access.
-9. Preencha `META_APP_ID`, `META_APP_SECRET` e a versão estável escolhida em `META_GRAPH_API_VERSION`.
-10. Conecte pelo painel e execute “Atualizar dados” no Radar. Uma conexão anterior precisa ser reautorizada para conceder o novo escopo de Insights.
+## Quem faz esta configuração
 
-## URLs públicas exigidas
+O administrador que instalou o InstaChat configura a Meta e a Vercel uma vez. Um usuário comum não cria outro aplicativo na Meta. Depois que a instalação estiver pronta, ele apenas entra no InstaChat e clica em "Conectar Instagram".
 
-- OAuth: `/api/meta/oauth/callback`
-- Webhook: `/api/meta/webhook`
-- Desautorização: `/api/meta/deauthorize`
-- Exclusão de dados: `/api/meta/data-deletion`
-- Política de privacidade: `/privacy`
+## Caminho usado pelo InstaChat
 
-Prefixe cada caminho com o mesmo `APP_ORIGIN` HTTPS de produção. As rotas de desautorização e exclusão validam o `signed_request` com HMAC-SHA256 antes de remover os dados derivados da conexão.
+- Caso de uso: `Gerenciar mensagens e conteúdo no Instagram`
+- Login: `Instagram API with Instagram Login`
+- Host: `graph.instagram.com`
+- Página do Facebook: não é necessária
+- Conta: Instagram Business ou Creator
 
-## Teste controlado
+Não use "Auxiliar de integração de API" nem "Configuração com Facebook Login".
 
-- Crie uma automação para um Reel de teste e palavra exclusiva.
-- Comente por uma segunda conta.
-- Confirme no histórico: webhook, resposta pública, `message_id` privado e clique.
-- Repita com o mesmo usuário: deve aparecer como duplicado, sem nova DM.
-- Abra o Radar, importe os comentários dos 20 Reels mais recentes e confirme que toda oportunidade possui comentários originais como evidência.
-- Crie um rascunho a partir de uma ideia e confirme que ele permanece inativo até revisão manual.
+## Permissões solicitadas no OAuth
 
-Antes de abrir para contas de terceiros serão necessários Advanced Access, App Review, política de privacidade e eventual verificação comercial. Para a conta própria adicionada ao app, Standard Access atende o MVP.
+- `instagram_business_basic`
+- `instagram_business_manage_comments`
+- `instagram_business_manage_insights`
+
+A Meta pode adicionar `instagram_business_manage_messages` ao pacote do caso de uso. O InstaChat não solicita essa permissão durante o login.
+
+## Webhook
+
+- Callback: `https://SEU_DOMINIO/api/meta/webhook`
+- Campo necessário: `comments`
+- Campos desnecessários: `live_comments`, `messages`, `message_*`, `messaging_*` e `standby`
+- Certificado de cliente: desligado
+
+O administrador cria `META_WEBHOOK_VERIFY_TOKEN`, salva o mesmo valor na Vercel e no campo "Verificar token" da Meta. Depois do OAuth, o InstaChat chama `/{ig_user_id}/subscribed_apps?subscribed_fields=comments` automaticamente.
+
+## URLs do login
+
+- OAuth: `https://SEU_DOMINIO/api/meta/oauth/callback`
+- Desautorização: `https://SEU_DOMINIO/api/meta/deauthorize`
+- Exclusão de dados: `https://SEU_DOMINIO/api/meta/data-deletion`
+- Política de privacidade: `https://SEU_DOMINIO/privacy`
+
+## Teste
+
+1. Adicione a conta como Testador do Instagram e aceite o convite.
+2. Salve as variáveis na Vercel e faça um novo deploy.
+3. Configure o webhook e as URLs do login.
+4. Conecte a conta pelo InstaChat.
+5. Crie uma automação de teste.
+6. Comente em um Reel usando uma segunda conta.
+7. Confira a resposta pública, a private reply e o Histórico.
+
+Para liberar contas que não são testadoras, siga o bloco 5 da Meta, conclua a análise do aplicativo e solicite o nível de acesso exigido para as permissões usadas.

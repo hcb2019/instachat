@@ -74,40 +74,6 @@ export function WebhookTokenSetup() {
   </section>;
 }
 
-type GuideRoute = "standard" | "saas";
-
-export function GuideRouteChoice() {
-  const [route, setRoute] = useState<GuideRoute | null>(null);
-
-  function choose(nextRoute: GuideRoute) {
-    setRoute(nextRoute);
-  }
-
-  function start() {
-    document.getElementById("guide-start")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  return <section className="guide-route-choice" aria-labelledby="route-title">
-    <div className="guide-route-intro">
-      <p className="eyebrow">Passo zero — escolha uma opção</p>
-      <h2 id="route-title">Como você pretende usar o InstaChat?</h2>
-      <p>Clique em uma das opções abaixo. Para conectar somente a sua conta, escolha a primeira.</p>
-    </div>
-    <button type="button" className={route === "standard" ? "guide-route-card selected" : "guide-route-card"} onClick={() => choose("standard")} aria-pressed={route === "standard"}>
-      <span className="guide-route-number">01</span>
-      <span className="guide-route-content"><span className="guide-route-badge recommended">Recomendado para começar</span><strong>Minha própria conta</strong><small>Também serve para quem vai disponibilizar o código como template. Você seguirá as 8 etapas usando Standard Access.</small><span className="guide-route-select">{route === "standard" ? <><Check size={16} /> Opção escolhida</> : <>Escolher este caminho <ArrowRight size={16} /></>}</span></span>
-    </button>
-    <button type="button" className={route === "saas" ? "guide-route-card selected" : "guide-route-card"} onClick={() => choose("saas")} aria-pressed={route === "saas"}>
-      <span className="guide-route-number">02</span>
-      <span className="guide-route-content"><span className="guide-route-badge advanced">Para uma fase futura</span><strong>Contas de clientes</strong><small>Escolha apenas se você já vai operar como SaaS. Além das 8 etapas, haverá App Review, Advanced Access e verificação empresarial.</small><span className="guide-route-select">{route === "saas" ? <><Check size={16} /> Opção escolhida</> : <>Escolher este caminho <ArrowRight size={16} /></>}</span></span>
-    </button>
-    {route && <div className="guide-route-confirmation" role="status">
-      <div><Check size={17} /><span><strong>Caminho selecionado:</strong> {route === "standard" ? "minha própria conta." : "contas de clientes."} {route === "standard" ? "Siga as etapas em ordem e marque cada uma ao terminar." : "Siga todas as etapas e dê atenção especial à etapa 8."}</span></div>
-      <button type="button" onClick={start}>Começar pela etapa 1 <ArrowRight size={15} /></button>
-    </div>}
-  </section>;
-}
-
 export function GuideProgress({ stepIds }: { stepIds: string[] }) {
   const completed = useCompletedSteps();
 

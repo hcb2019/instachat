@@ -34,26 +34,22 @@ test("explores Radar evidence and creates a reviewable draft", async ({ page }) 
 
 test("follows the Instagram connection guide and persists progress", async ({ page }) => {
   await page.goto("/connection-guide");
-  await expect(page.getByRole("heading", { name: /Da conta profissional/ })).toBeVisible();
-  await expect(page.getByText("8 etapas verificáveis", { exact: true })).toBeVisible();
-  const ownAccountRoute = page.getByRole("button", { name: /Minha própria conta/ });
-  await expect(ownAccountRoute).toHaveAttribute("aria-pressed", "false");
-  await ownAccountRoute.click();
-  await expect(ownAccountRoute).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByText(/Caminho selecionado:/)).toBeVisible();
-  await expect(page.getByRole("link", { name: "Abrir a criação de aplicativo na Meta" })).toHaveAttribute("href", "https://developers.facebook.com/apps/creation/");
+  await expect(page.getByRole("heading", { name: /Um caminho só/ })).toBeVisible();
+  await expect(page.getByText("Você instalou ou administra o InstaChat?", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Você não precisa criar um app na Meta/)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Abrir criação de aplicativo" })).toHaveAttribute("href", "https://developers.facebook.com/apps/creation/");
   await expect(page.getByText("Gerenciar mensagens e conteúdo no Instagram", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText(/Não use.*App ID e o App Secret genéricos/)).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Procure estes quatro blocos numerados" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A página correta tem cinco blocos numerados" })).toBeVisible();
   await expect(page.getByText("Auxiliar de integração de API", { exact: true })).toBeVisible();
-  await expect(page.getByText("Não use neste projeto", { exact: true })).toBeVisible();
   await expect(page.getByText("instagram_business_basic", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText("ID do app do Instagram", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Não use o App ID genérico/)).toBeVisible();
+  await expect(page.getByText(/Não use "Gerar token" para conectar/)).toBeVisible();
   await expect(page.getByRole("heading", { name: "Crie seu META_WEBHOOK_VERIFY_TOKEN aqui" })).toBeVisible();
   await page.getByRole("button", { name: "Gerar token seguro" }).click();
   await expect(page.getByText("Seu token foi criado", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /Copiar token:/ })).toBeVisible();
-  await expect(page.getByText("URL de callback do webhook", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Para o InstaChat, ligue somente comments" })).toBeVisible();
+  await expect(page.getByText("URL de callback", { exact: true })).toBeVisible();
   await expect(page.getByText("Valid OAuth Redirect URI", { exact: true }).first()).toBeVisible();
   await page.getByRole("button", { name: "Marcar como concluída" }).first().click();
   await expect(page.getByRole("button", { name: "Etapa concluída" }).first()).toBeVisible();
