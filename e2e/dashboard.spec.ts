@@ -49,6 +49,10 @@ test("follows the Instagram connection guide and persists progress", async ({ pa
   await expect(page.getByText("Não use neste projeto", { exact: true })).toBeVisible();
   await expect(page.getByText("instagram_business_basic", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("ID do app do Instagram", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Crie seu META_WEBHOOK_VERIFY_TOKEN aqui" })).toBeVisible();
+  await page.getByRole("button", { name: "Gerar token seguro" }).click();
+  await expect(page.getByText("Seu token foi criado", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Copiar token:/ })).toBeVisible();
   await expect(page.getByText("URL de callback do webhook", { exact: true })).toBeVisible();
   await expect(page.getByText("Valid OAuth Redirect URI", { exact: true }).first()).toBeVisible();
   await page.getByRole("button", { name: "Marcar como concluída" }).first().click();

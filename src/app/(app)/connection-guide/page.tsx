@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AlertTriangle, ArrowRight, AtSign, BookOpen, Boxes, Check, CheckCircle2, ChevronRight, CircleHelp, Clock3, Code2, ExternalLink, FileKey2, Globe2, KeyRound, LockKeyhole, MessageCircle, MousePointerClick, Radio, Rocket, ShieldCheck, TestTube2, UserRoundCheck, Webhook } from "lucide-react";
 import { Badge, Card } from "@/components/ui";
-import { CopyValue, GuideProgress, GuideRouteChoice, StepComplete } from "@/features/integration-guide/guide-client";
+import { CopyValue, GuideProgress, GuideRouteChoice, StepComplete, WebhookTokenSetup } from "@/features/integration-guide/guide-client";
 import { env, isDemoMode } from "@/lib/env";
 import { getConnection } from "@/server/data";
 import type { IntegrationGuideStep } from "@/types/integration-guide";
@@ -49,7 +49,7 @@ const steps: IntegrationGuideStep[] = [
   {
     id: "environment", number: "05", phase: "instachat", title: "Configure os segredos do deploy", duration: "10 min", location: "Vercel/Supabase › Environment Variables",
     summary: "Copie App ID e App Secret para o ambiente do servidor. Nunca coloque segredos em arquivos versionados ou variáveis NEXT_PUBLIC_*.",
-    tasks: ["Na Meta, copie o Instagram App ID e revele o Instagram App Secret.", "No provedor de deploy, crie as variáveis indicadas no quadro.", "Gere TOKEN_ENCRYPTION_KEY e WORKER_SECRET com valores aleatórios fortes.", "Defina DEMO_MODE=false e APP_ORIGIN para o domínio HTTPS sem barra final.", "Faça um novo deploy depois de salvar as variáveis."],
+    tasks: ["Na Meta, copie o Instagram App ID e revele o Instagram App Secret.", "No provedor de deploy, crie as variáveis indicadas no quadro.", "Use o gerador logo abaixo para criar META_WEBHOOK_VERIFY_TOKEN e salve o valor na Vercel.", "Gere TOKEN_ENCRYPTION_KEY e WORKER_SECRET com valores aleatórios fortes.", "Defina DEMO_MODE=false e APP_ORIGIN para o domínio HTTPS sem barra final.", "Faça um novo deploy depois de salvar as variáveis."],
     checks: ["App ID configurado", "Segredos somente no servidor", "Novo deploy concluído"],
     warning: "Nunca envie App Secret, token de acesso ou chave de criptografia por print, GitHub Issue, chat público ou código do navegador.",
     action: { label: "Abrir variáveis de ambiente na Vercel", href: "https://vercel.com/hernando-candidos-projects/instachat/settings/environment-variables", external: true },
@@ -227,7 +227,7 @@ export default async function ConnectionGuidePage() {
         {step.id === "meta-app" && <MetaAppCreationWalkthrough />}
         {step.id === "instagram-api-setup" && <InstagramApiSetupWalkthrough />}
         {step.id === "callbacks" && <><div className="guide-url-stack"><UrlField label="URL de callback do webhook" value={urls.webhook} /><div className="guide-token-hint"><KeyRound size={15} /><span>Em <strong>Verificar token</strong>, cole exatamente o valor de <code>META_WEBHOOK_VERIFY_TOKEN</code> salvo na Vercel. Deixe o certificado de cliente desligado.</span></div></div><div className="guide-url-stack"><UrlField label="Valid OAuth Redirect URI" value={urls.oauth} /><UrlField label="Deauthorize Callback URL" value={urls.deauthorize} /><UrlField label="Data Deletion Request URL" value={urls.deletion} /><UrlField label="Privacy Policy URL" value={urls.privacy} /></div></>}
-        {step.id === "environment" && <div className="environment-map"><div><span>Variável</span><span>Origem</span></div>{[["META_APP_ID", "Instagram App ID"], ["META_APP_SECRET", "Instagram App Secret"], ["META_WEBHOOK_VERIFY_TOKEN", "Você cria"], ["META_GRAPH_API_VERSION", "Versão estável do dashboard"], ["APP_ORIGIN", "Seu domínio HTTPS"], ["DEMO_MODE", "false"]].map(([key, source]) => <div key={key}><code>{key}</code><span>{source}</span><CopyValue value={key!} label="Copiar nome" /></div>)}</div>}
+        {step.id === "environment" && <><div className="environment-map"><div><span>Variável</span><span>De onde vem</span></div>{[["META_APP_ID", "Tela da Meta"], ["META_APP_SECRET", "Tela da Meta"], ["META_WEBHOOK_VERIFY_TOKEN", "Gerador abaixo"], ["META_GRAPH_API_VERSION", "Versão estável do dashboard"], ["APP_ORIGIN", "Seu domínio HTTPS"], ["DEMO_MODE", "Digite false"]].map(([key, source]) => <div key={key}><code>{key}</code><span>{source}</span><CopyValue value={key!} label="Copiar nome" /></div>)}</div><WebhookTokenSetup /></>}
         {step.id === "connect-and-test" && <div className="test-flow" aria-label="Fluxo do teste"><span><MessageCircle size={16} /> Segunda conta comenta</span><ChevronRight size={15} /><span><Radio size={16} /> Webhook chega</span><ChevronRight size={15} /><span><AtSign size={16} /> Resposta + DM</span><ChevronRight size={15} /><span><CheckCircle2 size={16} /> Histórico confirma</span></div>}
         <div className="guide-step-footer">{step.warning && <p><AlertTriangle size={14} /><span>{step.warning}</span></p>}<div><a href={step.reference?.href} target="_blank" rel="noopener noreferrer">{step.reference?.label}<ExternalLink size={13} /></a><StepComplete id={step.id} /></div></div>
       </div>
