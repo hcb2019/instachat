@@ -142,7 +142,10 @@ export class MetaInstagramGateway implements InstagramGateway {
 
   async listComments(mediaId: string, accessToken: string, since: Date, limit: number) {
     const items: Array<{ commentId: string; commenterScopedId: string; commenterUsername: string; text: string; publishedAt: string }> = [];
-    let path: string | null = `/${encodeURIComponent(mediaId)}/comments?fields=id,from,text,timestamp&limit=100`;
+    // Keep this field list identical to Meta's documented request for
+    // Instagram API with Instagram Login. The comment ID is returned
+    // automatically and some Graph API versions reject extra requested fields.
+    let path: string | null = `/${encodeURIComponent(mediaId)}/comments?fields=from%2Ctext&limit=100`;
     while (path && items.length < limit) {
       const data: {
         data: Array<{
