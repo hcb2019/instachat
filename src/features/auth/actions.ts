@@ -14,6 +14,19 @@ export async function requestMagicLink(_state: AuthActionState, formData: FormDa
   const origin = requestHeaders.get("origin");
   if (origin !== env.APP_ORIGIN) return { error: "Origem da solicitação inválida." };
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: `${env.APP_ORIGIN}/auth/callback` } });
-  return error ? { error: "Não foi possível enviar o link agora." } : { message: "Enviamos um link seguro para o seu e-mail." };
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: `${env.APP_ORIGIN}/auth/callback`,
+      shouldCreateUser: false,
+    },
+  });
+  if (error) {
+    console.error("[auth:magic-link] Supabase rejected the request", {
+      code: error.code,
+      status: error.status,
+    });
+    return { error: "Não foi possível enviar o link agora." };
+  }
+  return { message: "Enviamos um link seguro para o seu e-mail." };
 }

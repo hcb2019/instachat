@@ -6,7 +6,14 @@ export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
   if (code) {
     const supabase = await createSupabaseServerClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      console.error("[auth:callback] Supabase rejected the authorization code", {
+        code: error.code,
+        status: error.status,
+      });
+      return NextResponse.redirect(`${env.APP_ORIGIN}/login?error=invalid_or_expired_link`);
+    }
   }
   return NextResponse.redirect(`${env.APP_ORIGIN}/dashboard`);
 }
