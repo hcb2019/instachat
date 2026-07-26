@@ -20,6 +20,7 @@ export interface InstagramGateway {
   exchangeCode(code: string, redirectUri: string): Promise<InstagramTokenResult>;
   getProfile(accessToken: string): Promise<{ userId: string; username: string }>;
   subscribeToComments(userId: string, accessToken: string): Promise<void>;
+  hasCommentSubscription(userId: string, accessToken: string): Promise<boolean>;
   listReels(userId: string, accessToken: string): Promise<Array<{ externalId: string; caption: string; permalink: string; thumbnailUrl: string | null; publishedAt: string }>>;
   listComments(mediaId: string, accessToken: string, since: Date, limit: number): Promise<Array<{ commentId: string; commenterScopedId: string; commenterUsername: string; text: string; publishedAt: string }>>;
   getMediaInsights(mediaId: string, accessToken: string): Promise<{ comments: number; views: number; reach: number; shares: number; saved: number; totalInteractions: number; raw: Record<string, number> }>;

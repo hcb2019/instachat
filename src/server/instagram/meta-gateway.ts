@@ -105,6 +105,14 @@ export class MetaInstagramGateway implements InstagramGateway {
     await metaFetch(`/${encodeURIComponent(userId)}/subscribed_apps?subscribed_fields=comments`, { method: "POST", accessToken });
   }
 
+  async hasCommentSubscription(userId: string, accessToken: string) {
+    const result = await metaFetch<{ data?: Array<{ subscribed_fields?: string[] }> }>(
+      `/${encodeURIComponent(userId)}/subscribed_apps`,
+      { method: "GET", accessToken },
+    );
+    return (result.data ?? []).some((subscription) => subscription.subscribed_fields?.includes("comments"));
+  }
+
   async listReels(_userId: string, accessToken: string) {
     const items: Array<{ externalId: string; caption: string; permalink: string; thumbnailUrl: string | null; publishedAt: string }> = [];
     // Instagram Login resolves the authenticated professional account through
