@@ -1,10 +1,19 @@
 import "server-only";
 import { env } from "@/lib/env";
 import type { InstagramGateway, InstagramTokenResult } from "@/server/instagram/types";
+import { normalizeMetaPagingPath } from "@/server/instagram/pagination";
 
 export class MetaApiError extends Error {
   constructor(message: string, readonly status: number, readonly code?: string, readonly retryAfter?: number, readonly ambiguous = false) { super(message); }
   get transient() { return this.status === 429 || this.status >= 500; }
+}
+
+function safeMetaMessage(message?: string) {
+  if (!message) return "A Meta rejeitou a solicitação.";
+  return message
+    .replace(/access[_ -]?token[=: ]+\S+/gi, "access token [oculto]")
+    .replace(/[A-Za-z0-9_-]{80,}/g, "[dado oculto]")
+    .slice(0, 300);
 }
 
 async function metaFetch<T>(path: string, options: RequestInit & { accessToken?: string }, attempt = 1): Promise<T> {
@@ -18,7 +27,7 @@ async function metaFetch<T>(path: string, options: RequestInit & { accessToken?:
   if (response.ok) return await response.json() as T;
   const retryAfter = Number(response.headers.get("retry-after") ?? 0) || undefined;
   const body = await response.json().catch(() => ({})) as { error?: { message?: string; code?: number } };
-  const error = new MetaApiError("A Meta rejeitou a solicitação.", response.status, String(body.error?.code ?? "HTTP_ERROR"), retryAfter);
+  const error = new MetaApiError(safeMetaMessage(body.error?.message), response.status, String(body.error?.code ?? "HTTP_ERROR"), retryAfter);
   if (error.transient && attempt < 3) {
     const delay = Math.min((retryAfter ?? 2 ** attempt) * 1000 + Math.random() * 250, 10_000);
     await new Promise((resolve) => setTimeout(resolve, delay));
@@ -51,7 +60,7 @@ export class MetaInstagramGateway implements InstagramGateway {
     while (path && items.length < 250) {
       const data: { data: Array<{ id: string; caption?: string; media_product_type?: string; permalink: string; thumbnail_url?: string; timestamp: string }>; paging?: { next?: string } } = await metaFetch(path, { accessToken });
       for (const item of data.data) if (item.media_product_type === "REELS") items.push({ externalId: item.id, caption: item.caption ?? "Reel sem legenda", permalink: item.permalink, thumbnailUrl: item.thumbnail_url ?? null, publishedAt: item.timestamp });
-      path = data.paging?.next ? new URL(data.paging.next).pathname + new URL(data.paging.next).search : null;
+      path = data.paging?.next ? normalizeMetaPagingPath(data.paging.next, env.META_GRAPH_API_VERSION) : null;
     }
     return items;
   }
@@ -68,7 +77,7 @@ export class MetaInstagramGateway implements InstagramGateway {
         items.push({ commentId: item.id, commenterScopedId: item.from.id, commenterUsername: item.from.username ?? "instagram_user", text: item.text, publishedAt });
         if (items.length >= limit) break;
       }
-      path = data.paging?.next ? new URL(data.paging.next).pathname + new URL(data.paging.next).search : null;
+      path = data.paging?.next ? normalizeMetaPagingPath(data.paging.next, env.META_GRAPH_API_VERSION) : null;
     }
     return items;
   }
