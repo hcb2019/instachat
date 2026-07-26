@@ -36,6 +36,12 @@ test("follows the Instagram connection guide and persists progress", async ({ pa
   await page.goto("/connection-guide");
   await expect(page.getByRole("heading", { name: /Da conta profissional/ })).toBeVisible();
   await expect(page.getByText("8 etapas verificáveis", { exact: true })).toBeVisible();
+  const ownAccountRoute = page.getByRole("button", { name: /Minha própria conta/ });
+  await expect(ownAccountRoute).toHaveAttribute("aria-pressed", "false");
+  await ownAccountRoute.click();
+  await expect(ownAccountRoute).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText(/Caminho selecionado:/)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Abrir Meus Apps na Meta" }).first()).toHaveAttribute("href", "https://developers.facebook.com/apps/");
   await expect(page.getByText("Valid OAuth Redirect URI", { exact: true }).first()).toBeVisible();
   await page.getByRole("button", { name: "Marcar como concluída" }).first().click();
   await expect(page.getByRole("button", { name: "Etapa concluída" }).first()).toBeVisible();

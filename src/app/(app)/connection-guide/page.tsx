@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AlertTriangle, ArrowRight, AtSign, BookOpen, Boxes, Check, CheckCircle2, ChevronRight, CircleHelp, Clock3, Code2, ExternalLink, FileKey2, Globe2, KeyRound, LockKeyhole, MessageCircle, Radio, Rocket, ShieldCheck, TestTube2, UserRoundCheck, Webhook } from "lucide-react";
 import { Badge, Card } from "@/components/ui";
-import { CopyValue, GuideProgress, StepComplete } from "@/features/integration-guide/guide-client";
+import { CopyValue, GuideProgress, GuideRouteChoice, StepComplete } from "@/features/integration-guide/guide-client";
 import { env, isDemoMode } from "@/lib/env";
 import { getConnection } from "@/server/data";
 import type { IntegrationGuideStep } from "@/types/integration-guide";
@@ -16,6 +16,7 @@ const steps: IntegrationGuideStep[] = [
     tasks: ["No Instagram, abra Configurações e atividade.", "Entre em Tipo e ferramentas da conta.", "Escolha Mudar para conta profissional e selecione Business ou Creator.", "Mantenha a conta pública durante a configuração e confirme que você consegue publicar/comentar normalmente."],
     checks: ["Conta Business ou Creator", "Login e senha disponíveis", "Autenticação em dois fatores recomendada"],
     warning: "Instagram API with Instagram Login não exige uma Página do Facebook vinculada.",
+    action: { label: "Ver como preparar a conta no Instagram", href: "https://www.facebook.com/help/instagram/138925576505882?locale=pt_BR", external: true },
     reference: { label: "Visão geral oficial da Instagram API", href: META_DOCS }, illustration: "account",
   },
   {
@@ -24,6 +25,7 @@ const steps: IntegrationGuideStep[] = [
     tasks: ["Acesse Meta for Developers com uma conta autorizada a administrar o negócio.", "Abra Meus Apps e escolha Criar app.", "Escolha o caso de uso relacionado ao Instagram; se o painel pedir um tipo de app, use Business.", "Informe nome público, e-mail de contato e associe um portfólio empresarial quando a Meta solicitar.", "No painel do app, adicione Instagram API e selecione API setup with Instagram login."],
     checks: ["App criado", "Instagram API adicionada", "Instagram Login selecionado"],
     warning: "Não escolha o fluxo antigo “Instagram API with Facebook Login”; ele exige Página do Facebook e usa escopos diferentes.",
+    action: { label: "Abrir Meus Apps na Meta", href: "https://developers.facebook.com/apps/", external: true },
     reference: { label: "Abrir Meus Apps na Meta", href: "https://developers.facebook.com/apps/" }, illustration: "app",
   },
   {
@@ -32,6 +34,7 @@ const steps: IntegrationGuideStep[] = [
     tasks: ["Abra a configuração de Business Login for Instagram.", "Em Valid OAuth Redirect URIs, adicione a URL de callback abaixo.", "Cadastre também as URLs de desautorização e exclusão de dados.", "Salve, recarregue a página e confirme que as três URLs continuam cadastradas."],
     checks: ["Callback OAuth salvo", "Desautorização cadastrada", "Exclusão de dados cadastrada"],
     warning: "Use o domínio definitivo HTTPS. localhost serve para a demonstração do painel, mas não para a conexão real da Meta.",
+    action: { label: "Abrir o painel de aplicativos da Meta", href: "https://developers.facebook.com/apps/", external: true },
     reference: { label: "Documentação oficial do login", href: "https://www.postman.com/meta/instagram/folder/23987686-98bfade9-3736-4738-8b4a-f56d6534f6de" }, illustration: "oauth",
   },
   {
@@ -40,6 +43,7 @@ const steps: IntegrationGuideStep[] = [
     tasks: ["No produto Instagram, abra Webhooks/Configure webhooks.", "Cole a Callback URL mostrada abaixo.", "Use exatamente o mesmo valor de META_WEBHOOK_VERIFY_TOKEN configurado no servidor.", "Clique em verificar e salvar.", "Assine o campo comments. live_comments é opcional e não faz parte deste MVP."],
     checks: ["Challenge aprovado", "Campo comments assinado", "Endpoint HTTPS público"],
     warning: "O Verify Token não é o App Secret. Crie uma frase aleatória exclusiva; o App Secret nunca deve ser colado nesse campo.",
+    action: { label: "Abrir o painel de webhooks da Meta", href: "https://developers.facebook.com/apps/", external: true },
     reference: { label: "Comentários e webhooks — Meta", href: `${META_DOCS}?entity=request-23987686-5216d45b-1e24-4bff-bdc8-e1bf15358477` }, illustration: "webhook",
   },
   {
@@ -48,6 +52,7 @@ const steps: IntegrationGuideStep[] = [
     tasks: ["Na Meta, copie o Instagram App ID e revele o Instagram App Secret.", "No provedor de deploy, crie as variáveis indicadas no quadro.", "Gere TOKEN_ENCRYPTION_KEY e WORKER_SECRET com valores aleatórios fortes.", "Defina DEMO_MODE=false e APP_ORIGIN para o domínio HTTPS sem barra final.", "Faça um novo deploy depois de salvar as variáveis."],
     checks: ["App ID configurado", "Segredos somente no servidor", "Novo deploy concluído"],
     warning: "Nunca envie App Secret, token de acesso ou chave de criptografia por print, GitHub Issue, chat público ou código do navegador.",
+    action: { label: "Abrir variáveis de ambiente na Vercel", href: "https://vercel.com/hernando-candidos-projects/instachat/settings/environment-variables", external: true },
     reference: { label: "Boas práticas da Plataforma Meta", href: "https://developers.facebook.com/terms/" }, illustration: "environment",
   },
   {
@@ -56,6 +61,7 @@ const steps: IntegrationGuideStep[] = [
     tasks: ["Adicione o administrador/desenvolvedor ao app quando necessário.", "Na configuração da Instagram API, adicione a conta profissional que será usada no teste.", "Entre no Instagram com essa conta e aceite qualquer convite pendente do app.", "Garanta que essa pessoa também controla a conta profissional escolhida.", "Mantenha o app em Development enquanto testa sua própria conta."],
     checks: ["Pessoa tem função no app", "Conta profissional adicionada", "Convite aceito"],
     warning: "Standard Access atende contas que você possui ou administra e adicionou ao App Dashboard. Contas de clientes exigem Advanced Access.",
+    action: { label: "Abrir funções e contas do aplicativo", href: "https://developers.facebook.com/apps/", external: true },
     reference: { label: "Access Levels — documentação oficial", href: `${META_DOCS}?entity=request-23987686-26e7999c-fc7e-44c8-8f71-ab2de8d35c32` }, illustration: "connect",
   },
   {
@@ -64,6 +70,7 @@ const steps: IntegrationGuideStep[] = [
     tasks: ["No InstaChat, abra Integração e clique em Conectar Instagram.", "Na tela do Instagram, escolha a conta profissional e conceda os três escopos solicitados.", "Volte ao InstaChat e confirme status Conectada e Reels sincronizados.", "Crie uma automação de teste com palavra exclusiva e mantenha-a ativa.", "Com uma segunda conta, comente exatamente a palavra no Reel.", "Confira resposta pública, Solicitações do Direct, Histórico do InstaChat e clique rastreado."],
     checks: ["OAuth concluiu", "Reels sincronizados", "Webhook recebido", "Resposta pública e DM confirmadas"],
     warning: "Não teste comentando com a própria conta profissional: comentários próprios são ignorados para impedir loops.",
+    action: { label: "Abrir a integração no InstaChat", href: "/settings" },
     reference: { label: "Private Replies — Meta", href: "https://www.postman.com/meta/instagram/request/23987686-189d7215-22b3-403f-b2f5-a46c7e66a514" }, illustration: "test",
   },
   {
@@ -72,6 +79,7 @@ const steps: IntegrationGuideStep[] = [
     tasks: ["Template GitHub: cada pessoa faz deploy e cria o próprio Meta App; publique apenas .env.example, nunca credenciais.", "Uso próprio: mantenha Standard Access e somente contas administradas por você.", "SaaS: solicite Advanced Access para basic, manage_comments e manage_insights.", "Prepare política de privacidade, exclusão de dados, termos, domínio verificado e screencast mostrando cada permissão em uso.", "Conclua verificação empresarial e Data Use Checkup quando solicitado pela Meta.", "Antes de abrir a terceiros, execute novo threat model, multi-tenancy, cobrança e suporte operacional."],
     checks: ["Modelo de distribuição escolhido", "Documentos públicos revisados", "App Review planejado quando necessário"],
     warning: "Colocar o app em modo Live não substitui Advanced Access. Sem aprovação, pessoas fora das funções/contas autorizadas não conseguirão usar as permissões avançadas.",
+    action: { label: "Abrir documentação do App Review", href: "https://developers.facebook.com/docs/app-review/", external: true },
     reference: { label: "App Review — Meta for Developers", href: "https://developers.facebook.com/docs/app-review/" }, illustration: "review",
   },
 ];
@@ -111,7 +119,13 @@ export default async function ConnectionGuidePage() {
       <div className="guide-status-card"><div className={connection ? "guide-status-icon connected" : "guide-status-icon"}>{connection ? <CheckCircle2 size={24} /> : <AtSign size={24} />}</div><p className="eyebrow">Estado atual</p><h2>{connection ? `@${connection.username}` : "Conta não conectada"}</h2><p>{isDemoMode ? "Você está vendo uma conexão simulada. Siga o guia antes de desativar o modo demo." : connection ? "A conexão está salva. Use o teste controlado para validar os eventos." : "Complete as etapas e volte à Integração para autorizar a conta."}</p><Link href="/settings">Abrir integração <ArrowRight size={14} /></Link></div>
     </header>
 
-    <section className="guide-route-choice" aria-labelledby="route-title"><div><p className="eyebrow">Antes de começar</p><h2 id="route-title">Qual caminho você vai seguir?</h2></div><article><span>01</span><div><Badge tone="success">Mais simples</Badge><h3>Minha conta ou template</h3><p>Standard Access. Cada instalação conecta apenas contas próprias/adicionadas ao app.</p></div></article><article><span>02</span><div><Badge tone="warning">Negócio SaaS</Badge><h3>Contas de clientes</h3><p>Advanced Access, App Review, verificação empresarial e operação de privacidade.</p></div></article></section>
+    <GuideRouteChoice />
+
+    <section className="guide-how-to" aria-label="Como usar este guia">
+      <div><span>1</span><p><strong>Escolha seu caminho</strong>Clique em uma das duas opções acima.</p></div>
+      <div><span>2</span><p><strong>Faça uma etapa por vez</strong>Use o botão “Abrir…” de cada etapa para chegar à tela correta.</p></div>
+      <div><span>3</span><p><strong>Confirme e avance</strong>Marque a etapa como concluída somente depois de conferir os itens.</p></div>
+    </section>
 
     <GuideProgress stepIds={steps.map(({ id }) => id)} />
 
@@ -119,9 +133,9 @@ export default async function ConnectionGuidePage() {
 
     <section className="guide-prerequisites"><div><CheckCircle2 size={17} /><span>Conta <strong>Business ou Creator</strong></span></div><div><Globe2 size={17} /><span>Domínio público com <strong>HTTPS</strong></span></div><div><Code2 size={17} /><span>Acesso ao <strong>deploy e variáveis</strong></span></div><div><LockKeyhole size={17} /><span>Conta Meta com <strong>2FA</strong></span></div></section>
 
-    <section className="guide-timeline" aria-label="Passo a passo da integração">{steps.map((step) => <article className="guide-step" id={step.id} key={step.id}>
+    <section className="guide-timeline" id="guide-start" aria-label="Passo a passo da integração">{steps.map((step) => <article className="guide-step" id={step.id} key={step.id}>
       <aside><span>{step.number}</span><i /></aside>
-      <div className="guide-step-main"><header><div><PhaseBadge phase={step.phase} /><h2>{step.title}</h2><p>{step.summary}</p></div><div className="guide-step-meta"><span><Clock3 size={13} /> {step.duration}</span><span><Globe2 size={13} /> {step.location}</span></div></header>
+      <div className="guide-step-main"><header><div><PhaseBadge phase={step.phase} /><h2>{step.title}</h2><p>{step.summary}</p></div><div className="guide-step-meta"><span><Clock3 size={15} /> {step.duration}</span><span><Globe2 size={15} /> Onde: {step.location}</span><a className="guide-step-action" href={step.action.href} target={step.action.external ? "_blank" : undefined} rel={step.action.external ? "noopener noreferrer" : undefined}>{step.action.label}{step.action.external ? <ExternalLink size={15} /> : <ArrowRight size={15} />}</a></div></header>
         <div className="guide-step-grid"><div><h3>O que fazer</h3><ol>{step.tasks.map((task) => <li key={task}><span>{task}</span></li>)}</ol></div><div className="guide-step-side"><MetaIllustration kind={step.illustration} /><div className="guide-verification"><h3>Antes de avançar</h3>{step.checks.map((check) => <p key={check}><Check size={12} /> {check}</p>)}</div></div></div>
         {step.id === "oauth" && <div className="guide-url-stack"><UrlField label="Valid OAuth Redirect URI" value={urls.oauth} /><UrlField label="Deauthorize Callback URL" value={urls.deauthorize} /><UrlField label="Data Deletion Request URL" value={urls.deletion} /><UrlField label="Privacy Policy URL" value={urls.privacy} /></div>}
         {step.id === "webhook" && <div className="guide-url-stack"><UrlField label="Callback URL" value={urls.webhook} /><div className="guide-token-hint"><KeyRound size={15} /><span>Crie o valor de <code>META_WEBHOOK_VERIFY_TOKEN</code> no seu gerenciador de segredos e cole o mesmo texto na Meta.</span></div></div>}

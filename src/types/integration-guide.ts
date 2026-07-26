@@ -11,6 +11,7 @@ export interface IntegrationGuideStep {
   tasks: string[];
   checks: string[];
   warning?: string;
+  action: { label: string; href: string; external?: boolean };
   reference?: { label: string; href: string };
   illustration: "account" | "app" | "oauth" | "webhook" | "environment" | "connect" | "test" | "review";
 }
