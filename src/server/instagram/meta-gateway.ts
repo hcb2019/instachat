@@ -144,14 +144,45 @@ export class MetaInstagramGateway implements InstagramGateway {
     const items: Array<{ commentId: string; commenterScopedId: string; commenterUsername: string; text: string; publishedAt: string }> = [];
     let path: string | null = `/${encodeURIComponent(mediaId)}/comments?fields=id,from,text,timestamp&limit=100`;
     while (path && items.length < limit) {
-      const data: { data: Array<{ id: string; from?: { id?: string; username?: string }; text?: string; timestamp?: string }>; paging?: { next?: string } } = await metaFetch(path, { accessToken });
+      const data: {
+        data: Array<{
+          id: string;
+          from?: { id?: string; username?: string };
+          username?: string;
+          text?: string;
+          timestamp?: string;
+        }>;
+        paging?: { next?: string };
+      } = await metaFetch(path, { accessToken });
+      let accepted = 0;
       for (const item of data.data) {
         const publishedAt = item.timestamp ?? new Date().toISOString();
         if (new Date(publishedAt) < since) return items;
-        if (!item.from?.id || !item.text) continue;
-        items.push({ commentId: item.id, commenterScopedId: item.from.id, commenterUsername: item.from.username ?? "instagram_user", text: item.text, publishedAt });
+        if (!item.text) continue;
+
+        // Depending on the Instagram Login response and app access level, Meta
+        // may omit the commenter's scoped ID while still returning the username.
+        // Keep a stable, non-secret deduplication key instead of silently
+        // discarding an otherwise valid comment.
+        const commenterUsername = item.from?.username?.trim() || item.username?.trim() || "instagram_user";
+        const normalizedUsername = commenterUsername.normalize("NFKC").toLocaleLowerCase("en-US");
+        const commenterScopedId = item.from?.id
+          ?? (normalizedUsername !== "instagram_user" ? `username:${normalizedUsername}` : `comment:${item.id}`);
+
+        items.push({
+          commentId: item.id,
+          commenterScopedId,
+          commenterUsername,
+          text: item.text,
+          publishedAt,
+        });
+        accepted += 1;
         if (items.length >= limit) break;
       }
+      console.info("Instagram comments page read", {
+        received: data.data.length,
+        accepted,
+      });
       path = data.paging?.next ? normalizeMetaPagingPath(data.paging.next, env.META_GRAPH_API_VERSION) : null;
     }
     return items;
