@@ -46,6 +46,49 @@ describe("Meta webhooks", () => {
     }]);
   });
 
+  it("accepts comment values sent as an array with optional author and media fields omitted", () => {
+    const compactPayload = JSON.stringify({
+      object: "instagram",
+      entry: [{
+        id: 12345,
+        field: "comments",
+        value: [{
+          id: 67890,
+          text: 1991,
+          media: { id: 54321 },
+        }],
+      }],
+    });
+
+    expect(parseCommentEvents(compactPayload)).toEqual([{
+      instagramUserId: "12345",
+      commentId: "67890",
+      mediaId: "54321",
+      mediaProductType: "UNKNOWN",
+      commenterScopedId: "comment:67890",
+      commenterUsername: "instagram_user",
+      text: "1991",
+      isSelf: false,
+    }]);
+  });
+
+  it("ignores unrelated webhook fields without rejecting the delivery", () => {
+    const messagingPayload = JSON.stringify({
+      object: "instagram",
+      entry: [{
+        id: "ig-owner",
+        field: "messages",
+        value: {
+          id: "message-1",
+          text: "oi",
+          media: { id: "reel-1" },
+        },
+      }],
+    });
+
+    expect(parseCommentEvents(messagingPayload)).toEqual([]);
+  });
+
   it("identifies comments made by the connected account", () => {
     const selfPayload = JSON.stringify({
       object: "instagram",

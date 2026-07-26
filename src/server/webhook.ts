@@ -4,39 +4,39 @@ import { z } from "zod";
 import { constantTimeTextEqual } from "@/server/crypto";
 import type { InstagramCommentEvent } from "@/server/instagram/types";
 
-const commentValueSchema = z.object({
-  id: z.string(),
-  text: z.string().max(2200),
-  from: z.object({
-    id: z.string().optional(),
-    username: z.string().max(80),
-    self_ig_scoped_id: z.string().optional(),
-  }),
-  media: z.object({
-    id: z.string(),
-    media_product_type: z.string(),
-  }),
-});
+const metaIdSchema = z.union([z.string(), z.number().transform(String)]);
 
-const commentChangeSchema = z.object({
-  field: z.literal("comments"),
-  value: commentValueSchema,
-});
+const commentValueSchema = z.object({
+  id: metaIdSchema,
+  text: z.union([z.string(), z.number().transform(String)]).default(""),
+  from: z.object({
+    id: metaIdSchema.optional(),
+    username: z.string().max(80).optional(),
+    self_ig_scoped_id: metaIdSchema.optional(),
+  }).optional(),
+  media: z.object({
+    id: metaIdSchema,
+    media_product_type: z.string().optional(),
+  }),
+}).passthrough();
+
+const commentValuesSchema = z.union([
+  commentValueSchema,
+  z.array(commentValueSchema),
+]);
 
 const webhookSchema = z.object({
-  object: z.literal("instagram"),
-  entry: z.array(z.union([
-    z.object({
-      id: z.string(),
-      changes: z.array(commentChangeSchema),
-    }),
-    z.object({
-      id: z.string(),
-      field: z.literal("comments"),
-      value: commentValueSchema,
-    }),
-  ])),
-});
+  object: z.enum(["instagram", "instagram_business_account"]),
+  entry: z.array(z.object({
+    id: metaIdSchema,
+    field: z.string().optional(),
+    value: z.unknown().optional(),
+    changes: z.array(z.object({
+      field: z.string(),
+      value: z.unknown(),
+    }).passthrough()).optional(),
+  }).passthrough()),
+}).passthrough();
 
 export function verifyWebhookSignature(rawBody: string, signature: string | null, secret: string) {
   if (!signature?.startsWith("sha256=")) return false;
@@ -47,21 +47,34 @@ export function verifyWebhookSignature(rawBody: string, signature: string | null
 export function parseCommentEvents(rawBody: string): InstagramCommentEvent[] {
   const payload = webhookSchema.parse(JSON.parse(rawBody));
   return payload.entry.flatMap((entry) => {
-    const values = "changes" in entry
-      ? entry.changes.map((change) => change.value)
-      : [entry.value];
+    const directResult = entry.field === "comments"
+      ? commentValuesSchema.safeParse(entry.value)
+      : null;
+    const directValues = directResult?.success
+      ? (Array.isArray(directResult.data) ? directResult.data : [directResult.data])
+      : [];
+    const changedValues = (entry.changes ?? [])
+      .filter((change) => change.field === "comments")
+      .flatMap((change) => {
+        const result = commentValuesSchema.safeParse(change.value);
+        if (!result.success) return [];
+        return Array.isArray(result.data) ? result.data : [result.data];
+      });
+    const values = [...directValues, ...changedValues];
 
     return values.map((value) => ({
       instagramUserId: entry.id,
       commentId: value.id,
       mediaId: value.media.id,
-      mediaProductType: value.media.media_product_type,
-      commenterScopedId: value.from.id
-        ?? `username:${value.from.username.normalize("NFKC").toLocaleLowerCase("en-US")}`,
-      commenterUsername: value.from.username,
+      mediaProductType: value.media.media_product_type ?? "UNKNOWN",
+      commenterScopedId: value.from?.id
+        ?? (value.from?.username
+          ? `username:${value.from.username.normalize("NFKC").toLocaleLowerCase("en-US")}`
+          : `comment:${value.id}`),
+      commenterUsername: value.from?.username ?? "instagram_user",
       text: value.text,
-      isSelf: Boolean(value.from.self_ig_scoped_id)
-        || (value.from.id !== undefined && value.from.id === entry.id),
+      isSelf: Boolean(value.from?.self_ig_scoped_id)
+        || (value.from?.id !== undefined && value.from.id === entry.id),
     }));
   });
 }
