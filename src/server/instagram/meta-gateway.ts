@@ -48,6 +48,40 @@ function isUnsupportedMediaEdge(error: unknown) {
     && error.message.toLowerCase().includes("/media");
 }
 
+type MetaMediaItem = {
+  id: string;
+  caption?: string;
+  media_product_type?: string;
+  permalink: string;
+  thumbnail_url?: string;
+  timestamp: string;
+};
+
+function mapReels(data: MetaMediaItem[]) {
+  return data
+    .filter((item) => item.media_product_type === "REELS")
+    .map((item) => ({
+      externalId: item.id,
+      caption: item.caption ?? "Reel sem legenda",
+      permalink: item.permalink,
+      thumbnailUrl: item.thumbnail_url ?? null,
+      publishedAt: item.timestamp,
+    }));
+}
+
+async function listReelsFromExpandedProfile(accessToken: string) {
+  const mediaFields = "id,caption,media_product_type,media_type,permalink,thumbnail_url,timestamp";
+  const fields = encodeURIComponent(`media.limit(50){${mediaFields}}`);
+  let data: { media?: { data?: MetaMediaItem[] } };
+  try {
+    data = await metaFetch(`/me?fields=${fields}`, { accessToken });
+  } catch (error) {
+    if (!isUnsupportedMediaEdge(error)) throw error;
+    data = await metaFetch(`/me?fields=${fields}`, { accessToken, unversioned: true });
+  }
+  return mapReels(data.media?.data ?? []);
+}
+
 export class MetaInstagramGateway implements InstagramGateway {
   async exchangeCode(code: string, redirectUri: string): Promise<InstagramTokenResult> {
     if (!env.META_APP_ID || !env.META_APP_SECRET) throw new Error("Meta não configurada.");
@@ -79,15 +113,20 @@ export class MetaInstagramGateway implements InstagramGateway {
     let path: string | null = "/me/media?fields=id,caption,media_product_type,media_type,permalink,thumbnail_url,timestamp&limit=50";
     let unversioned = false;
     while (path && items.length < 250) {
-      let data: { data: Array<{ id: string; caption?: string; media_product_type?: string; permalink: string; thumbnail_url?: string; timestamp: string }>; paging?: { next?: string } };
+      let data: { data: MetaMediaItem[]; paging?: { next?: string } };
       try {
         data = await metaFetch(path, { accessToken, unversioned });
       } catch (error) {
         if (unversioned || items.length > 0 || !isUnsupportedMediaEdge(error)) throw error;
         unversioned = true;
-        data = await metaFetch(path, { accessToken, unversioned: true });
+        try {
+          data = await metaFetch(path, { accessToken, unversioned: true });
+        } catch (fallbackError) {
+          if (!isUnsupportedMediaEdge(fallbackError)) throw fallbackError;
+          return listReelsFromExpandedProfile(accessToken);
+        }
       }
-      for (const item of data.data) if (item.media_product_type === "REELS") items.push({ externalId: item.id, caption: item.caption ?? "Reel sem legenda", permalink: item.permalink, thumbnailUrl: item.thumbnail_url ?? null, publishedAt: item.timestamp });
+      items.push(...mapReels(data.data));
       path = data.paging?.next ? normalizeMetaPagingPath(data.paging.next, env.META_GRAPH_API_VERSION) : null;
     }
     return items;

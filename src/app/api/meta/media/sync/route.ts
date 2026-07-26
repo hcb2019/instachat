@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       && error.code === "2500"
       && error.message.toLowerCase().includes("/media");
     const diagnostic = unsupportedMedia
-      ? "A Meta autenticou a conta, mas não liberou a leitura das mídias para este token. No painel da Meta, adicione a permissão instagram_business_basic e depois clique em “Reautorizar Instagram” no InstaChat."
+      ? "A Meta autenticou a conta, mas não expôs a coleção de mídias para este token. Confira se o Client ID configurado abaixo é o “ID do app do Instagram” — e não o ID principal do app Meta — e então reautorize a conta."
       : error instanceof MetaApiError
         ? `Meta (${error.code ?? error.status}): ${error.message}`
       : error instanceof Error
