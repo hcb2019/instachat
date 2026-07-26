@@ -21,6 +21,17 @@ test("shows responsive navigation on a small viewport", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Automações" })).toBeVisible();
 });
 
+test("selects a Reel from the visual gallery", async ({ page }) => {
+  await page.goto("/automations/new");
+  const options = page.locator(".reel-option");
+  await expect(options).toHaveCount(3);
+  await options.nth(1).click();
+  await expect(options.nth(1).getByRole("radio")).toBeChecked();
+  await page.getByRole("textbox", { name: "Buscar Reel pela legenda" }).fill("Checklist");
+  await expect(page.locator(".reel-option")).toHaveCount(1);
+  await expect(page.getByText("1 de 3 Reels")).toBeVisible();
+});
+
 test("explores Radar evidence and creates a reviewable draft", async ({ page }) => {
   await page.goto("/radar");
   await expect(page.getByRole("heading", { name: /O que sua audiência/ })).toBeVisible();
