@@ -109,7 +109,7 @@ function PermissionTable() {
     <div><code>instagram_business_basic</code><span>Conta profissional e Reels</span><b>Usada</b></div>
     <div><code>instagram_business_manage_comments</code><span>Comentários, resposta pública e private reply</span><b>Usada</b></div>
     <div><code>instagram_business_manage_insights</code><span>Métricas usadas pelo Radar</span><b>Usada</b></div>
-    <div className="muted"><code>instagram_business_manage_messages</code><span>Pode aparecer no pacote da Meta</span><b>Não solicitada</b></div>
+    <div><code>instagram_business_manage_messages</code><span>Compatibilidade do envio da mensagem privada</span><b>Usada</b></div>
   </div>;
 }
 

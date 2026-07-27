@@ -14,7 +14,7 @@ export async function GET() {
   url.search = new URLSearchParams({
     enable_fb_login: "0", force_authentication: "1", client_id: env.META_APP_ID,
     redirect_uri: redirectUri, response_type: "code",
-    scope: "instagram_business_basic,instagram_business_manage_comments,instagram_business_manage_insights", state,
+    scope: "instagram_business_basic,instagram_business_manage_comments,instagram_business_manage_messages,instagram_business_manage_insights", state,
   }).toString();
   const response = NextResponse.redirect(url);
   response.cookies.set("meta_oauth_state", state, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/api/meta/oauth/callback", maxAge: 600 });

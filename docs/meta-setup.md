@@ -20,9 +20,10 @@ Não use "Auxiliar de integração de API" nem "Configuração com Facebook Logi
 
 - `instagram_business_basic`
 - `instagram_business_manage_comments`
+- `instagram_business_manage_messages`
 - `instagram_business_manage_insights`
 
-A Meta pode adicionar `instagram_business_manage_messages` ao pacote do caso de uso. O InstaChat não solicita essa permissão durante o login.
+O InstaChat solicita `instagram_business_manage_messages` por compatibilidade com aplicativos Meta que exigem essa permissão no endpoint usado para a private reply.
 
 ## Webhook
 

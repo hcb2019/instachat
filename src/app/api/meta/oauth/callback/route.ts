@@ -21,6 +21,9 @@ export async function GET(request: NextRequest) {
     if (token.permissions && !token.permissions.includes("instagram_business_manage_comments")) {
       return NextResponse.redirect(`${env.APP_ORIGIN}/settings?error=missing_comments`);
     }
+    if (token.permissions && !token.permissions.includes("instagram_business_manage_messages")) {
+      return NextResponse.redirect(`${env.APP_ORIGIN}/settings?error=missing_messages`);
+    }
     const profile = await gateway.getProfile(token.accessToken);
     await gateway.subscribeToComments(profile.userId, token.accessToken);
     const encrypted = encryptSecret(token.accessToken);

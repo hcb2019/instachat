@@ -85,7 +85,9 @@ async function processEvent(eventId: string) {
   } catch (error) {
     publicStatus = error instanceof MetaApiError && error.ambiguous ? "ambiguous" : "failed";
     errorCode = error instanceof MetaApiError ? error.code ?? `HTTP_${error.status}` : "PUBLIC_REPLY_FAILED";
-    errorMessage = "Não foi possível confirmar a resposta pública.";
+    errorMessage = error instanceof MetaApiError
+      ? `Resposta pública: ${error.message}`
+      : "Não foi possível confirmar a resposta pública.";
   }
   try {
     const trackingUrl = `${env.APP_ORIGIN}/r/${token}`;
@@ -94,7 +96,9 @@ async function processEvent(eventId: string) {
   } catch (error) {
     dmStatus = error instanceof MetaApiError && error.ambiguous ? "ambiguous" : "failed";
     errorCode ??= error instanceof MetaApiError ? error.code ?? `HTTP_${error.status}` : "PRIVATE_REPLY_FAILED";
-    errorMessage ??= "Não foi possível confirmar a mensagem privada.";
+    errorMessage ??= error instanceof MetaApiError
+      ? `Mensagem privada: ${error.message}`
+      : "Não foi possível confirmar a mensagem privada.";
   }
   const status = publicStatus === "succeeded" && dmStatus === "succeeded" ? "succeeded" : publicStatus === "failed" && dmStatus === "failed" ? "failed" : publicStatus === "ambiguous" || dmStatus === "ambiguous" ? "ambiguous" : "partial";
   const completedAt = new Date().toISOString();

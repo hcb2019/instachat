@@ -7,7 +7,7 @@ export class MockInstagramGateway implements InstagramGateway {
       accessToken: "demo-token",
       userId: demoStore().connection.instagramUserId,
       expiresIn: 5_184_000,
-      permissions: ["instagram_business_basic", "instagram_business_manage_comments", "instagram_business_manage_insights"],
+      permissions: ["instagram_business_basic", "instagram_business_manage_comments", "instagram_business_manage_messages", "instagram_business_manage_insights"],
     };
   }
   async getProfile() { return { userId: demoStore().connection.instagramUserId, username: demoStore().connection.username }; }
