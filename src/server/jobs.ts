@@ -33,6 +33,101 @@ export async function processQueueBatch(batchSize = 10) {
   return { processed };
 }
 
+export async function retryPrivateReply(ownerId: string, runId: string) {
+  if (isDemoMode) return { sent: true };
+  const supabase = createSupabaseAdminClient();
+  const { data: run } = await supabase
+    .from("automation_runs")
+    .select("*")
+    .eq("id", runId)
+    .eq("owner_id", ownerId)
+    .maybeSingle();
+  if (!run) throw new Error("Execução não encontrada.");
+  if (run.dm_status !== "failed") throw new Error("A DM desta execução não está disponível para reenvio.");
+  if (Date.now() - new Date(run.created_at).getTime() > 7 * 24 * 60 * 60 * 1000) {
+    throw new Error("A janela de sete dias da Meta terminou.");
+  }
+
+  const { data: connection } = await supabase
+    .from("instagram_connections")
+    .select("*")
+    .eq("owner_id", ownerId)
+    .eq("status", "connected")
+    .maybeSingle();
+  if (!connection) throw new Error("Conexão do Instagram indisponível.");
+
+  const { token, hash } = createTrackingToken();
+  const attempts = Number(run.dm_attempts ?? 0) + 1;
+  const accessToken = decryptSecret({
+    ciphertext: connection.token_ciphertext,
+    iv: connection.token_iv,
+    tag: connection.token_tag,
+  });
+  const gateway = instagramGateway();
+
+  try {
+    const trackingUrl = `${env.APP_ORIGIN}/r/${token}`;
+    const reply = await gateway.sendPrivateReply(
+      connection.instagram_user_id,
+      run.comment_id,
+      `${run.dm_message_snapshot}\n\n${trackingUrl}`,
+      accessToken,
+    );
+    const status = run.public_reply_status === "succeeded"
+      ? "succeeded"
+      : run.public_reply_status === "ambiguous"
+        ? "ambiguous"
+        : "partial";
+    const { error } = await supabase
+      .from("automation_runs")
+      .update({
+        tracking_token_hash: hash,
+        dm_status: "succeeded",
+        dm_message_id: reply.messageId,
+        dm_attempts: attempts,
+        status,
+        error_code: null,
+        error_message: null,
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", run.id)
+      .eq("owner_id", ownerId);
+    if (error) {
+      throw new MetaApiError(
+        "A DM pode ter sido enviada, mas o histórico não confirmou a gravação.",
+        0,
+        "PERSISTENCE_AFTER_SEND",
+        undefined,
+        true,
+      );
+    }
+    return { sent: true };
+  } catch (error) {
+    const ambiguous = error instanceof MetaApiError && error.ambiguous;
+    const errorCode = error instanceof MetaApiError
+      ? error.code ?? `HTTP_${error.status}`
+      : "PRIVATE_REPLY_RETRY_FAILED";
+    const errorMessage = error instanceof MetaApiError
+      ? `Mensagem privada: ${error.message}`
+      : error instanceof Error
+        ? error.message
+        : "Não foi possível confirmar a mensagem privada.";
+    await supabase
+      .from("automation_runs")
+      .update({
+        dm_status: ambiguous ? "ambiguous" : "failed",
+        dm_attempts: attempts,
+        status: ambiguous ? "ambiguous" : run.public_reply_status === "succeeded" ? "partial" : "failed",
+        error_code: errorCode,
+        error_message: errorMessage.slice(0, 400),
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", run.id)
+      .eq("owner_id", ownerId);
+    throw error;
+  }
+}
+
 async function processEvent(eventId: string) {
   const supabase = createSupabaseAdminClient();
   const { data: event } = await supabase.from("comment_events").select("*").eq("id", eventId).single();

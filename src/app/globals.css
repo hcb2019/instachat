@@ -209,7 +209,7 @@ h1, h2, h3, p { margin-top: 0; }
 .filter-bar > span { margin-right: auto; font-weight: 700; }
 .filter-bar a { padding: 6px 9px; border-radius: 7px; }
 .filter-bar a.active { color: white; background: var(--ink); }
-.history-head, .history-row { display: grid; grid-template-columns: 1.25fr 1fr 110px 110px 120px 120px; align-items: center; gap: 12px; }
+.history-head, .history-row { display: grid; grid-template-columns: 1.25fr 1fr 100px 100px 120px 110px 130px; align-items: center; gap: 12px; }
 .history-row { min-height: 78px; padding: 14px 18px; border-top: 1px solid #ebe6dc; color: var(--muted); font-size: 10px; }
 .history-row strong, .history-row small { display: block; }
 .history-row strong { color: var(--ink); font-size: 12px; }
