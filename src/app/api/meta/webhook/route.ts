@@ -5,7 +5,7 @@ import { queueScheduledAudienceAnalyses } from "@/server/audience/jobs";
 import { parseCommentEvents, verifyWebhookSignature } from "@/server/webhook";
 
 export const runtime = "nodejs";
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -37,11 +37,24 @@ export async function POST(request: Request) {
 
   try {
     const result = await ingestEvents(events);
+    let processed = 0;
+    if (result.queued > 0) {
+      try {
+        const batch = await processQueueBatch(Math.min(result.queued, 10));
+        processed = batch.processed;
+      } catch (error) {
+        // The event is already durable. A later worker invocation can safely
+        // reclaim it after the queue visibility timeout.
+        console.error("Instagram webhook immediate processing failed", {
+          error: error instanceof Error ? error.message : "UnknownError",
+          queued: result.queued,
+        });
+      }
+    }
     after(async () => {
-      await processQueueBatch().catch(() => undefined);
       await queueScheduledAudienceAnalyses(20).catch(() => undefined);
     });
-    return Response.json(result, { headers: { "Cache-Control": "no-store" } });
+    return Response.json({ ...result, processed }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Instagram webhook ingestion failed", {
       error: error instanceof Error ? error.message : "UnknownError",
