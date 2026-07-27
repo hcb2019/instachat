@@ -48,6 +48,28 @@ function isUnsupportedMediaEdge(error: unknown) {
     && error.message.toLowerCase().includes("/media");
 }
 
+async function inspectCommentAccess(mediaId: string, accessToken: string) {
+  const [permissionsResult, mediaResult] = await Promise.allSettled([
+    metaFetch<{ data?: Array<{ permission?: string; status?: string }> }>(
+      "/me/permissions",
+      { accessToken },
+    ),
+    metaFetch<{ comments_count?: number }>(
+      `/${encodeURIComponent(mediaId)}?fields=comments_count`,
+      { accessToken },
+    ),
+  ]);
+  const grantedPermissions = permissionsResult.status === "fulfilled"
+    ? (permissionsResult.value.data ?? [])
+      .filter((item) => item.status === "granted" && item.permission)
+      .map((item) => item.permission as string)
+    : null;
+  const commentsCount = mediaResult.status === "fulfilled"
+    ? Number(mediaResult.value.comments_count ?? 0)
+    : null;
+  return { grantedPermissions, commentsCount };
+}
+
 type MetaMediaItem = {
   id: string;
   caption?: string;
@@ -157,6 +179,32 @@ export class MetaInstagramGateway implements InstagramGateway {
         }>;
         paging?: { next?: string };
       } = await metaFetch(path, { accessToken });
+      if (data.data.length === 0 && items.length === 0) {
+        const access = await inspectCommentAccess(mediaId, accessToken);
+        console.info("Instagram empty comments access diagnostic", {
+          commentsCount: access.commentsCount,
+          permissionsInspectable: access.grantedPermissions !== null,
+          hasBasicPermission: access.grantedPermissions?.includes("instagram_business_basic") ?? null,
+          hasManageCommentsPermission: access.grantedPermissions?.includes("instagram_business_manage_comments") ?? null,
+        });
+        if (
+          access.grantedPermissions !== null
+          && !access.grantedPermissions.includes("instagram_business_manage_comments")
+        ) {
+          throw new MetaApiError(
+            "O token conectado não possui instagram_business_manage_comments. Reautorize o Instagram e aceite essa permissão.",
+            403,
+            "MISSING_MANAGE_COMMENTS",
+          );
+        }
+        if (access.commentsCount !== null && access.commentsCount > 0) {
+          throw new MetaApiError(
+            `A Meta informa ${access.commentsCount} comentário(s) no Reel, mas não os disponibilizou para este token.`,
+            200,
+            "COMMENTS_FILTERED_BY_META",
+          );
+        }
+      }
       let accepted = 0;
       for (const item of data.data) {
         const publishedAt = item.timestamp ?? new Date().toISOString();
