@@ -4,7 +4,17 @@ import type { InstagramGateway, InstagramTokenResult } from "@/server/instagram/
 import { normalizeMetaPagingPath } from "@/server/instagram/pagination";
 
 export class MetaApiError extends Error {
-  constructor(message: string, readonly status: number, readonly code?: string, readonly retryAfter?: number, readonly ambiguous = false) { super(message); }
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly code?: string,
+    readonly retryAfter?: number,
+    readonly ambiguous = false,
+    readonly subcode?: string,
+    readonly requestId?: string,
+  ) {
+    super(message);
+  }
   get transient() { return this.status === 429 || this.status >= 500; }
 }
 
@@ -31,8 +41,18 @@ async function metaFetch<T>(path: string, options: MetaFetchOptions, attempt = 1
   }).catch((cause) => { throw new MetaApiError(cause instanceof Error && cause.name === "TimeoutError" ? "Tempo limite da Meta excedido." : "Meta indisponível.", 0, "NETWORK", undefined, true); });
   if (response.ok) return await response.json() as T;
   const retryAfter = Number(response.headers.get("retry-after") ?? 0) || undefined;
-  const body = await response.json().catch(() => ({})) as { error?: { message?: string; code?: number } };
-  const error = new MetaApiError(safeMetaMessage(body.error?.message), response.status, String(body.error?.code ?? "HTTP_ERROR"), retryAfter);
+  const body = await response.json().catch(() => ({})) as {
+    error?: { message?: string; code?: number; error_subcode?: number };
+  };
+  const error = new MetaApiError(
+    safeMetaMessage(body.error?.message),
+    response.status,
+    String(body.error?.code ?? "HTTP_ERROR"),
+    retryAfter,
+    false,
+    body.error?.error_subcode ? String(body.error.error_subcode) : undefined,
+    response.headers.get("x-fb-request-id") ?? undefined,
+  );
   if (error.transient && attempt < 3) {
     const delay = Math.min((retryAfter ?? 2 ** attempt) * 1000 + Math.random() * 250, 10_000);
     await new Promise((resolve) => setTimeout(resolve, delay));

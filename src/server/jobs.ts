@@ -6,6 +6,18 @@ import { createTrackingToken, decryptSecret } from "@/server/crypto";
 import { instagramGateway } from "@/server/instagram";
 import { MetaApiError } from "@/server/instagram/meta-gateway";
 
+function metaDiagnosticCode(error: MetaApiError) {
+  return error.subcode ? `${error.code ?? `HTTP_${error.status}`}/${error.subcode}` : error.code ?? `HTTP_${error.status}`;
+}
+
+function metaDiagnosticMessage(prefix: string, error: MetaApiError) {
+  const details = [
+    error.subcode ? `subcódigo ${error.subcode}` : null,
+    error.requestId ? `requisição ${error.requestId}` : null,
+  ].filter(Boolean).join(", ");
+  return `${prefix}${details ? ` (${details})` : ""}: ${error.message}`;
+}
+
 export async function ingestEvents(events: unknown[]) {
   if (isDemoMode) return { accepted: events.length, queued: 0 };
   const supabase = createSupabaseAdminClient();
@@ -105,10 +117,10 @@ export async function retryPrivateReply(ownerId: string, runId: string) {
   } catch (error) {
     const ambiguous = error instanceof MetaApiError && error.ambiguous;
     const errorCode = error instanceof MetaApiError
-      ? error.code ?? `HTTP_${error.status}`
+      ? metaDiagnosticCode(error)
       : "PRIVATE_REPLY_RETRY_FAILED";
     const errorMessage = error instanceof MetaApiError
-      ? `Mensagem privada: ${error.message}`
+      ? metaDiagnosticMessage("Mensagem privada", error)
       : error instanceof Error
         ? error.message
         : "Não foi possível confirmar a mensagem privada.";
@@ -179,9 +191,9 @@ async function processEvent(eventId: string) {
     publicId = reply.id;
   } catch (error) {
     publicStatus = error instanceof MetaApiError && error.ambiguous ? "ambiguous" : "failed";
-    errorCode = error instanceof MetaApiError ? error.code ?? `HTTP_${error.status}` : "PUBLIC_REPLY_FAILED";
+    errorCode = error instanceof MetaApiError ? metaDiagnosticCode(error) : "PUBLIC_REPLY_FAILED";
     errorMessage = error instanceof MetaApiError
-      ? `Resposta pública: ${error.message}`
+      ? metaDiagnosticMessage("Resposta pública", error)
       : "Não foi possível confirmar a resposta pública.";
   }
   try {
@@ -190,9 +202,9 @@ async function processEvent(eventId: string) {
     messageId = reply.messageId;
   } catch (error) {
     dmStatus = error instanceof MetaApiError && error.ambiguous ? "ambiguous" : "failed";
-    errorCode ??= error instanceof MetaApiError ? error.code ?? `HTTP_${error.status}` : "PRIVATE_REPLY_FAILED";
+    errorCode ??= error instanceof MetaApiError ? metaDiagnosticCode(error) : "PRIVATE_REPLY_FAILED";
     errorMessage ??= error instanceof MetaApiError
-      ? `Mensagem privada: ${error.message}`
+      ? metaDiagnosticMessage("Mensagem privada", error)
       : "Não foi possível confirmar a mensagem privada.";
   }
   const status = publicStatus === "succeeded" && dmStatus === "succeeded" ? "succeeded" : publicStatus === "failed" && dmStatus === "failed" ? "failed" : publicStatus === "ambiguous" || dmStatus === "ambiguous" ? "ambiguous" : "partial";
