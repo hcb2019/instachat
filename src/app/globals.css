@@ -164,6 +164,23 @@ h1, h2, h3, p { margin-top: 0; }
 .reel-option-copy strong { height: 34px; display: -webkit-box; overflow: hidden; font-size: 10px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .form-section .reel-option-copy small { margin-top: 6px; display: block; font-size: 9px; text-transform: capitalize; }
 .reel-empty { min-height: 130px; display: grid; place-items: center; align-content: center; gap: 8px; color: var(--muted); border: 1px dashed #d6cec1; border-radius: 10px; font-size: 11px; }
+.message-suggestion-box { margin: 0 0 22px; padding: 16px; background: #f7f2e9; border: 1px solid #ddd4c5; border-radius: 12px; }
+.message-suggestion-intro { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 11px; }
+.suggestion-icon { width: 36px; height: 36px; display: grid; place-items: center; color: var(--coral-dark); background: #f8ded5; border-radius: 10px; }
+.message-suggestion-intro strong { display: block; font-size: 13px; }
+.message-suggestion-intro p { margin: 4px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.message-suggestion-intro .button { white-space: nowrap; }
+.suggestion-error { margin: 12px 0 0; color: var(--red); font-size: 10px; }
+.suggestion-grid { margin-top: 14px; display: grid; gap: 9px; }
+.suggestion-card { padding: 13px; background: var(--surface); border: 1px solid #ded7ca; border-radius: 9px; }
+.suggestion-card-head { margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.suggestion-card-head strong { font-size: 12px; }
+.suggestion-card-head button { padding: 5px 8px; color: var(--coral-dark); background: #fae8e2; border: 0; border-radius: 6px; cursor: pointer; font-size: 9px; font-weight: 800; }
+.suggestion-card > span { display: block; margin-top: 8px; color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.suggestion-card > p { margin: 3px 0 0; color: #38362f; font-size: 10px; line-height: 1.5; }
+.form-section .suggestion-card > small { display: block; margin-top: 10px; padding-top: 9px; border-top: 1px solid #eee8dd; line-height: 1.45; }
+.spin { animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .form-alert, .form-success { margin: 0; padding: 11px 13px; border-radius: 8px; font-size: 12px; }
 .form-alert { color: var(--red); background: #f8e4df; border: 1px solid #ecc7bf; }
 .form-success { color: var(--green); background: #dfecdf; }
@@ -822,6 +839,8 @@ h1, h2, h3, p { margin-top: 0; }
   .connection-stats { grid-template-columns: 1fr; gap: 14px; }
   .connection-stats > div { border-left: 0; padding: 0; }
   .permissions-card > div { grid-template-columns: 1fr; gap: 9px; }
+  .message-suggestion-intro { grid-template-columns: 36px 1fr; }
+  .message-suggestion-intro .button { grid-column: 1 / -1; justify-content: center; }
   .radar-control-bar { align-items: stretch; flex-direction: column; }
   .reel-filter { display: grid; grid-template-columns: auto 1fr auto; }
   .reel-filter select { max-width: none; }
@@ -893,6 +912,7 @@ h1, h2, h3, p { margin-top: 0; }
   .metric-card { min-height: 135px; }
   .preview-column { width: 100%; }
   .form-section { padding: 21px; }
+  .message-suggestion-box { padding: 13px; }
   .form-actions, .header-actions { width: 100%; }
   .form-actions .button, .header-actions .button, .header-actions form { flex: 1; }
   .title-line h1 { font-size: 34px; }

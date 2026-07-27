@@ -1,10 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { useActionState, useState } from "react";
-import { Check, ExternalLink, Film, MessageCircle, Search, Send, Sparkles } from "lucide-react";
-import { saveAutomation, type AutomationActionState } from "@/features/automations/actions";
+import { useActionState, useState, useTransition } from "react";
+import { Check, ExternalLink, Film, Lightbulb, LoaderCircle, MessageCircle, Search, Send, Sparkles } from "lucide-react";
+import {
+  saveAutomation,
+  suggestAutomationMessages,
+  type AutomationActionState,
+} from "@/features/automations/actions";
 import { Button, Card } from "@/components/ui";
+import type { AutomationMessageSuggestion } from "@/lib/automation-suggestions";
 import type { Automation, InstagramMedia } from "@/types/domain";
 
 function FieldError({ messages }: { messages?: string[] }) {
@@ -13,14 +18,45 @@ function FieldError({ messages }: { messages?: string[] }) {
 
 export function AutomationForm({ automation, media }: { automation?: Automation; media: InstagramMedia[] }) {
   const [state, action, pending] = useActionState<AutomationActionState, FormData>(saveAutomation, {});
+  const [suggestionPending, startSuggestionTransition] = useTransition();
+  const [publicReply, setPublicReply] = useState(automation?.publicReply ?? "");
   const [dm, setDm] = useState(automation?.dmMessage ?? "");
   const [destination, setDestination] = useState(automation?.destinationUrl ?? "");
   const [selectedMediaId, setSelectedMediaId] = useState(automation?.mediaId ?? "");
   const [reelQuery, setReelQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<AutomationMessageSuggestion[]>([]);
+  const [suggestionError, setSuggestionError] = useState("");
   const normalizedQuery = reelQuery.trim().toLocaleLowerCase("pt-BR");
   const visibleMedia = normalizedQuery
     ? media.filter((item) => item.caption.toLocaleLowerCase("pt-BR").includes(normalizedQuery))
     : media;
+  const selectedMedia = media.find((item) => item.id === selectedMediaId);
+
+  function selectMedia(id: string) {
+    setSelectedMediaId(id);
+    setSuggestions([]);
+    setSuggestionError("");
+  }
+
+  function generateSuggestions() {
+    if (!selectedMediaId) return;
+    setSuggestionError("");
+    startSuggestionTransition(async () => {
+      const result = await suggestAutomationMessages(selectedMediaId);
+      if ("error" in result) {
+        setSuggestions([]);
+        setSuggestionError(result.error);
+        return;
+      }
+      setSuggestions(result.suggestions);
+    });
+  }
+
+  function applySuggestion(suggestion: AutomationMessageSuggestion) {
+    setPublicReply(suggestion.publicReply);
+    setDm(suggestion.dmMessage);
+  }
+
   return <form action={action} className="automation-layout">
     {automation && <input type="hidden" name="id" value={automation.id} />}
     <section className="form-stack">
@@ -37,7 +73,7 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
             {visibleMedia.map((item) => {
               const selected = selectedMediaId === item.id;
               return <label className={`reel-option${selected ? " selected" : ""}`} key={item.id}>
-                <input type="radio" name="mediaId" value={item.id} checked={selected} onChange={() => setSelectedMediaId(item.id)} />
+                <input type="radio" name="mediaId" value={item.id} checked={selected} onChange={() => selectMedia(item.id)} />
                 <span className="reel-cover">
                   {item.thumbnailUrl
                     ? <Image src={item.thumbnailUrl} alt="" fill sizes="(max-width: 470px) 42vw, (max-width: 760px) 28vw, 180px" unoptimized />
@@ -59,7 +95,29 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
         <label><span>Palavra-chave</span><input name="keyword" defaultValue={automation?.keyword} placeholder="1991" maxLength={80} /><small>Correspondência exata, sem diferenciar maiúsculas e espaços extras. Pontuação conta.</small><FieldError messages={state.fields?.keyword} /></label>
       </Card>
       <Card className="form-section"><div className="section-kicker">03 · Respostas</div><h2>O que a pessoa recebe?</h2>
-        <label><span>Resposta pública</span><textarea name="publicReply" defaultValue={automation?.publicReply} placeholder="Enviei para você. Confira seu direct." maxLength={500} rows={3} /><FieldError messages={state.fields?.publicReply} /></label>
+        <div className="message-suggestion-box">
+          <div className="message-suggestion-intro">
+            <span className="suggestion-icon"><Lightbulb size={18} /></span>
+            <div>
+              <strong>Sugestões para este conteúdo</strong>
+              <p>{selectedMedia ? "Analisamos a legenda do Reel e preparamos mensagens que você pode revisar e usar." : "Escolha um Reel para gerar respostas relacionadas ao conteúdo."}</p>
+            </div>
+            <button type="button" className="button button-secondary" onClick={generateSuggestions} disabled={!selectedMediaId || suggestionPending}>
+              {suggestionPending ? <LoaderCircle className="spin" size={15} /> : <Sparkles size={15} />}
+              {suggestionPending ? "Analisando…" : suggestions.length ? "Gerar novamente" : "Gerar sugestões"}
+            </button>
+          </div>
+          {suggestionError && <p className="suggestion-error" role="alert">{suggestionError}</p>}
+          {suggestions.length > 0 && <div className="suggestion-grid" aria-live="polite">
+            {suggestions.map((suggestion) => <article className="suggestion-card" key={suggestion.label}>
+              <div className="suggestion-card-head"><strong>{suggestion.label}</strong><button type="button" onClick={() => applySuggestion(suggestion)}>Usar conjunto</button></div>
+              <span>Público</span><p>{suggestion.publicReply}</p>
+              <span>Direct</span><p>{suggestion.dmMessage}</p>
+              <small>{suggestion.rationale}</small>
+            </article>)}
+          </div>}
+        </div>
+        <label><span>Resposta pública</span><textarea name="publicReply" value={publicReply} onChange={(event) => setPublicReply(event.target.value)} placeholder="Enviei para você. Confira seu direct." maxLength={500} rows={3} /><FieldError messages={state.fields?.publicReply} /></label>
         <label><span>Mensagem privada</span><textarea name="dmMessage" value={dm} onChange={(event) => setDm(event.target.value)} placeholder="Aqui está o material que prometi:" maxLength={900} rows={5} /><FieldError messages={state.fields?.dmMessage} /></label>
         <label><span>URL de destino</span><input name="destinationUrl" type="url" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="https://seusite.com/produto" maxLength={2048} /><FieldError messages={state.fields?.destinationUrl} /></label>
       </Card>

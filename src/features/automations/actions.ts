@@ -7,10 +7,41 @@ import { automationSchema, normalizeKeyword } from "@/lib/domain";
 import { isDemoMode } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { saveDemoAutomation, demoStore } from "@/server/demo-store";
+import { generateAutomationMessageSuggestions } from "@/server/automation-suggestions";
+import type { AutomationMessageSuggestion } from "@/lib/automation-suggestions";
 
 export interface AutomationActionState {
   error?: string;
   fields?: Record<string, string[]>;
+}
+
+export type AutomationSuggestionsResult =
+  | { suggestions: AutomationMessageSuggestion[]; caption: string }
+  | { error: string };
+
+export async function suggestAutomationMessages(mediaId: string): Promise<AutomationSuggestionsResult> {
+  const owner = await requireOwner();
+  if (!/^[0-9a-f-]{36}$/i.test(mediaId)) return { error: "Escolha um Reel antes de gerar sugestões." };
+
+  let caption: string | null = null;
+  if (isDemoMode) {
+    caption = demoStore().media.find((item) => item.id === mediaId)?.caption ?? null;
+  } else {
+    const supabase = await createSupabaseServerClient();
+    const { data } = await supabase
+      .from("instagram_media")
+      .select("caption")
+      .eq("id", mediaId)
+      .eq("owner_id", owner.id)
+      .maybeSingle();
+    caption = data?.caption ?? null;
+  }
+  if (caption === null) return { error: "Este Reel não foi encontrado na sua conta." };
+
+  return {
+    suggestions: await generateAutomationMessageSuggestions(caption),
+    caption,
+  };
 }
 
 export async function saveAutomation(_state: AutomationActionState, formData: FormData): Promise<AutomationActionState> {
