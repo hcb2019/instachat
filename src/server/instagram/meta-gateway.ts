@@ -68,12 +68,6 @@ function isUnsupportedMediaEdge(error: unknown) {
     && error.message.toLowerCase().includes("/media");
 }
 
-function isUnresolvableInstagramUser(error: unknown) {
-  return error instanceof MetaApiError
-    && error.code === "100"
-    && error.message.toLowerCase().includes("requested user cannot be found");
-}
-
 async function inspectCommentAccess(mediaId: string, accessToken: string) {
   const [permissionsResult, mediaResult] = await Promise.allSettled([
     metaFetch<{ data?: Array<{ permission?: string; status?: string }> }>(
@@ -288,21 +282,14 @@ export class MetaInstagramGateway implements InstagramGateway {
   }
 
   async sendPrivateReply(userId: string, commentId: string, message: string, accessToken: string) {
-    const options = {
-      method: "POST",
-      accessToken,
-      body: JSON.stringify({ recipient: { comment_id: commentId }, message: { text: message } }),
-    };
-    let data: { recipient_id: string; message_id: string };
-    try {
-      data = await metaFetch(`/${encodeURIComponent(userId)}/messages`, options);
-    } catch (error) {
-      // Some Instagram Login tokens resolve the professional account only
-      // through "me". Error 100 is returned before a message is created, so
-      // this narrowly scoped fallback cannot duplicate a previously sent DM.
-      if (!isUnresolvableInstagramUser(error)) throw error;
-      data = await metaFetch("/me/messages", options);
-    }
+    const data = await metaFetch<{ recipient_id: string; message_id: string }>(
+      `/${encodeURIComponent(userId)}/messages`,
+      {
+        method: "POST",
+        accessToken,
+        body: JSON.stringify({ recipient: { comment_id: commentId }, message: { text: message } }),
+      },
+    );
     return { recipientId: data.recipient_id, messageId: data.message_id };
   }
 }
