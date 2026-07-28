@@ -1,7 +1,7 @@
 import "server-only";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { env, isDemoMode } from "@/lib/env";
-import { keywordMatches, normalizeKeyword, selectReplyVariant } from "@/lib/domain";
+import { buildKeywordVariants, keywordMatches, normalizeKeyword, selectReplyVariant } from "@/lib/domain";
 import { createTrackingToken, decryptSecret } from "@/server/crypto";
 import { instagramGateway } from "@/server/instagram";
 import { MetaApiError } from "@/server/instagram/meta-gateway";
@@ -170,7 +170,9 @@ async function processEvent(eventId: string) {
     keywordMatches(
       event.comment_text,
       item.keyword,
-      Array.isArray(item.keyword_variants) ? item.keyword_variants : [],
+      Array.isArray(item.keyword_variants) && item.keyword_variants.length
+        ? item.keyword_variants
+        : buildKeywordVariants(item.keyword),
     ),
   );
   if (!automation) {

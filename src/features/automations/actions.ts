@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireOwner } from "@/lib/auth";
-import { automationSchema, keywordMatches, normalizeKeyword } from "@/lib/domain";
+import { automationSchema, buildKeywordVariants, keywordMatches, normalizeKeyword } from "@/lib/domain";
 import { isDemoMode } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { saveDemoAutomation, demoStore } from "@/server/demo-store";
@@ -73,7 +73,9 @@ export async function saveAutomation(_state: AutomationActionState, formData: Fo
       item.id !== input.id
       && item.mediaId === input.mediaId
       && item.status !== "deleted"
-      && [input.keyword, ...input.keywordVariants].some((term) => keywordMatches(term, item.keyword, item.keywordVariants)),
+      && [input.keyword, ...input.keywordVariants].some((term) =>
+        keywordMatches(term, item.keyword, item.keywordVariants.length ? item.keywordVariants : buildKeywordVariants(item.keyword)),
+      ),
     );
     if (duplicate) return { error: "Já existe uma automação com essa palavra-chave neste Reel." };
     const saved = saveDemoAutomation({ ...input, status: input.intent });
@@ -93,7 +95,13 @@ export async function saveAutomation(_state: AutomationActionState, formData: Fo
   const duplicate = (existingAutomations ?? []).some((item) =>
     item.id !== input.id
     && [input.keyword, ...input.keywordVariants].some((term) =>
-      keywordMatches(term, item.keyword, Array.isArray(item.keyword_variants) ? item.keyword_variants : []),
+      keywordMatches(
+        term,
+        item.keyword,
+        Array.isArray(item.keyword_variants) && item.keyword_variants.length
+          ? item.keyword_variants
+          : buildKeywordVariants(item.keyword),
+      ),
     ),
   );
   if (duplicate) return { error: "Uma palavra-chave ou variação já é usada por outra automação neste Reel." };
