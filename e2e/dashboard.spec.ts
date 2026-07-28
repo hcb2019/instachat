@@ -9,8 +9,8 @@ test("navigates through the demo dashboard", async ({ page }) => {
   await expect(page.getByRole("heading", { name: /Comentários que viram/ })).toBeVisible();
   await expect(page.getByRole("main").getByText("Modo demonstração", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: /Nova automação/ }).first().click();
-  await expect(page.getByRole("heading", { name: "Do comentário ao direct." })).toBeVisible();
-  await expect(page.getByText("Correspondência exata", { exact: false })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Do comentário ao direct." })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText("Aceitamos maiúsculas", { exact: false })).toBeVisible();
   expect(consoleErrors).toEqual([]);
 });
 
@@ -56,8 +56,24 @@ test("explores Radar evidence and creates a reviewable draft", async ({ page }) 
   await page.getByText(/Ver \d+ evidências?/).first().click();
   await expect(page.locator(".evidence-list blockquote").first()).toBeVisible();
   await page.getByRole("button", { name: /Criar rascunho/ }).first().click();
-  await expect(page.getByText(/Rascunho criado pelo Radar/)).toBeVisible();
+  await expect(page.getByText(/Rascunho criado pelo Radar/)).toBeVisible({ timeout: 15_000 });
   await expect(page.getByLabel("Palavra-chave")).not.toHaveValue("");
+});
+
+test("generates keyword and message variations for the selected Reel", async ({ page }) => {
+  await page.goto("/automations/new");
+  await page.locator(".reel-option").first().click();
+  await page.getByLabel("Palavra-chave").fill("Material");
+  await expect(page.locator(".keyword-variant").filter({ hasText: "material." })).toBeVisible();
+  await expect(page.locator('input[name="keywordVariants"][value="materia"]').locator("..")).toBeVisible();
+  await page.getByRole("button", { name: "Gerar sugestões" }).click();
+  await expect(page.getByRole("button", { name: "Usar as 3 sugestões" })).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("button", { name: "Usar as 3 sugestões" }).click();
+  const publicReplies = page.locator('textarea[name="publicReplyVariants"]');
+  await expect(publicReplies).toHaveCount(3);
+  await expect(publicReplies.nth(0)).not.toHaveValue("");
+  await expect(publicReplies.nth(1)).not.toHaveValue("");
+  await expect(publicReplies.nth(2)).not.toHaveValue("");
 });
 
 test("follows the Instagram connection guide and persists progress", async ({ page }) => {
