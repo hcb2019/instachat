@@ -140,6 +140,15 @@ h1, h2, h3, p { margin-top: 0; }
 .form-section input:focus, .form-section textarea:focus, .form-section select:focus, .login-form input:focus { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(232,93,69,.1); }
 .form-section small { color: var(--muted); font-size: 10px; font-weight: 500; }
 .field-error { color: var(--red); font-size: 10px; }
+.form-section input[aria-invalid="true"],
+.form-section textarea[aria-invalid="true"] {
+  border-color: #d84c3f;
+  box-shadow: 0 0 0 3px rgb(216 76 63 / 10%);
+}
+.form-section .field-invalid {
+  border-color: #d84c3f;
+  box-shadow: 0 0 0 3px rgb(216 76 63 / 8%);
+}
 .reel-picker { min-width: 0; margin: 18px 0 0; padding: 0; border: 0; }
 .reel-picker legend { margin-bottom: 9px; color: #38362f; font-size: 12px; font-weight: 720; }
 .reel-picker-toolbar { margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }

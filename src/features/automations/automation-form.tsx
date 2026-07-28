@@ -20,6 +20,8 @@ function FieldError({ messages }: { messages?: string[] }) {
 export function AutomationForm({ automation, media }: { automation?: Automation; media: InstagramMedia[] }) {
   const [state, action, pending] = useActionState<AutomationActionState, FormData>(saveAutomation, {});
   const [suggestionPending, startSuggestionTransition] = useTransition();
+  const [name, setName] = useState(automation?.name ?? "");
+  const [keyword, setKeyword] = useState(automation?.keyword ?? "");
   const [publicReplies, setPublicReplies] = useState(() => {
     const existing = automation?.publicReplyVariants?.length
       ? automation.publicReplyVariants
@@ -107,8 +109,8 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
     <section className="form-stack">
       {state.error && <div className="form-alert" role="alert">{state.error}</div>}
       <Card className="form-section"><div className="section-kicker">01 · Identidade</div><h2>O que esta automação faz?</h2>
-        <label><span>Nome interno</span><input name="name" defaultValue={automation?.name} placeholder="Ex.: Reel — Guia de lançamento" maxLength={80} /><FieldError messages={state.fields?.name} /></label>
-        <fieldset className="reel-picker">
+        <label><span>Nome interno</span><input name="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: Reel — Guia de lançamento" maxLength={80} aria-invalid={Boolean(state.fields?.name) && !name.trim()} /><FieldError messages={state.fields?.name} /></label>
+        <fieldset className={`reel-picker${state.fields?.mediaId ? " field-invalid" : ""}`} aria-invalid={Boolean(state.fields?.mediaId)}>
           <legend>Reel vinculado</legend>
           <div className="reel-picker-toolbar">
             <div className="reel-search"><Search size={15} aria-hidden="true" /><input value={reelQuery} onChange={(event) => setReelQuery(event.target.value)} placeholder="Buscar pela legenda…" aria-label="Buscar Reel pela legenda" /></div>
@@ -137,7 +139,7 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
         </fieldset>
       </Card>
       <Card className="form-section"><div className="section-kicker">02 · Gatilho</div><h2>Qual comentário inicia o fluxo?</h2>
-        <label><span>Palavra-chave</span><input name="keyword" defaultValue={automation?.keyword} placeholder="1991" maxLength={80} /><small>Correspondência exata, sem diferenciar maiúsculas e espaços extras. Pontuação conta.</small><FieldError messages={state.fields?.keyword} /></label>
+        <label><span>Palavra-chave</span><input name="keyword" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="1991" maxLength={80} aria-invalid={Boolean(state.fields?.keyword) && !keyword.trim()} /><small>Correspondência exata, sem diferenciar maiúsculas e espaços extras. Pontuação conta.</small><FieldError messages={state.fields?.keyword} /></label>
       </Card>
       <Card className="form-section"><div className="section-kicker">03 · Respostas</div><h2>O que a pessoa recebe?</h2>
         <div className="message-suggestion-box">
@@ -162,7 +164,7 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
             </article>)}
           </div>}
         </div>
-        <div className="reply-variations">
+        <div className={`reply-variations${state.fields?.publicReplyVariants ? " field-invalid" : ""}`}>
           <div className="reply-variations-head">
             <div><strong>Respostas públicas variadas</strong><small>O InstaChat alterna automaticamente entre elas para deixar os comentários mais naturais.</small></div>
             <span>{publicReplies.filter((reply) => reply.trim()).length}/{publicReplies.length} preenchidas</span>
@@ -171,7 +173,7 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
             {publicReplies.map((reply, index) => <label key={index}>
               <span>Variação {index + 1}{index < 3 && <em> obrigatória</em>}</span>
               <div>
-                <textarea name="publicReplyVariants" value={reply} onChange={(event) => updatePublicReply(index, event.target.value)} placeholder={index === 0 ? "Enviei para você. Confira seu direct." : index === 1 ? "Prontinho! Acabei de mandar no seu direct ✨" : "Está a caminho — dá uma olhadinha nas mensagens."} maxLength={500} rows={3} />
+                <textarea name="publicReplyVariants" value={reply} onChange={(event) => updatePublicReply(index, event.target.value)} placeholder={index === 0 ? "Enviei para você. Confira seu direct." : index === 1 ? "Prontinho! Acabei de mandar no seu direct ✨" : "Está a caminho — dá uma olhadinha nas mensagens."} maxLength={500} rows={3} aria-invalid={Boolean(state.fields?.publicReplyVariants) && !reply.trim()} />
                 {publicReplies.length > 3 && <button type="button" className="icon-button" onClick={() => removePublicReply(index)} aria-label={`Remover variação ${index + 1}`}><Trash2 size={15} /></button>}
               </div>
             </label>)}
@@ -179,7 +181,7 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
           {publicReplies.length < 5 && <button type="button" className="add-reply-variation" onClick={() => setPublicReplies((current) => [...current, ""])}><Plus size={15} /> Adicionar outra variação</button>}
           <FieldError messages={state.fields?.publicReplyVariants} />
         </div>
-        <div className="reply-variations">
+        <div className={`reply-variations${state.fields?.dmMessageVariants ? " field-invalid" : ""}`}>
           <div className="reply-variations-head">
             <div><strong>Mensagens privadas variadas</strong><small>Uma mensagem é suficiente. Adicione outras se também quiser variar o direct.</small></div>
             <span>{dmMessages.filter((message) => message.trim()).length}/{dmMessages.length} preenchidas</span>
@@ -188,7 +190,7 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
             {dmMessages.map((message, index) => <label key={index}>
               <span>Mensagem {index + 1}{index === 0 && <em> obrigatória</em>}</span>
               <div>
-                <textarea name="dmMessageVariants" value={message} onChange={(event) => updateDmMessage(index, event.target.value)} placeholder={index === 0 ? "Aqui está o material que prometi:" : "Prontinho! Separei o conteúdo para você:"} maxLength={900} rows={4} />
+                <textarea name="dmMessageVariants" value={message} onChange={(event) => updateDmMessage(index, event.target.value)} placeholder={index === 0 ? "Aqui está o material que prometi:" : "Prontinho! Separei o conteúdo para você:"} maxLength={900} rows={4} aria-invalid={Boolean(state.fields?.dmMessageVariants) && !message.trim()} />
                 {dmMessages.length > 1 && <button type="button" className="icon-button" onClick={() => removeDmMessage(index)} aria-label={`Remover mensagem privada ${index + 1}`}><Trash2 size={15} /></button>}
               </div>
             </label>)}
@@ -196,7 +198,7 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
           {dmMessages.length < 5 && <button type="button" className="add-reply-variation" onClick={() => setDmMessages((current) => [...current, ""])}><Plus size={15} /> Adicionar outra mensagem privada</button>}
           <FieldError messages={state.fields?.dmMessageVariants} />
         </div>
-        <label><span>URL de destino</span><input name="destinationUrl" type="url" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="https://seusite.com/produto" maxLength={2048} /><FieldError messages={state.fields?.destinationUrl} /></label>
+        <label><span>URL de destino</span><input name="destinationUrl" type="url" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="https://seusite.com/produto" maxLength={2048} aria-invalid={Boolean(state.fields?.destinationUrl)} /><FieldError messages={state.fields?.destinationUrl} /></label>
         <div className={`follow-gate${requireFollow ? " enabled" : ""}`}>
           <label className="follow-gate-switch">
             <span className="follow-gate-icon"><UserCheck size={19} /></span>
@@ -218,13 +220,13 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
             </div>
             <label>
               <span>Primeira mensagem</span>
-              <textarea name="followGateMessage" value={followGateMessage} onChange={(event) => setFollowGateMessage(event.target.value)} maxLength={900} rows={4} />
+              <textarea name="followGateMessage" value={followGateMessage} onChange={(event) => setFollowGateMessage(event.target.value)} maxLength={900} rows={4} aria-invalid={Boolean(state.fields?.followGateMessage) && !followGateMessage.trim()} />
               <small>Enviada no lugar do link. A pessoa deve responder para autorizar a verificação.</small>
               <FieldError messages={state.fields?.followGateMessage} />
             </label>
             <label>
               <span>Se a pessoa ainda não seguir</span>
-              <textarea name="notFollowingMessage" value={notFollowingMessage} onChange={(event) => setNotFollowingMessage(event.target.value)} maxLength={900} rows={4} />
+              <textarea name="notFollowingMessage" value={notFollowingMessage} onChange={(event) => setNotFollowingMessage(event.target.value)} maxLength={900} rows={4} aria-invalid={Boolean(state.fields?.notFollowingMessage) && !notFollowingMessage.trim()} />
               <FieldError messages={state.fields?.notFollowingMessage} />
             </label>
           </div>}
