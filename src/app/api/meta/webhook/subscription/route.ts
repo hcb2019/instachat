@@ -3,6 +3,7 @@ import { env, isDemoMode } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { decryptSecret } from "@/server/crypto";
 import { instagramGateway } from "@/server/instagram";
+import { MetaApiError } from "@/server/instagram/meta-gateway";
 
 function settingsRedirect(result: "active" | "restored" | "error") {
   const url = new URL("/settings", env.APP_ORIGIN);
@@ -34,13 +35,25 @@ export async function POST(request: Request) {
     });
     const gateway = instagramGateway();
     if (await gateway.hasCommentSubscription(connection.instagram_user_id, accessToken)) {
+      await supabase.from("instagram_connections").update({ last_error: null }).eq("id", connection.id);
       return settingsRedirect("active");
     }
 
     await gateway.subscribeToComments(connection.instagram_user_id, accessToken);
     const restored = await gateway.hasCommentSubscription(connection.instagram_user_id, accessToken);
+    await supabase.from("instagram_connections").update({
+      last_error: restored ? null : "A Meta aceitou a solicitação, mas não confirmou os campos comments e messages.",
+    }).eq("id", connection.id);
     return settingsRedirect(restored ? "restored" : "error");
-  } catch {
+  } catch (error) {
+    const diagnostic = error instanceof MetaApiError
+      ? `Meta (${error.code ?? error.status}${error.subcode ? `/${error.subcode}` : ""}): ${error.message}`
+      : error instanceof Error
+        ? error.message
+        : "Falha desconhecida ao confirmar o webhook.";
+    await supabase.from("instagram_connections").update({
+      last_error: `Webhook: ${diagnostic}`.slice(0, 400),
+    }).eq("id", connection.id);
     return settingsRedirect("error");
   }
 }

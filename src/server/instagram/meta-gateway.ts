@@ -144,14 +144,26 @@ export class MetaInstagramGateway implements InstagramGateway {
   }
 
   async subscribeToComments(userId: string, accessToken: string) {
-    await metaFetch(`/${encodeURIComponent(userId)}/subscribed_apps?subscribed_fields=comments,messages`, { method: "POST", accessToken });
+    const query = "?subscribed_fields=comments,messages";
+    try {
+      await metaFetch(`/${encodeURIComponent(userId)}/subscribed_apps${query}`, { method: "POST", accessToken });
+    } catch (error) {
+      if (!(error instanceof MetaApiError) || error.transient) throw error;
+      await metaFetch(`/me/subscribed_apps${query}`, { method: "POST", accessToken });
+    }
   }
 
   async hasCommentSubscription(userId: string, accessToken: string) {
-    const result = await metaFetch<{ data?: Array<{ subscribed_fields?: string[] }> }>(
-      `/${encodeURIComponent(userId)}/subscribed_apps`,
-      { method: "GET", accessToken },
-    );
+    let result: { data?: Array<{ subscribed_fields?: string[] }> };
+    try {
+      result = await metaFetch(
+        `/${encodeURIComponent(userId)}/subscribed_apps`,
+        { method: "GET", accessToken },
+      );
+    } catch (error) {
+      if (!(error instanceof MetaApiError) || error.transient) throw error;
+      result = await metaFetch("/me/subscribed_apps", { method: "GET", accessToken });
+    }
     return (result.data ?? []).some((subscription) =>
       subscription.subscribed_fields?.includes("comments")
       && subscription.subscribed_fields.includes("messages"),
