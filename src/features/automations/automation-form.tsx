@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useActionState, useState, useTransition } from "react";
-import { Check, ExternalLink, Film, Lightbulb, LoaderCircle, MessageCircle, Search, Send, Sparkles, UserCheck } from "lucide-react";
+import { Check, ExternalLink, Film, Lightbulb, LoaderCircle, MessageCircle, Plus, Search, Send, Sparkles, Trash2, UserCheck } from "lucide-react";
 import {
   saveAutomation,
   suggestAutomationMessages,
@@ -20,8 +20,22 @@ function FieldError({ messages }: { messages?: string[] }) {
 export function AutomationForm({ automation, media }: { automation?: Automation; media: InstagramMedia[] }) {
   const [state, action, pending] = useActionState<AutomationActionState, FormData>(saveAutomation, {});
   const [suggestionPending, startSuggestionTransition] = useTransition();
-  const [publicReply, setPublicReply] = useState(automation?.publicReply ?? "");
-  const [dm, setDm] = useState(automation?.dmMessage ?? "");
+  const [publicReplies, setPublicReplies] = useState(() => {
+    const existing = automation?.publicReplyVariants?.length
+      ? automation.publicReplyVariants
+      : automation?.publicReply
+        ? [automation.publicReply]
+        : [];
+    return [...existing, "", ""].slice(0, Math.max(3, existing.length));
+  });
+  const [dmMessages, setDmMessages] = useState(() => {
+    const existing = automation?.dmMessageVariants?.length
+      ? automation.dmMessageVariants
+      : automation?.dmMessage
+        ? [automation.dmMessage]
+        : [""];
+    return existing;
+  });
   const [destination, setDestination] = useState(automation?.destinationUrl ?? "");
   const [requireFollow, setRequireFollow] = useState(automation?.requireFollow ?? false);
   const [followGateMessage, setFollowGateMessage] = useState(automation?.followGateMessage || DEFAULT_FOLLOW_GATE_MESSAGE);
@@ -35,6 +49,7 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
     ? media.filter((item) => item.caption.toLocaleLowerCase("pt-BR").includes(normalizedQuery))
     : media;
   const selectedMedia = media.find((item) => item.id === selectedMediaId);
+  const dmPreview = dmMessages.find((message) => message.trim()) ?? "";
 
   function selectMedia(id: string) {
     setSelectedMediaId(id);
@@ -57,8 +72,34 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
   }
 
   function applySuggestion(suggestion: AutomationMessageSuggestion) {
-    setPublicReply(suggestion.publicReply);
-    setDm(suggestion.dmMessage);
+    setPublicReplies((current) => {
+      const next = [...current];
+      const emptyIndex = next.findIndex((value) => !value.trim());
+      next[emptyIndex >= 0 ? emptyIndex : 0] = suggestion.publicReply;
+      return next;
+    });
+    setDmMessages((current) => {
+      const next = [...current];
+      const emptyIndex = next.findIndex((value) => !value.trim());
+      next[emptyIndex >= 0 ? emptyIndex : 0] = suggestion.dmMessage;
+      return next;
+    });
+  }
+
+  function updatePublicReply(index: number, value: string) {
+    setPublicReplies((current) => current.map((item, itemIndex) => itemIndex === index ? value : item));
+  }
+
+  function removePublicReply(index: number) {
+    setPublicReplies((current) => current.length > 3 ? current.filter((_, itemIndex) => itemIndex !== index) : current);
+  }
+
+  function updateDmMessage(index: number, value: string) {
+    setDmMessages((current) => current.map((item, itemIndex) => itemIndex === index ? value : item));
+  }
+
+  function removeDmMessage(index: number) {
+    setDmMessages((current) => current.length > 1 ? current.filter((_, itemIndex) => itemIndex !== index) : current);
   }
 
   return <form action={action} className="automation-layout">
@@ -114,15 +155,47 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
           {suggestionError && <p className="suggestion-error" role="alert">{suggestionError}</p>}
           {suggestions.length > 0 && <div className="suggestion-grid" aria-live="polite">
             {suggestions.map((suggestion) => <article className="suggestion-card" key={suggestion.label}>
-              <div className="suggestion-card-head"><strong>{suggestion.label}</strong><button type="button" onClick={() => applySuggestion(suggestion)}>Usar conjunto</button></div>
+              <div className="suggestion-card-head"><strong>{suggestion.label}</strong><button type="button" onClick={() => applySuggestion(suggestion)}>Usar mensagem</button></div>
               <span>Público</span><p>{suggestion.publicReply}</p>
               <span>Direct</span><p>{suggestion.dmMessage}</p>
               <small>{suggestion.rationale}</small>
             </article>)}
           </div>}
         </div>
-        <label><span>Resposta pública</span><textarea name="publicReply" value={publicReply} onChange={(event) => setPublicReply(event.target.value)} placeholder="Enviei para você. Confira seu direct." maxLength={500} rows={3} /><FieldError messages={state.fields?.publicReply} /></label>
-        <label><span>Mensagem privada</span><textarea name="dmMessage" value={dm} onChange={(event) => setDm(event.target.value)} placeholder="Aqui está o material que prometi:" maxLength={900} rows={5} /><FieldError messages={state.fields?.dmMessage} /></label>
+        <div className="reply-variations">
+          <div className="reply-variations-head">
+            <div><strong>Respostas públicas variadas</strong><small>O InstaChat alterna automaticamente entre elas para deixar os comentários mais naturais.</small></div>
+            <span>{publicReplies.filter((reply) => reply.trim()).length}/{publicReplies.length} preenchidas</span>
+          </div>
+          <div className="reply-variations-list">
+            {publicReplies.map((reply, index) => <label key={index}>
+              <span>Variação {index + 1}{index < 3 && <em> obrigatória</em>}</span>
+              <div>
+                <textarea name="publicReplyVariants" value={reply} onChange={(event) => updatePublicReply(index, event.target.value)} placeholder={index === 0 ? "Enviei para você. Confira seu direct." : index === 1 ? "Prontinho! Acabei de mandar no seu direct ✨" : "Está a caminho — dá uma olhadinha nas mensagens."} maxLength={500} rows={3} />
+                {publicReplies.length > 3 && <button type="button" className="icon-button" onClick={() => removePublicReply(index)} aria-label={`Remover variação ${index + 1}`}><Trash2 size={15} /></button>}
+              </div>
+            </label>)}
+          </div>
+          {publicReplies.length < 5 && <button type="button" className="add-reply-variation" onClick={() => setPublicReplies((current) => [...current, ""])}><Plus size={15} /> Adicionar outra variação</button>}
+          <FieldError messages={state.fields?.publicReplyVariants} />
+        </div>
+        <div className="reply-variations">
+          <div className="reply-variations-head">
+            <div><strong>Mensagens privadas variadas</strong><small>Uma mensagem é suficiente. Adicione outras se também quiser variar o direct.</small></div>
+            <span>{dmMessages.filter((message) => message.trim()).length}/{dmMessages.length} preenchidas</span>
+          </div>
+          <div className="reply-variations-list">
+            {dmMessages.map((message, index) => <label key={index}>
+              <span>Mensagem {index + 1}{index === 0 && <em> obrigatória</em>}</span>
+              <div>
+                <textarea name="dmMessageVariants" value={message} onChange={(event) => updateDmMessage(index, event.target.value)} placeholder={index === 0 ? "Aqui está o material que prometi:" : "Prontinho! Separei o conteúdo para você:"} maxLength={900} rows={4} />
+                {dmMessages.length > 1 && <button type="button" className="icon-button" onClick={() => removeDmMessage(index)} aria-label={`Remover mensagem privada ${index + 1}`}><Trash2 size={15} /></button>}
+              </div>
+            </label>)}
+          </div>
+          {dmMessages.length < 5 && <button type="button" className="add-reply-variation" onClick={() => setDmMessages((current) => [...current, ""])}><Plus size={15} /> Adicionar outra mensagem privada</button>}
+          <FieldError messages={state.fields?.dmMessageVariants} />
+        </div>
         <label><span>URL de destino</span><input name="destinationUrl" type="url" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="https://seusite.com/produto" maxLength={2048} /><FieldError messages={state.fields?.destinationUrl} /></label>
         <div className={`follow-gate${requireFollow ? " enabled" : ""}`}>
           <label className="follow-gate-switch">
@@ -163,6 +236,6 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
       </Card>
       <div className="form-actions"><Button name="intent" value="draft" variant="secondary" disabled={pending}>Salvar rascunho</Button><Button name="intent" value="active" disabled={pending}>{pending ? "Salvando…" : automation?.status === "active" ? "Salvar e manter ativa" : "Salvar e ativar"}</Button></div>
     </section>
-    <aside className="preview-column"><div className="preview-label"><Sparkles size={15} /> Prévia do direct</div><div className="phone"><div className="phone-top"><span className="preview-avatar">I</span><div><strong>instachat.demo</strong><small>Instagram</small></div></div>{requireFollow && <><div className="message-bubble"><p>{followGateMessage}</p></div><div className="message-bubble message-bubble-user"><p>PRONTO</p></div></>}<div className="message-bubble"><p>{dm || "Sua mensagem aparecerá aqui."}</p>{destination && <span className="preview-link"><ExternalLink size={13} /> Abrir material</span>}</div><div className="phone-hint"><MessageCircle size={14} /> {requireFollow ? "Link liberado após confirmar o seguidor" : "Resposta privada ao comentário"}</div><div className="phone-input"><span>Mensagem…</span><Send size={15} /></div></div></aside>
+    <aside className="preview-column"><div className="preview-label"><Sparkles size={15} /> Prévia do direct</div><div className="phone"><div className="phone-top"><span className="preview-avatar">I</span><div><strong>instachat.demo</strong><small>Instagram</small></div></div>{requireFollow && <><div className="message-bubble"><p>{followGateMessage}</p></div><div className="message-bubble message-bubble-user"><p>PRONTO</p></div></>}<div className="message-bubble"><p>{dmPreview || "Sua mensagem aparecerá aqui."}</p>{destination && <span className="preview-link"><ExternalLink size={13} /> Abrir material</span>}</div><div className="phone-hint"><MessageCircle size={14} /> {requireFollow ? "Link liberado após confirmar o seguidor" : "Resposta privada ao comentário"}</div><div className="phone-input"><span>Mensagem…</span><Send size={15} /></div></div></aside>
   </form>;
 }

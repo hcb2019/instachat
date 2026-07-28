@@ -8,7 +8,14 @@ function mapAutomation(row: Record<string, unknown>): Automation {
   return {
     id: String(row.id), ownerId: String(row.owner_id), connectionId: String(row.connection_id),
     mediaId: row.media_id ? String(row.media_id) : null, name: String(row.name), keyword: String(row.keyword),
-    keywordNormalized: String(row.keyword_normalized), publicReply: String(row.public_reply), dmMessage: String(row.dm_message),
+    keywordNormalized: String(row.keyword_normalized), publicReply: String(row.public_reply),
+    publicReplyVariants: Array.isArray(row.public_reply_variants)
+      ? row.public_reply_variants.map(String)
+      : [String(row.public_reply)],
+    dmMessage: String(row.dm_message),
+    dmMessageVariants: Array.isArray(row.dm_message_variants)
+      ? row.dm_message_variants.map(String)
+      : [String(row.dm_message)],
     destinationUrl: String(row.destination_url), requireFollow: Boolean(row.require_follow),
     followGateMessage: String(row.follow_gate_message ?? ""), notFollowingMessage: String(row.not_following_message ?? ""),
     status: row.status as Automation["status"], version: Number(row.version),

@@ -11,6 +11,17 @@ export function keywordMatches(comment: string, keyword: string) {
   return normalizeKeyword(comment) === normalizeKeyword(keyword);
 }
 
+export function selectReplyVariant(commentId: string, variants: string[]) {
+  const usable = variants.map((value) => value.trim()).filter(Boolean);
+  if (!usable.length) return "";
+  let hash = 2166136261;
+  for (const character of commentId.normalize("NFKC")) {
+    hash ^= character.codePointAt(0) ?? 0;
+    hash = Math.imul(hash, 16777619);
+  }
+  return usable[(hash >>> 0) % usable.length] ?? usable[0]!;
+}
+
 export const httpsUrlSchema = z
   .string()
   .trim()
@@ -24,7 +35,9 @@ export const automationSchema = z
     mediaId: z.string().trim().max(120),
     keyword: z.string().trim().max(80, "Use até 80 caracteres."),
     publicReply: z.string().trim().max(500, "Use até 500 caracteres."),
+    publicReplyVariants: z.array(z.string().trim().max(500, "Use até 500 caracteres.")).max(5, "Use no máximo cinco variações.").default([]),
     dmMessage: z.string().trim().max(900, "Use até 900 caracteres."),
+    dmMessageVariants: z.array(z.string().trim().max(900, "Use até 900 caracteres.")).max(5, "Use no máximo cinco variações.").default([]),
     destinationUrl: z.string().trim().max(2048),
     requireFollow: z.boolean().default(false),
     followGateMessage: z.string().trim().max(900, "Use até 900 caracteres.").default(DEFAULT_FOLLOW_GATE_MESSAGE),
@@ -37,12 +50,22 @@ export const automationSchema = z
       ["name", "Informe um nome."],
       ["mediaId", "Selecione um Reel."],
       ["keyword", "Informe uma palavra-chave."],
-      ["publicReply", "Informe a resposta pública."],
-      ["dmMessage", "Informe a mensagem privada."],
       ["destinationUrl", "Informe o destino."],
     ];
     for (const [field, message] of required) {
       if (!data[field]) context.addIssue({ code: "custom", path: [field], message });
+    }
+    const publicReplies = data.publicReplyVariants.filter(Boolean);
+    if (publicReplies.length < 3) {
+      context.addIssue({ code: "custom", path: ["publicReplyVariants"], message: "Informe pelo menos três respostas públicas." });
+    } else if (new Set(publicReplies.map(normalizeKeyword)).size !== publicReplies.length) {
+      context.addIssue({ code: "custom", path: ["publicReplyVariants"], message: "As respostas precisam ser diferentes entre si." });
+    }
+    const dmMessages = data.dmMessageVariants.filter(Boolean);
+    if (!dmMessages.length) {
+      context.addIssue({ code: "custom", path: ["dmMessageVariants"], message: "Informe pelo menos uma mensagem privada." });
+    } else if (new Set(dmMessages.map(normalizeKeyword)).size !== dmMessages.length) {
+      context.addIssue({ code: "custom", path: ["dmMessageVariants"], message: "As mensagens privadas precisam ser diferentes entre si." });
     }
     if (data.destinationUrl) {
       const parsed = httpsUrlSchema.safeParse(data.destinationUrl);

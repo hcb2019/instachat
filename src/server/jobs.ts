@@ -1,7 +1,7 @@
 import "server-only";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { env, isDemoMode } from "@/lib/env";
-import { normalizeKeyword } from "@/lib/domain";
+import { normalizeKeyword, selectReplyVariant } from "@/lib/domain";
 import { createTrackingToken, decryptSecret } from "@/server/crypto";
 import { instagramGateway } from "@/server/instagram";
 import { MetaApiError } from "@/server/instagram/meta-gateway";
@@ -172,13 +172,25 @@ async function processEvent(eventId: string) {
     return;
   }
   const { token, hash } = createTrackingToken();
+  const publicReply = selectReplyVariant(
+    event.comment_id,
+    Array.isArray(automation.public_reply_variants)
+      ? automation.public_reply_variants
+      : [automation.public_reply],
+  ) || automation.public_reply;
+  const dmMessage = selectReplyVariant(
+    `dm:${event.comment_id}`,
+    Array.isArray(automation.dm_message_variants)
+      ? automation.dm_message_variants
+      : [automation.dm_message],
+  ) || automation.dm_message;
   const { data: run, error: runError } = await supabase.from("automation_runs").insert({
     owner_id: automation.owner_id, automation_id: automation.id, comment_event_id: event.id,
     automation_name_snapshot: automation.name, automation_version: automation.version,
     media_external_id: event.media_external_id, comment_id: event.comment_id,
     commenter_scoped_id: event.commenter_scoped_id, commenter_username: event.commenter_username,
-    comment_text: event.comment_text, public_reply_snapshot: automation.public_reply,
-    dm_message_snapshot: automation.dm_message, destination_url_snapshot: automation.destination_url,
+    comment_text: event.comment_text, public_reply_snapshot: publicReply,
+    dm_message_snapshot: dmMessage, destination_url_snapshot: automation.destination_url,
     require_follow_snapshot: automation.require_follow,
     follow_gate_message_snapshot: automation.follow_gate_message,
     not_following_message_snapshot: automation.not_following_message,
@@ -203,7 +215,7 @@ async function processEvent(eventId: string) {
   let errorMessage: string | null = null;
 
   try {
-    const reply = await gateway.replyToComment(event.comment_id, automation.public_reply, accessToken);
+    const reply = await gateway.replyToComment(event.comment_id, publicReply, accessToken);
     publicId = reply.id;
   } catch (error) {
     publicStatus = error instanceof MetaApiError && error.ambiguous ? "ambiguous" : "failed";
@@ -216,7 +228,7 @@ async function processEvent(eventId: string) {
     const trackingUrl = `${env.APP_ORIGIN}/r/${token}`;
     const privateMessage = automation.require_follow
       ? automation.follow_gate_message
-      : `${automation.dm_message}\n\n${trackingUrl}`;
+      : `${dmMessage}\n\n${trackingUrl}`;
     const reply = await gateway.sendPrivateReply(connection.instagram_user_id, event.comment_id, privateMessage, accessToken);
     messageId = reply.messageId;
     recipientId = reply.recipientId;

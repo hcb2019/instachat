@@ -46,13 +46,17 @@ export async function suggestAutomationMessages(mediaId: string): Promise<Automa
 
 export async function saveAutomation(_state: AutomationActionState, formData: FormData): Promise<AutomationActionState> {
   const owner = await requireOwner();
+  const publicReplyVariants = formData.getAll("publicReplyVariants").map(String);
+  const dmMessageVariants = formData.getAll("dmMessageVariants").map(String);
   const parsed = automationSchema.safeParse({
     id: formData.get("id") || undefined,
     name: formData.get("name") ?? "",
     mediaId: formData.get("mediaId") ?? "",
     keyword: formData.get("keyword") ?? "",
-    publicReply: formData.get("publicReply") ?? "",
-    dmMessage: formData.get("dmMessage") ?? "",
+    publicReply: publicReplyVariants.find((value) => value.trim()) ?? "",
+    publicReplyVariants,
+    dmMessage: dmMessageVariants.find((value) => value.trim()) ?? "",
+    dmMessageVariants,
     destinationUrl: formData.get("destinationUrl") ?? "",
     requireFollow: formData.get("requireFollow") === "on",
     followGateMessage: formData.get("followGateMessage") ?? "",
@@ -83,7 +87,9 @@ export async function saveAutomation(_state: AutomationActionState, formData: Fo
     keyword: input.keyword,
     keyword_normalized: normalizeKeyword(input.keyword),
     public_reply: input.publicReply,
+    public_reply_variants: input.publicReplyVariants,
     dm_message: input.dmMessage,
+    dm_message_variants: input.dmMessageVariants,
     destination_url: input.destinationUrl,
     require_follow: input.requireFollow,
     follow_gate_message: input.followGateMessage,

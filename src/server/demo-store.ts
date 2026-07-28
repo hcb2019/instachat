@@ -48,7 +48,13 @@ const automationSeed: Automation[] = [
     keyword: "1991",
     keywordNormalized: "1991",
     publicReply: "Enviei para você. Confira seu direct.",
+    publicReplyVariants: [
+      "Enviei para você. Confira seu direct.",
+      "Prontinho! Acabei de mandar no seu direct ✨",
+      "Está a caminho — dá uma olhadinha nas suas mensagens.",
+    ],
     dmMessage: "Aqui está o material que prometi — espero que seja útil:",
+    dmMessageVariants: ["Aqui está o material que prometi — espero que seja útil:"],
     destinationUrl: "https://example.com/produto-1991",
     requireFollow: false,
     followGateMessage: "Se você já me segue, digite PRONTO. Se não, me segue e depois volta aqui e digita PRONTO.",
@@ -68,7 +74,13 @@ const automationSeed: Automation[] = [
     keyword: "GUIA",
     keywordNormalized: "guia",
     publicReply: "O guia já está a caminho ✦",
+    publicReplyVariants: [
+      "O guia já está a caminho ✦",
+      "Prontinho! Confira seu direct.",
+      "Te mandei agora — espero que ajude!",
+    ],
     dmMessage: "Seu checklist está aqui:",
+    dmMessageVariants: ["Seu checklist está aqui:"],
     destinationUrl: "https://example.com/guia",
     requireFollow: false,
     followGateMessage: "Se você já me segue, digite PRONTO. Se não, me segue e depois volta aqui e digita PRONTO.",
@@ -144,7 +156,9 @@ export function saveDemoAutomation(input: {
   mediaId: string;
   keyword: string;
   publicReply: string;
+  publicReplyVariants: string[];
   dmMessage: string;
+  dmMessageVariants: string[];
   destinationUrl: string;
   requireFollow: boolean;
   followGateMessage: string;
@@ -155,7 +169,13 @@ export function saveDemoAutomation(input: {
   const timestamp = new Date().toISOString();
   const existing = input.id ? store.automations.find((item) => item.id === input.id) : undefined;
   if (existing) {
-    Object.assign(existing, input, { keywordNormalized: normalizeKeyword(input.keyword), version: existing.version + 1, updatedAt: timestamp });
+    Object.assign(existing, input, {
+      publicReply: input.publicReplyVariants.find(Boolean) ?? input.publicReply,
+      dmMessage: input.dmMessageVariants.find(Boolean) ?? input.dmMessage,
+      keywordNormalized: normalizeKeyword(input.keyword),
+      version: existing.version + 1,
+      updatedAt: timestamp,
+    });
     return existing;
   }
   const created: Automation = {
@@ -164,6 +184,8 @@ export function saveDemoAutomation(input: {
     ownerId,
     connectionId,
     keywordNormalized: normalizeKeyword(input.keyword),
+    publicReply: input.publicReplyVariants.find(Boolean) ?? input.publicReply,
+    dmMessage: input.dmMessageVariants.find(Boolean) ?? input.dmMessage,
     version: 1,
     createdAt: timestamp,
     updatedAt: timestamp,

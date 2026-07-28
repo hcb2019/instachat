@@ -48,7 +48,9 @@ export interface Automation {
   keyword: string;
   keywordNormalized: string;
   publicReply: string;
+  publicReplyVariants: string[];
   dmMessage: string;
+  dmMessageVariants: string[];
   destinationUrl: string;
   requireFollow: boolean;
   followGateMessage: string;
@@ -100,7 +102,9 @@ export interface AutomationInput {
   mediaId: string;
   keyword: string;
   publicReply: string;
+  publicReplyVariants: string[];
   dmMessage: string;
+  dmMessageVariants: string[];
   destinationUrl: string;
   requireFollow: boolean;
   followGateMessage: string;

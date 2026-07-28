@@ -179,6 +179,20 @@ h1, h2, h3, p { margin-top: 0; }
 .suggestion-card > span { display: block; margin-top: 8px; color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .suggestion-card > p { margin: 3px 0 0; color: #38362f; font-size: 10px; line-height: 1.5; }
 .form-section .suggestion-card > small { display: block; margin-top: 10px; padding-top: 9px; border-top: 1px solid #eee8dd; line-height: 1.45; }
+.reply-variations { margin-top: 20px; padding: 16px; background: #f7f4ed; border: 1px solid #ddd6ca; border-radius: 12px; }
+.reply-variations-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.reply-variations-head strong, .reply-variations-head small { display: block; }
+.reply-variations-head strong { font-size: 13px; }
+.form-section .reply-variations-head small { max-width: 540px; margin-top: 4px; line-height: 1.45; }
+.reply-variations-head > span { flex: none; padding: 5px 7px; color: var(--coral-dark); background: #f8e5df; border-radius: 6px; font-size: 9px; font-weight: 800; }
+.reply-variations-list { margin-top: 4px; }
+.form-section .reply-variations-list label { margin-top: 13px; }
+.reply-variations-list label > span { display: flex; align-items: center; gap: 4px; }
+.reply-variations-list em { color: var(--muted); font-size: 9px; font-style: normal; font-weight: 550; }
+.reply-variations-list label > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px; }
+.reply-variations-list .icon-button { margin-top: 4px; }
+.add-reply-variation { margin-top: 13px; padding: 8px 0; display: inline-flex; align-items: center; gap: 6px; color: var(--coral-dark); background: transparent; border: 0; cursor: pointer; font-size: 10px; font-weight: 800; }
+.reply-variation-summary { margin: 0; padding-left: 18px; display: grid; gap: 7px; }
 .follow-gate { margin-top: 22px; padding: 16px; background: #f7f4ed; border: 1px solid #ddd6ca; border-radius: 12px; transition: border-color .16s ease, background .16s ease; }
 .follow-gate.enabled { background: #fff8f5; border-color: #efb7a9; }
 .form-section .follow-gate-switch { margin: 0; display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; align-items: center; gap: 11px; cursor: pointer; }
