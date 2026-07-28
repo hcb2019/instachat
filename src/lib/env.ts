@@ -12,6 +12,7 @@ const schema = z.object({
   SUPABASE_SECRET_KEY: z.string().optional(),
   META_APP_ID: z.string().optional(),
   META_APP_SECRET: z.string().optional(),
+  META_WEBHOOK_APP_SECRET: z.string().optional(),
   META_GRAPH_API_VERSION: z.string().regex(/^v\d+\.\d+$/).default("v25.0"),
   META_WEBHOOK_VERIFY_TOKEN: z.string().optional(),
   TOKEN_ENCRYPTION_KEY: z.string().optional(),

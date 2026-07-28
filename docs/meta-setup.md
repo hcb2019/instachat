@@ -25,14 +25,19 @@ Não use "Auxiliar de integração de API" nem "Configuração com Facebook Logi
 
 O InstaChat solicita `instagram_business_manage_messages` por compatibilidade com aplicativos Meta que exigem essa permissão no endpoint usado para a private reply.
 
-## Webhook
+## Credenciais e webhook
+
+- `META_APP_ID`: ID do app do Instagram, dentro de "Configuração da API com login do Instagram".
+- `META_APP_SECRET`: chave secreta do app do Instagram, usada no OAuth.
+- `META_WEBHOOK_APP_SECRET`: chave secreta do aplicativo principal, em "Configurações do app → Básico". A Meta usa este segredo para assinar webhooks e solicitações de exclusão de dados.
+- `META_WEBHOOK_VERIFY_TOKEN`: senha aleatória criada pelo administrador. Ela não é fornecida pela Meta.
 
 - Callback: `https://SEU_DOMINIO/api/meta/webhook`
-- Campo necessário: `comments`
-- Campos desnecessários: `live_comments`, `messages`, `message_*`, `messaging_*` e `standby`
+- Campos necessários: `comments` e `messages`
+- Campos desnecessários: `live_comments`, `message_edit`, `message_reactions`, `messaging_handover`, `messaging_optins`, `messaging_postbacks`, `messaging_referral`, `messaging_seen` e `standby`
 - Certificado de cliente: desligado
 
-O administrador cria `META_WEBHOOK_VERIFY_TOKEN`, salva o mesmo valor na Vercel e no campo "Verificar token" da Meta. Depois do OAuth, o InstaChat chama `/{ig_user_id}/subscribed_apps?subscribed_fields=comments` automaticamente.
+O administrador cria `META_WEBHOOK_VERIFY_TOKEN`, salva o mesmo valor na Vercel e no campo "Verificar token" da Meta. Depois do OAuth, o InstaChat chama `/{ig_user_id}/subscribed_apps?subscribed_fields=comments,messages` automaticamente.
 
 ## URLs do login
 

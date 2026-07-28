@@ -2,7 +2,7 @@ import { after } from "next/server";
 import { env, isDemoMode } from "@/lib/env";
 import { ingestEvents, processIncomingMessages, processQueueBatch } from "@/server/jobs";
 import { queueScheduledAudienceAnalyses } from "@/server/audience/jobs";
-import { parseCommentEvents, parseMessageEvents, verifyWebhookSignature } from "@/server/webhook";
+import { parseCommentEvents, parseMessageEvents, verifyWebhookSignatureWithSecrets } from "@/server/webhook";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -22,8 +22,21 @@ export async function POST(request: Request) {
   if (length > 256_000) return new Response("Payload too large", { status: 413 });
   const rawBody = await request.text();
   if (Buffer.byteLength(rawBody) > 256_000) return new Response("Payload too large", { status: 413 });
-  const secret = env.META_APP_SECRET ?? (isDemoMode ? "demo-webhook-secret" : "");
-  if (!secret || !verifyWebhookSignature(rawBody, request.headers.get("x-hub-signature-256"), secret)) return new Response("Invalid signature", { status: 401 });
+  const webhookSecrets = isDemoMode
+    ? ["demo-webhook-secret", "demo-meta-secret"]
+    : [env.META_WEBHOOK_APP_SECRET, env.META_APP_SECRET];
+  if (!verifyWebhookSignatureWithSecrets(
+    rawBody,
+    request.headers.get("x-hub-signature-256"),
+    webhookSecrets,
+  )) {
+    console.warn("Instagram webhook signature rejected", {
+      bodyBytes: Buffer.byteLength(rawBody),
+      hasPlatformSecret: Boolean(env.META_WEBHOOK_APP_SECRET),
+      hasInstagramSecret: Boolean(env.META_APP_SECRET),
+    });
+    return new Response("Invalid signature", { status: 401 });
+  }
   let events;
   let messageEvents;
   try {

@@ -53,6 +53,16 @@ export function verifyWebhookSignature(rawBody: string, signature: string | null
   return constantTimeTextEqual(signature, expected);
 }
 
+export function verifyWebhookSignatureWithSecrets(
+  rawBody: string,
+  signature: string | null,
+  secrets: Array<string | undefined>,
+) {
+  const configuredSecrets = [...new Set(secrets.filter((secret): secret is string => Boolean(secret)))];
+  return configuredSecrets.length > 0
+    && configuredSecrets.some((secret) => verifyWebhookSignature(rawBody, signature, secret));
+}
+
 export function parseCommentEvents(rawBody: string): InstagramCommentEvent[] {
   const payload = webhookSchema.parse(JSON.parse(rawBody));
   return payload.entry.flatMap((entry) => {

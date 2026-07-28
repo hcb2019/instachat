@@ -19,6 +19,23 @@ test("shows responsive navigation on a small viewport", async ({ page }) => {
   await page.goto("/automations");
   await expect(page.getByRole("navigation", { name: "Navegação principal" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Automações" })).toBeVisible();
+  const widths = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    document: document.documentElement.scrollWidth,
+  }));
+  expect(widths.document).toBeLessThanOrEqual(widths.viewport);
+});
+
+test("keeps automation fields readable without iOS input zoom", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto("/automations/new");
+  const fieldSizes = await page.locator("input, textarea, select").evaluateAll((fields) =>
+    fields.map((field) => Number.parseFloat(getComputedStyle(field).fontSize)),
+  );
+  expect(fieldSizes.length).toBeGreaterThan(0);
+  expect(fieldSizes.every((size) => size >= 16)).toBe(true);
+  const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(documentWidth).toBeLessThanOrEqual(360);
 });
 
 test("selects a Reel from the visual gallery", async ({ page }) => {
@@ -59,7 +76,7 @@ test("follows the Instagram connection guide and persists progress", async ({ pa
   await page.getByRole("button", { name: "Gerar token seguro" }).click();
   await expect(page.getByText("Seu token foi criado", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /Copiar token:/ })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Para o InstaChat, ligue somente comments" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ligue comments e messages" })).toBeVisible();
   await expect(page.getByText("URL de callback", { exact: true })).toBeVisible();
   await expect(page.getByText("Valid OAuth Redirect URI", { exact: true }).first()).toBeVisible();
   await page.getByRole("button", { name: "Marcar como concluída" }).first().click();

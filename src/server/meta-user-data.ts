@@ -10,7 +10,9 @@ function decodeBase64Url(value: string) {
 }
 
 export function verifyMetaSignedRequest(signedRequest: string): MetaSignedPayload | null {
-  const secret = env.META_APP_SECRET ?? (isDemoMode ? "demo-meta-secret" : "");
+  const secret = env.META_WEBHOOK_APP_SECRET
+    ?? env.META_APP_SECRET
+    ?? (isDemoMode ? "demo-meta-secret" : "");
   if (!secret || signedRequest.length > 10_000) return null;
   const [encodedSignature, encodedPayload, ...rest] = signedRequest.split(".");
   if (!encodedSignature || !encodedPayload || rest.length) return null;

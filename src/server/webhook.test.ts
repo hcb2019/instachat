@@ -1,6 +1,11 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { parseCommentEvents, parseMessageEvents, verifyWebhookSignature } from "@/server/webhook";
+import {
+  parseCommentEvents,
+  parseMessageEvents,
+  verifyWebhookSignature,
+  verifyWebhookSignatureWithSecrets,
+} from "@/server/webhook";
 
 const payload = JSON.stringify({
   object: "instagram",
@@ -13,6 +18,23 @@ describe("Meta webhooks", () => {
     expect(verifyWebhookSignature(payload, signature, "secret")).toBe(true);
     expect(verifyWebhookSignature(`${payload} `, signature, "secret")).toBe(false);
     expect(verifyWebhookSignature(payload, null, "secret")).toBe(false);
+  });
+
+  it("accepts the main Meta app secret while keeping the Instagram secret as a transition fallback", () => {
+    const platformSignature = `sha256=${createHmac("sha256", "platform-secret").update(payload).digest("hex")}`;
+    const instagramSignature = `sha256=${createHmac("sha256", "instagram-secret").update(payload).digest("hex")}`;
+
+    expect(verifyWebhookSignatureWithSecrets(
+      payload,
+      platformSignature,
+      ["platform-secret", "instagram-secret"],
+    )).toBe(true);
+    expect(verifyWebhookSignatureWithSecrets(
+      payload,
+      instagramSignature,
+      ["platform-secret", "instagram-secret"],
+    )).toBe(true);
+    expect(verifyWebhookSignatureWithSecrets(payload, platformSignature, [])).toBe(false);
   });
 
   it("maps a comment event without retaining the full envelope", () => {

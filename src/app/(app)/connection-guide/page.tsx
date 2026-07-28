@@ -116,12 +116,13 @@ function PermissionTable() {
 function WebhookFields() {
   const fields = [
     ["comments", "Ligado", true],
+    ["messages", "Ligado", true],
     ["live_comments", "Desligado", false],
-    ["messages e message_*", "Desligado", false],
-    ["messaging_* e standby", "Desligado", false],
+    ["message_edit e message_reactions", "Desligado", false],
+    ["outros messaging_* e standby", "Desligado", false],
   ];
   return <section className="webhook-fields" aria-labelledby="webhook-fields-title">
-    <div className="setup-section-heading"><span>Campos do webhook</span><h3 id="webhook-fields-title">Para o InstaChat, ligue somente comments</h3><p>Os outros campos pertencem a conversas, lives ou recursos que este aplicativo não processa.</p></div>
+    <div className="setup-section-heading"><span>Campos do webhook</span><h3 id="webhook-fields-title">Ligue comments e messages</h3><p><code>comments</code> inicia a automação. <code>messages</code> recebe a confirmação “pronto” e libera o conteúdo depois da verificação de seguidor.</p></div>
     <div>{fields.map(([name, status, enabled]) => <div key={String(name)}><code>{name}</code><span className={enabled ? "on" : "off"}><i />{status}</span></div>)}</div>
   </section>;
 }
@@ -232,6 +233,7 @@ export default async function ConnectionGuidePage() {
         <div className="setup-env-table">
           <div><code>META_APP_ID</code><span>Copie o ID do app do Instagram mostrado na etapa 3.</span></div>
           <div><code>META_APP_SECRET</code><span>Copie a chave secreta do app do Instagram. Nunca exponha esse valor.</span></div>
+          <div><code>META_WEBHOOK_APP_SECRET</code><span>Em <strong>Configurações do app → Básico</strong>, copie a <strong>Chave secreta do aplicativo principal</strong>. Ela assina os eventos recebidos; não é a chave do app do Instagram.</span></div>
           <div><code>META_GRAPH_API_VERSION</code><span>Use <strong>v25.0</strong>, a versão exibida nas telas atuais da Meta.</span></div>
           <div><code>META_WEBHOOK_VERIFY_TOKEN</code><span>Crie no gerador logo abaixo.</span></div>
           <div><code>APP_ORIGIN</code><span>Use <strong>{origin}</strong>, sem barra no final.</span></div>
@@ -250,7 +252,7 @@ export default async function ConnectionGuidePage() {
           <div className="setup-plain-instruction"><b>Certificado de cliente</b><p>Deixe a chave desligada. Clique em <strong>Verificar e salvar</strong>.</p></div>
         </section>
         <WebhookFields />
-        <div className="setup-warning"><AlertTriangle size={17} /><p>Se vários campos aparecerem como &quot;Assinado&quot;, desligue os que o InstaChat não usa. Deixe apenas <code>comments</code>. O campo <code>live_comments</code> também pode ficar desligado.</p></div>
+        <div className="setup-warning"><AlertTriangle size={17} /><p>Deixe <code>comments</code> e <code>messages</code> como &quot;Assinado&quot;. Sem <code>messages</code>, o InstaChat envia a primeira DM, mas não recebe a palavra “pronto”. Os demais campos podem ficar desligados.</p></div>
         <section className="setup-config-panel">
           <header><Link2 size={19} /><div><small>Bloco 4</small><h3>Configurar o login da empresa no Instagram</h3></div></header>
           <p className="setup-panel-intro">Clique em <strong>Configurar</strong>. Na tela que abrir, cadastre estas URLs:</p>

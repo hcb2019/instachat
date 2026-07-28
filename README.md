@@ -49,7 +49,7 @@ pnpm test:e2e
 
 ## Segurança operacional
 
-- Nunca coloque `SUPABASE_SECRET_KEY`, `META_APP_SECRET`, `TOKEN_ENCRYPTION_KEY` ou `WORKER_SECRET` em variáveis `NEXT_PUBLIC_*`.
+- Nunca coloque `SUPABASE_SECRET_KEY`, `META_APP_SECRET`, `META_WEBHOOK_APP_SECRET`, `TOKEN_ENCRYPTION_KEY` ou `WORKER_SECRET` em variáveis `NEXT_PUBLIC_*`.
 - `OPENAI_API_KEY` também é exclusivamente server-side. Usernames e IDs externos são substituídos por aliases temporários antes de qualquer chamada à OpenAI.
 - Gere `TOKEN_ENCRYPTION_KEY` com `openssl rand -base64 32` e `WORKER_SECRET` com pelo menos 32 bytes aleatórios.
 - O token Meta é cifrado com AES-256-GCM antes de chegar ao banco.

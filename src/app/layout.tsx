@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Instrument_Sans, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
@@ -10,6 +10,13 @@ export const metadata: Metadata = {
   description: "Transforme comentários em conversas e oportunidades.",
   applicationName: "InstaChat",
   icons: { icon: "/icon.png", apple: "/apple-icon.png" },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#f4f1ea",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
