@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+export const DEFAULT_FOLLOW_GATE_MESSAGE = "Se você já me segue, digite PRONTO. Se não, me segue e depois volta aqui e digita PRONTO.";
+export const DEFAULT_NOT_FOLLOWING_MESSAGE = "Poxa… você quer o conteúdo e ainda não me segue? 😅 Me segue primeiro e depois digita PRONTO aqui de novo.";
+
 export function normalizeKeyword(value: string) {
   return value.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("pt-BR");
 }
@@ -23,6 +26,9 @@ export const automationSchema = z
     publicReply: z.string().trim().max(500, "Use até 500 caracteres."),
     dmMessage: z.string().trim().max(900, "Use até 900 caracteres."),
     destinationUrl: z.string().trim().max(2048),
+    requireFollow: z.boolean().default(false),
+    followGateMessage: z.string().trim().max(900, "Use até 900 caracteres.").default(DEFAULT_FOLLOW_GATE_MESSAGE),
+    notFollowingMessage: z.string().trim().max(900, "Use até 900 caracteres.").default(DEFAULT_NOT_FOLLOWING_MESSAGE),
     intent: z.enum(["draft", "active"]),
   })
   .superRefine((data, context) => {
@@ -41,6 +47,12 @@ export const automationSchema = z
     if (data.destinationUrl) {
       const parsed = httpsUrlSchema.safeParse(data.destinationUrl);
       if (!parsed.success) context.addIssue({ code: "custom", path: ["destinationUrl"], message: parsed.error.issues[0]?.message ?? "URL inválida." });
+    }
+    if (data.requireFollow && !data.followGateMessage) {
+      context.addIssue({ code: "custom", path: ["followGateMessage"], message: "Informe a mensagem que pede a confirmação." });
+    }
+    if (data.requireFollow && !data.notFollowingMessage) {
+      context.addIssue({ code: "custom", path: ["notFollowingMessage"], message: "Informe a mensagem para quem ainda não segue." });
     }
   });
 

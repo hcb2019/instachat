@@ -1,8 +1,8 @@
 import { after } from "next/server";
 import { env, isDemoMode } from "@/lib/env";
-import { ingestEvents, processQueueBatch } from "@/server/jobs";
+import { ingestEvents, processIncomingMessages, processQueueBatch } from "@/server/jobs";
 import { queueScheduledAudienceAnalyses } from "@/server/audience/jobs";
-import { parseCommentEvents, verifyWebhookSignature } from "@/server/webhook";
+import { parseCommentEvents, parseMessageEvents, verifyWebhookSignature } from "@/server/webhook";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -25,8 +25,10 @@ export async function POST(request: Request) {
   const secret = env.META_APP_SECRET ?? (isDemoMode ? "demo-webhook-secret" : "");
   if (!secret || !verifyWebhookSignature(rawBody, request.headers.get("x-hub-signature-256"), secret)) return new Response("Invalid signature", { status: 401 });
   let events;
+  let messageEvents;
   try {
     events = parseCommentEvents(rawBody).filter((event) => !event.isSelf);
+    messageEvents = parseMessageEvents(rawBody).filter((event) => !event.isEcho);
   } catch (error) {
     console.warn("Instagram webhook payload rejected", {
       error: error instanceof Error ? error.name : "UnknownError",
@@ -37,6 +39,7 @@ export async function POST(request: Request) {
 
   try {
     const result = await ingestEvents(events);
+    const messages = await processIncomingMessages(messageEvents);
     let processed = 0;
     if (result.queued > 0) {
       try {
@@ -54,11 +57,12 @@ export async function POST(request: Request) {
     after(async () => {
       await queueScheduledAudienceAnalyses(20).catch(() => undefined);
     });
-    return Response.json({ ...result, processed }, { headers: { "Cache-Control": "no-store" } });
+    return Response.json({ ...result, processed, messages }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Instagram webhook ingestion failed", {
       error: error instanceof Error ? error.message : "UnknownError",
       eventCount: events.length,
+      messageEventCount: messageEvents.length,
     });
     return Response.json({ error: "Ingestion failed" }, { status: 500, headers: { "Cache-Control": "no-store" } });
   }

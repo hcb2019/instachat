@@ -54,6 +54,9 @@ export async function saveAutomation(_state: AutomationActionState, formData: Fo
     publicReply: formData.get("publicReply") ?? "",
     dmMessage: formData.get("dmMessage") ?? "",
     destinationUrl: formData.get("destinationUrl") ?? "",
+    requireFollow: formData.get("requireFollow") === "on",
+    followGateMessage: formData.get("followGateMessage") ?? "",
+    notFollowingMessage: formData.get("notFollowingMessage") ?? "",
     intent: formData.get("intent") ?? "draft",
   });
   if (!parsed.success) return { error: "Revise os campos destacados.", fields: parsed.error.flatten().fieldErrors };
@@ -82,6 +85,9 @@ export async function saveAutomation(_state: AutomationActionState, formData: Fo
     public_reply: input.publicReply,
     dm_message: input.dmMessage,
     destination_url: input.destinationUrl,
+    require_follow: input.requireFollow,
+    follow_gate_message: input.followGateMessage,
+    not_following_message: input.notFollowingMessage,
     status: input.intent,
   };
   const result = input.id

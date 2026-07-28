@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useActionState, useState, useTransition } from "react";
-import { Check, ExternalLink, Film, Lightbulb, LoaderCircle, MessageCircle, Search, Send, Sparkles } from "lucide-react";
+import { Check, ExternalLink, Film, Lightbulb, LoaderCircle, MessageCircle, Search, Send, Sparkles, UserCheck } from "lucide-react";
 import {
   saveAutomation,
   suggestAutomationMessages,
@@ -10,6 +10,7 @@ import {
 } from "@/features/automations/actions";
 import { Button, Card } from "@/components/ui";
 import type { AutomationMessageSuggestion } from "@/lib/automation-suggestions";
+import { DEFAULT_FOLLOW_GATE_MESSAGE, DEFAULT_NOT_FOLLOWING_MESSAGE } from "@/lib/domain";
 import type { Automation, InstagramMedia } from "@/types/domain";
 
 function FieldError({ messages }: { messages?: string[] }) {
@@ -22,6 +23,9 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
   const [publicReply, setPublicReply] = useState(automation?.publicReply ?? "");
   const [dm, setDm] = useState(automation?.dmMessage ?? "");
   const [destination, setDestination] = useState(automation?.destinationUrl ?? "");
+  const [requireFollow, setRequireFollow] = useState(automation?.requireFollow ?? false);
+  const [followGateMessage, setFollowGateMessage] = useState(automation?.followGateMessage || DEFAULT_FOLLOW_GATE_MESSAGE);
+  const [notFollowingMessage, setNotFollowingMessage] = useState(automation?.notFollowingMessage || DEFAULT_NOT_FOLLOWING_MESSAGE);
   const [selectedMediaId, setSelectedMediaId] = useState(automation?.mediaId ?? "");
   const [reelQuery, setReelQuery] = useState("");
   const [suggestions, setSuggestions] = useState<AutomationMessageSuggestion[]>([]);
@@ -120,9 +124,45 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
         <label><span>Resposta pública</span><textarea name="publicReply" value={publicReply} onChange={(event) => setPublicReply(event.target.value)} placeholder="Enviei para você. Confira seu direct." maxLength={500} rows={3} /><FieldError messages={state.fields?.publicReply} /></label>
         <label><span>Mensagem privada</span><textarea name="dmMessage" value={dm} onChange={(event) => setDm(event.target.value)} placeholder="Aqui está o material que prometi:" maxLength={900} rows={5} /><FieldError messages={state.fields?.dmMessage} /></label>
         <label><span>URL de destino</span><input name="destinationUrl" type="url" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="https://seusite.com/produto" maxLength={2048} /><FieldError messages={state.fields?.destinationUrl} /></label>
+        <div className={`follow-gate${requireFollow ? " enabled" : ""}`}>
+          <label className="follow-gate-switch">
+            <span className="follow-gate-icon"><UserCheck size={19} /></span>
+            <span className="follow-gate-copy">
+              <strong>Liberar conteúdo somente para seguidores</strong>
+              <small>O Instagram só permite confirmar depois que a pessoa responder à primeira mensagem.</small>
+            </span>
+            <input
+              type="checkbox"
+              name="requireFollow"
+              checked={requireFollow}
+              onChange={(event) => setRequireFollow(event.target.checked)}
+            />
+            <span className="switch-control" aria-hidden="true" />
+          </label>
+          {requireFollow && <div className="follow-gate-fields">
+            <div className="follow-gate-flow" aria-label="Fluxo da confirmação">
+              <span>1 · Comentou</span><span>2 · Respondeu PRONTO</span><span>3 · Seguimento confirmado</span><span>4 · Link liberado</span>
+            </div>
+            <label>
+              <span>Primeira mensagem</span>
+              <textarea name="followGateMessage" value={followGateMessage} onChange={(event) => setFollowGateMessage(event.target.value)} maxLength={900} rows={4} />
+              <small>Enviada no lugar do link. A pessoa deve responder para autorizar a verificação.</small>
+              <FieldError messages={state.fields?.followGateMessage} />
+            </label>
+            <label>
+              <span>Se a pessoa ainda não seguir</span>
+              <textarea name="notFollowingMessage" value={notFollowingMessage} onChange={(event) => setNotFollowingMessage(event.target.value)} maxLength={900} rows={4} />
+              <FieldError messages={state.fields?.notFollowingMessage} />
+            </label>
+          </div>}
+          {!requireFollow && <>
+            <input type="hidden" name="followGateMessage" value={followGateMessage} />
+            <input type="hidden" name="notFollowingMessage" value={notFollowingMessage} />
+          </>}
+        </div>
       </Card>
       <div className="form-actions"><Button name="intent" value="draft" variant="secondary" disabled={pending}>Salvar rascunho</Button><Button name="intent" value="active" disabled={pending}>{pending ? "Salvando…" : automation?.status === "active" ? "Salvar e manter ativa" : "Salvar e ativar"}</Button></div>
     </section>
-    <aside className="preview-column"><div className="preview-label"><Sparkles size={15} /> Prévia do direct</div><div className="phone"><div className="phone-top"><span className="preview-avatar">I</span><div><strong>instachat.demo</strong><small>Instagram</small></div></div><div className="message-bubble"><p>{dm || "Sua mensagem aparecerá aqui."}</p>{destination && <span className="preview-link"><ExternalLink size={13} /> Abrir material</span>}</div><div className="phone-hint"><MessageCircle size={14} /> Resposta privada ao comentário</div><div className="phone-input"><span>Mensagem…</span><Send size={15} /></div></div></aside>
+    <aside className="preview-column"><div className="preview-label"><Sparkles size={15} /> Prévia do direct</div><div className="phone"><div className="phone-top"><span className="preview-avatar">I</span><div><strong>instachat.demo</strong><small>Instagram</small></div></div>{requireFollow && <><div className="message-bubble"><p>{followGateMessage}</p></div><div className="message-bubble message-bubble-user"><p>PRONTO</p></div></>}<div className="message-bubble"><p>{dm || "Sua mensagem aparecerá aqui."}</p>{destination && <span className="preview-link"><ExternalLink size={13} /> Abrir material</span>}</div><div className="phone-hint"><MessageCircle size={14} /> {requireFollow ? "Link liberado após confirmar o seguidor" : "Resposta privada ao comentário"}</div><div className="phone-input"><span>Mensagem…</span><Send size={15} /></div></div></aside>
   </form>;
 }

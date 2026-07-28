@@ -9,7 +9,9 @@ function mapAutomation(row: Record<string, unknown>): Automation {
     id: String(row.id), ownerId: String(row.owner_id), connectionId: String(row.connection_id),
     mediaId: row.media_id ? String(row.media_id) : null, name: String(row.name), keyword: String(row.keyword),
     keywordNormalized: String(row.keyword_normalized), publicReply: String(row.public_reply), dmMessage: String(row.dm_message),
-    destinationUrl: String(row.destination_url), status: row.status as Automation["status"], version: Number(row.version),
+    destinationUrl: String(row.destination_url), requireFollow: Boolean(row.require_follow),
+    followGateMessage: String(row.follow_gate_message ?? ""), notFollowingMessage: String(row.not_following_message ?? ""),
+    status: row.status as Automation["status"], version: Number(row.version),
     createdAt: String(row.created_at), updatedAt: String(row.updated_at), deletedAt: row.deleted_at ? String(row.deleted_at) : null,
   };
 }
@@ -55,7 +57,9 @@ export async function listRuns(): Promise<AutomationRun[]> {
     mediaExternalId: row.media_external_id, commentId: row.comment_id, commenterScopedId: row.commenter_scoped_id,
     commenterUsername: row.commenter_username, commentText: row.comment_text, status: row.status,
     publicReplyStatus: row.public_reply_status, dmStatus: row.dm_status, publicReplyAttempts: row.public_reply_attempts,
-    dmAttempts: row.dm_attempts, errorCode: row.error_code, errorMessage: row.error_message,
+    dmAttempts: row.dm_attempts, requireFollow: Boolean(row.require_follow_snapshot),
+    followStatus: row.follow_status, contentDeliveredAt: row.content_delivered_at,
+    errorCode: row.error_code, errorMessage: row.error_message,
     firstClickedAt: row.first_clicked_at, createdAt: row.created_at,
   })) as AutomationRun[];
 }
@@ -66,7 +70,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     activeAutomations: automations.filter((item) => item.status === "active").length,
     matchedComments: runs.length,
     eligibleRecipients: runs.length,
-    sentDms: runs.filter((item) => item.dmStatus === "succeeded").length,
+    sentDms: runs.filter((item) => item.contentDeliveredAt).length,
     uniqueClicks: runs.filter((item) => item.firstClickedAt).length,
     failures: runs.filter((item) => ["failed", "partial", "ambiguous"].includes(item.status)).length,
     duplicates: 0,

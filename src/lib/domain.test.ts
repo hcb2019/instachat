@@ -28,4 +28,13 @@ describe("automation validation", () => {
     expect(formatPercent(0, 0)).toBe("0%");
     expect(formatPercent(1, 4)).toBe("25%");
   });
+
+  it("exige as duas mensagens quando a confirmação de seguidor está ativa", () => {
+    const invalid = automationSchema.safeParse({
+      name: "A", mediaId: "id", keyword: "x", publicReply: "ok", dmMessage: "ok",
+      destinationUrl: "https://example.com", requireFollow: true,
+      followGateMessage: "", notFollowingMessage: "", intent: "active",
+    });
+    expect(invalid.success).toBe(false);
+  });
 });

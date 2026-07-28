@@ -2,7 +2,7 @@ import "server-only";
 import { createHmac } from "node:crypto";
 import { z } from "zod";
 import { constantTimeTextEqual } from "@/server/crypto";
-import type { InstagramCommentEvent } from "@/server/instagram/types";
+import type { InstagramCommentEvent, InstagramMessageEvent } from "@/server/instagram/types";
 
 const metaIdSchema = z.union([z.string(), z.number().transform(String)]);
 
@@ -34,6 +34,15 @@ const webhookSchema = z.object({
     changes: z.array(z.object({
       field: z.string(),
       value: z.unknown(),
+    }).passthrough()).optional(),
+    messaging: z.array(z.object({
+      sender: z.object({ id: metaIdSchema }),
+      recipient: z.object({ id: metaIdSchema }),
+      message: z.object({
+        mid: metaIdSchema,
+        text: z.string().max(1000).optional(),
+        is_echo: z.boolean().optional(),
+      }).passthrough(),
     }).passthrough()).optional(),
   }).passthrough()),
 }).passthrough();
@@ -77,4 +86,20 @@ export function parseCommentEvents(rawBody: string): InstagramCommentEvent[] {
         || (value.from?.id !== undefined && value.from.id === entry.id),
     }));
   });
+}
+
+export function parseMessageEvents(rawBody: string): InstagramMessageEvent[] {
+  const payload = webhookSchema.parse(JSON.parse(rawBody));
+  return payload.entry.flatMap((entry) =>
+    (entry.messaging ?? []).map((event) => ({
+      instagramUserId: entry.id,
+      messageId: event.message.mid,
+      senderScopedId: event.sender.id,
+      recipientId: event.recipient.id,
+      text: event.message.text ?? "",
+      isEcho: event.message.is_echo === true
+        || event.sender.id === entry.id
+        || event.recipient.id !== entry.id,
+    })),
+  );
 }

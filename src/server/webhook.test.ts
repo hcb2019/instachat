@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { parseCommentEvents, verifyWebhookSignature } from "@/server/webhook";
+import { parseCommentEvents, parseMessageEvents, verifyWebhookSignature } from "@/server/webhook";
 
 const payload = JSON.stringify({
   object: "instagram",
@@ -87,6 +87,46 @@ describe("Meta webhooks", () => {
     });
 
     expect(parseCommentEvents(messagingPayload)).toEqual([]);
+  });
+
+  it("maps an inbound direct message used to confirm the follower", () => {
+    const messagingPayload = JSON.stringify({
+      object: "instagram",
+      entry: [{
+        id: "ig-owner",
+        messaging: [{
+          sender: { id: "ig-scoped-person" },
+          recipient: { id: "ig-owner" },
+          timestamp: 1785197000000,
+          message: { mid: "message-1", text: "PRONTO" },
+        }],
+      }],
+    });
+
+    expect(parseMessageEvents(messagingPayload)).toEqual([{
+      instagramUserId: "ig-owner",
+      messageId: "message-1",
+      senderScopedId: "ig-scoped-person",
+      recipientId: "ig-owner",
+      text: "PRONTO",
+      isEcho: false,
+    }]);
+  });
+
+  it("marks app echoes so they are never processed as follower replies", () => {
+    const echoPayload = JSON.stringify({
+      object: "instagram",
+      entry: [{
+        id: "ig-owner",
+        messaging: [{
+          sender: { id: "ig-owner" },
+          recipient: { id: "ig-scoped-person" },
+          message: { mid: "message-2", text: "mensagem enviada", is_echo: true },
+        }],
+      }],
+    });
+
+    expect(parseMessageEvents(echoPayload)[0]?.isEcho).toBe(true);
   });
 
   it("identifies comments made by the connected account", () => {

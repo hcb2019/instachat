@@ -8,6 +8,7 @@ export type ConnectionStatus =
 export type AutomationStatus = "draft" | "active" | "paused" | "error" | "deleted";
 export type RunStatus = "queued" | "processing" | "succeeded" | "partial" | "failed" | "ambiguous";
 export type StepStatus = "pending" | "succeeded" | "failed" | "ambiguous" | "skipped";
+export type FollowGateStatus = "not_required" | "awaiting_reply" | "not_following" | "verified" | "failed";
 
 export interface InstagramConnection {
   id: string;
@@ -49,6 +50,9 @@ export interface Automation {
   publicReply: string;
   dmMessage: string;
   destinationUrl: string;
+  requireFollow: boolean;
+  followGateMessage: string;
+  notFollowingMessage: string;
   status: AutomationStatus;
   version: number;
   createdAt: string;
@@ -70,6 +74,9 @@ export interface AutomationRun {
   dmStatus: StepStatus;
   publicReplyAttempts: number;
   dmAttempts: number;
+  requireFollow: boolean;
+  followStatus: FollowGateStatus;
+  contentDeliveredAt: string | null;
   errorCode: string | null;
   errorMessage: string | null;
   firstClickedAt: string | null;
@@ -95,5 +102,8 @@ export interface AutomationInput {
   publicReply: string;
   dmMessage: string;
   destinationUrl: string;
+  requireFollow: boolean;
+  followGateMessage: string;
+  notFollowingMessage: string;
   intent: "draft" | "active";
 }

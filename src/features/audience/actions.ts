@@ -4,7 +4,7 @@ import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { audienceFeedbackSchema, audiencePeriodSchema, audienceStatusSchema, contentSuggestionSchema } from "@/lib/audience";
-import { normalizeKeyword } from "@/lib/domain";
+import { DEFAULT_FOLLOW_GATE_MESSAGE, DEFAULT_NOT_FOLLOWING_MESSAGE, normalizeKeyword } from "@/lib/domain";
 import { requireOwner } from "@/lib/auth";
 import { isDemoMode } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -59,7 +59,18 @@ export async function createAutomationFromInsight(formData: FormData) {
     const suggestion = insight?.contentSuggestion;
     if (!insight || !suggestion) return;
     if (insight.createdAutomationId) redirect(`/automations/${insight.createdAutomationId}/edit?source=radar`);
-    const saved = saveDemoAutomation({ name: `Radar — ${insight.title}`.slice(0, 80), mediaId: insight.mediaIds[0] ?? "", keyword: suggestion.keyword, publicReply: suggestion.publicReply, dmMessage: suggestion.dmMessage, destinationUrl: "", status: "draft" });
+    const saved = saveDemoAutomation({
+      name: `Radar — ${insight.title}`.slice(0, 80),
+      mediaId: insight.mediaIds[0] ?? "",
+      keyword: suggestion.keyword,
+      publicReply: suggestion.publicReply,
+      dmMessage: suggestion.dmMessage,
+      destinationUrl: "",
+      requireFollow: false,
+      followGateMessage: DEFAULT_FOLLOW_GATE_MESSAGE,
+      notFollowingMessage: DEFAULT_NOT_FOLLOWING_MESSAGE,
+      status: "draft",
+    });
     insight.status = "converted"; insight.createdAutomationId = saved.id;
     revalidatePath("/dashboard", "layout");
     redirect(`/automations/${saved.id}/edit?source=radar`);

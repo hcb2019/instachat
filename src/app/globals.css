@@ -179,6 +179,22 @@ h1, h2, h3, p { margin-top: 0; }
 .suggestion-card > span { display: block; margin-top: 8px; color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .suggestion-card > p { margin: 3px 0 0; color: #38362f; font-size: 10px; line-height: 1.5; }
 .form-section .suggestion-card > small { display: block; margin-top: 10px; padding-top: 9px; border-top: 1px solid #eee8dd; line-height: 1.45; }
+.follow-gate { margin-top: 22px; padding: 16px; background: #f7f4ed; border: 1px solid #ddd6ca; border-radius: 12px; transition: border-color .16s ease, background .16s ease; }
+.follow-gate.enabled { background: #fff8f5; border-color: #efb7a9; }
+.form-section .follow-gate-switch { margin: 0; display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; align-items: center; gap: 11px; cursor: pointer; }
+.follow-gate-icon { width: 38px; height: 38px; display: grid; place-items: center; color: var(--coral-dark); background: #f8ded5; border-radius: 10px; }
+.follow-gate-copy strong, .follow-gate-copy small { display: block; }
+.follow-gate-copy strong { font-size: 13px; }
+.form-section .follow-gate-copy small { margin-top: 4px; line-height: 1.45; }
+.follow-gate-switch > input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.switch-control { width: 42px; height: 24px; padding: 3px; background: #c9c2b7; border-radius: 999px; transition: background .16s ease; }
+.switch-control::after { content: ""; width: 18px; height: 18px; display: block; background: white; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.18); transition: transform .16s ease; }
+.follow-gate-switch > input:checked + .switch-control { background: var(--coral); }
+.follow-gate-switch > input:checked + .switch-control::after { transform: translateX(18px); }
+.follow-gate-switch > input:focus-visible + .switch-control { outline: 3px solid rgba(232,93,69,.22); outline-offset: 2px; }
+.follow-gate-fields { margin-top: 16px; padding-top: 16px; border-top: 1px solid #ead9d2; }
+.follow-gate-flow { display: flex; flex-wrap: wrap; gap: 6px; }
+.follow-gate-flow span { padding: 6px 8px; color: #7b4438; background: #f8e5df; border-radius: 6px; font-size: 9px; font-weight: 750; }
 .spin { animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .form-alert, .form-success { margin: 0; padding: 11px 13px; border-radius: 8px; font-size: 12px; }
@@ -193,11 +209,14 @@ h1, h2, h3, p { margin-top: 0; }
 .phone-top strong, .phone-top small { display: block; }
 .phone-top strong { font-size: 11px; }
 .phone-top small { color: var(--muted); font-size: 9px; }
-.message-bubble { width: 86%; margin: 54px 0 0 auto; padding: 13px; background: #dedbe8; border-radius: 16px 16px 4px 16px; font-size: 11px; line-height: 1.5; }
+.message-bubble { width: 86%; margin: 18px 0 0 auto; padding: 13px; background: #dedbe8; border-radius: 16px 16px 4px 16px; font-size: 11px; line-height: 1.5; }
+.message-bubble:first-of-type { margin-top: 38px; }
+.message-bubble-user { width: max-content; max-width: 74%; margin-left: 0; margin-right: auto; color: white; background: var(--coral); border-radius: 16px 16px 16px 4px; }
 .message-bubble p { margin-bottom: 10px; white-space: pre-wrap; }
+.message-bubble-user p { margin-bottom: 0; }
 .preview-link { padding-top: 9px; display: flex; gap: 5px; align-items: center; border-top: 1px solid rgba(0,0,0,.1); color: #3d4778; font-weight: 700; }
 .phone-hint { margin-top: 12px; display: flex; justify-content: flex-end; align-items: center; gap: 5px; color: var(--muted); font-size: 8px; }
-.phone-input { margin-top: 270px; height: 36px; padding: 0 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #d3cec4; border-radius: 999px; color: var(--muted); font-size: 9px; }
+.phone-input { margin-top: 120px; height: 36px; padding: 0 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #d3cec4; border-radius: 999px; color: var(--muted); font-size: 9px; }
 
 .back-link { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 34px; color: var(--muted); font-size: 12px; font-weight: 700; }
 .detail-header { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }

@@ -5,6 +5,7 @@ import { normalizeKeyword } from "@/lib/domain";
 import { createTrackingToken, decryptSecret } from "@/server/crypto";
 import { instagramGateway } from "@/server/instagram";
 import { MetaApiError } from "@/server/instagram/meta-gateway";
+import type { InstagramMessageEvent } from "@/server/instagram/types";
 
 function metaDiagnosticCode(error: MetaApiError) {
   return error.subcode ? `${error.code ?? `HTTP_${error.status}`}/${error.subcode}` : error.code ?? `HTTP_${error.status}`;
@@ -79,28 +80,37 @@ export async function retryPrivateReply(ownerId: string, runId: string) {
 
   try {
     const trackingUrl = `${env.APP_ORIGIN}/r/${token}`;
+    const message = run.require_follow_snapshot
+      ? run.follow_gate_message_snapshot
+      : `${run.dm_message_snapshot}\n\n${trackingUrl}`;
     const reply = await gateway.sendPrivateReply(
       connection.instagram_user_id,
       run.comment_id,
-      `${run.dm_message_snapshot}\n\n${trackingUrl}`,
+      message,
       accessToken,
     );
-    const status = run.public_reply_status === "succeeded"
-      ? "succeeded"
-      : run.public_reply_status === "ambiguous"
-        ? "ambiguous"
-        : "partial";
+    const status = run.require_follow_snapshot
+      ? "processing"
+      : run.public_reply_status === "succeeded"
+        ? "succeeded"
+        : run.public_reply_status === "ambiguous"
+          ? "ambiguous"
+          : "partial";
+    const completedAt = run.require_follow_snapshot ? null : new Date().toISOString();
     const { error } = await supabase
       .from("automation_runs")
       .update({
         tracking_token_hash: hash,
         dm_status: "succeeded",
         dm_message_id: reply.messageId,
+        dm_recipient_id: reply.recipientId,
         dm_attempts: attempts,
         status,
+        follow_status: run.require_follow_snapshot ? "awaiting_reply" : "not_required",
+        content_delivered_at: run.require_follow_snapshot ? null : completedAt,
         error_code: null,
         error_message: null,
-        completed_at: new Date().toISOString(),
+        completed_at: completedAt,
       })
       .eq("id", run.id)
       .eq("owner_id", ownerId);
@@ -130,6 +140,7 @@ export async function retryPrivateReply(ownerId: string, runId: string) {
         dm_status: ambiguous ? "ambiguous" : "failed",
         dm_attempts: attempts,
         status: ambiguous ? "ambiguous" : run.public_reply_status === "succeeded" ? "partial" : "failed",
+        follow_status: run.require_follow_snapshot ? "failed" : "not_required",
         error_code: errorCode,
         error_message: errorMessage.slice(0, 400),
         completed_at: new Date().toISOString(),
@@ -168,6 +179,10 @@ async function processEvent(eventId: string) {
     commenter_scoped_id: event.commenter_scoped_id, commenter_username: event.commenter_username,
     comment_text: event.comment_text, public_reply_snapshot: automation.public_reply,
     dm_message_snapshot: automation.dm_message, destination_url_snapshot: automation.destination_url,
+    require_follow_snapshot: automation.require_follow,
+    follow_gate_message_snapshot: automation.follow_gate_message,
+    not_following_message_snapshot: automation.not_following_message,
+    follow_status: automation.require_follow ? "awaiting_reply" : "not_required",
     tracking_token_hash: hash, status: "processing",
   }).select("id").single();
   if (runError?.code === "23505") {
@@ -183,6 +198,7 @@ async function processEvent(eventId: string) {
   let dmStatus: "succeeded" | "failed" | "ambiguous" = "succeeded";
   let publicId: string | null = null;
   let messageId: string | null = null;
+  let recipientId: string | null = null;
   let errorCode: string | null = null;
   let errorMessage: string | null = null;
 
@@ -198,8 +214,12 @@ async function processEvent(eventId: string) {
   }
   try {
     const trackingUrl = `${env.APP_ORIGIN}/r/${token}`;
-    const reply = await gateway.sendPrivateReply(connection.instagram_user_id, event.comment_id, `${automation.dm_message}\n\n${trackingUrl}`, accessToken);
+    const privateMessage = automation.require_follow
+      ? automation.follow_gate_message
+      : `${automation.dm_message}\n\n${trackingUrl}`;
+    const reply = await gateway.sendPrivateReply(connection.instagram_user_id, event.comment_id, privateMessage, accessToken);
     messageId = reply.messageId;
+    recipientId = reply.recipientId;
   } catch (error) {
     dmStatus = error instanceof MetaApiError && error.ambiguous ? "ambiguous" : "failed";
     errorCode ??= error instanceof MetaApiError ? metaDiagnosticCode(error) : "PRIVATE_REPLY_FAILED";
@@ -207,12 +227,163 @@ async function processEvent(eventId: string) {
       ? metaDiagnosticMessage("Mensagem privada", error)
       : "Não foi possível confirmar a mensagem privada.";
   }
-  const status = publicStatus === "succeeded" && dmStatus === "succeeded" ? "succeeded" : publicStatus === "failed" && dmStatus === "failed" ? "failed" : publicStatus === "ambiguous" || dmStatus === "ambiguous" ? "ambiguous" : "partial";
+  const status = automation.require_follow && dmStatus === "succeeded"
+    ? "processing"
+    : publicStatus === "succeeded" && dmStatus === "succeeded"
+      ? "succeeded"
+      : publicStatus === "failed" && dmStatus === "failed"
+        ? "failed"
+        : publicStatus === "ambiguous" || dmStatus === "ambiguous"
+          ? "ambiguous"
+          : "partial";
   const completedAt = new Date().toISOString();
   await supabase.from("automation_runs").update({
     status, public_reply_status: publicStatus, dm_status: dmStatus, public_reply_id: publicId,
-    dm_message_id: messageId, public_reply_attempts: 1, dm_attempts: 1,
-    error_code: errorCode, error_message: errorMessage, completed_at: completedAt,
+    dm_message_id: messageId, dm_recipient_id: recipientId, public_reply_attempts: 1, dm_attempts: 1,
+    follow_status: automation.require_follow
+      ? dmStatus === "succeeded" ? "awaiting_reply" : "failed"
+      : "not_required",
+    content_delivered_at: !automation.require_follow && dmStatus === "succeeded" ? completedAt : null,
+    error_code: errorCode, error_message: errorMessage,
+    completed_at: automation.require_follow && dmStatus === "succeeded" ? null : completedAt,
   }).eq("id", run.id);
   await supabase.from("comment_events").update({ processed_at: completedAt }).eq("id", eventId);
+}
+
+export async function processIncomingMessages(events: InstagramMessageEvent[]) {
+  if (isDemoMode) return { received: events.length, processed: events.length };
+  const supabase = createSupabaseAdminClient();
+  let received = 0;
+  let processed = 0;
+
+  for (const event of events) {
+    if (!event.text.trim()) continue;
+    const { data: connection } = await supabase
+      .from("instagram_connections")
+      .select("*")
+      .eq("instagram_user_id", event.instagramUserId)
+      .eq("status", "connected")
+      .maybeSingle();
+    if (!connection) continue;
+
+    const { data: inserted, error: insertError } = await supabase
+      .from("instagram_message_events")
+      .insert({
+        owner_id: connection.owner_id,
+        connection_id: connection.id,
+        message_id: event.messageId,
+        sender_scoped_id: event.senderScopedId,
+        message_text: event.text.slice(0, 1000),
+      })
+      .select("id")
+      .maybeSingle();
+    if (insertError?.code === "23505") continue;
+    if (insertError || !inserted) throw new Error("Não foi possível registrar a mensagem recebida.");
+    received += 1;
+
+    const { data: run } = await supabase
+      .from("automation_runs")
+      .select("*")
+      .eq("owner_id", connection.owner_id)
+      .eq("dm_recipient_id", event.senderScopedId)
+      .eq("require_follow_snapshot", true)
+      .in("follow_status", ["awaiting_reply", "not_following"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!run) {
+      await supabase.from("instagram_message_events").update({
+        outcome: "no_pending_gate",
+        processed_at: new Date().toISOString(),
+      }).eq("id", inserted.id);
+      processed += 1;
+      continue;
+    }
+
+    const accessToken = decryptSecret({
+      ciphertext: connection.token_ciphertext,
+      iv: connection.token_iv,
+      tag: connection.token_tag,
+    });
+    const gateway = instagramGateway();
+    const checkedAt = new Date().toISOString();
+
+    try {
+      const follows = await gateway.getUserFollowStatus(event.senderScopedId, accessToken);
+      if (!follows) {
+        await gateway.sendTextMessage(event.senderScopedId, run.not_following_message_snapshot, accessToken);
+        await supabase.from("automation_runs").update({
+          follow_status: "not_following",
+          follow_checked_at: checkedAt,
+          dm_attempts: Number(run.dm_attempts ?? 0) + 1,
+          error_code: null,
+          error_message: null,
+        }).eq("id", run.id);
+        await supabase.from("instagram_message_events").update({
+          outcome: "not_following",
+          processed_at: checkedAt,
+        }).eq("id", inserted.id);
+        processed += 1;
+        continue;
+      }
+
+      const { token, hash } = createTrackingToken();
+      const trackingUrl = `${env.APP_ORIGIN}/r/${token}`;
+      const reply = await gateway.sendTextMessage(
+        event.senderScopedId,
+        `${run.dm_message_snapshot}\n\n${trackingUrl}`,
+        accessToken,
+      );
+      const finalStatus = run.public_reply_status === "succeeded"
+        ? "succeeded"
+        : run.public_reply_status === "ambiguous"
+          ? "ambiguous"
+          : "partial";
+      const { error: updateError } = await supabase.from("automation_runs").update({
+        tracking_token_hash: hash,
+        status: finalStatus,
+        follow_status: "verified",
+        follow_checked_at: checkedAt,
+        dm_delivery_message_id: reply.messageId,
+        dm_attempts: Number(run.dm_attempts ?? 0) + 1,
+        content_delivered_at: checkedAt,
+        completed_at: checkedAt,
+        error_code: null,
+        error_message: null,
+      }).eq("id", run.id);
+      if (updateError) {
+        throw new MetaApiError(
+          "O conteúdo pode ter sido enviado, mas o histórico não confirmou a gravação.",
+          0,
+          "PERSISTENCE_AFTER_SEND",
+          undefined,
+          true,
+        );
+      }
+      await supabase.from("instagram_message_events").update({
+        outcome: "content_delivered",
+        processed_at: checkedAt,
+      }).eq("id", inserted.id);
+      processed += 1;
+    } catch (error) {
+      const ambiguous = error instanceof MetaApiError && error.ambiguous;
+      const errorCode = error instanceof MetaApiError ? metaDiagnosticCode(error) : "FOLLOW_CHECK_FAILED";
+      const errorMessage = error instanceof MetaApiError
+        ? metaDiagnosticMessage("Confirmação de seguidor", error)
+        : "Não foi possível confirmar se a pessoa segue o perfil.";
+      await supabase.from("automation_runs").update({
+        status: ambiguous ? "ambiguous" : "processing",
+        error_code: errorCode,
+        error_message: errorMessage.slice(0, 400),
+      }).eq("id", run.id);
+      await supabase.from("instagram_message_events").update({
+        outcome: "failed",
+        processed_at: new Date().toISOString(),
+      }).eq("id", inserted.id);
+      processed += 1;
+    }
+  }
+
+  return { received, processed };
 }

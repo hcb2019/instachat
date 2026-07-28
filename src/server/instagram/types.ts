@@ -9,6 +9,15 @@ export interface InstagramCommentEvent {
   isSelf: boolean;
 }
 
+export interface InstagramMessageEvent {
+  instagramUserId: string;
+  messageId: string;
+  senderScopedId: string;
+  recipientId: string;
+  text: string;
+  isEcho: boolean;
+}
+
 export interface InstagramTokenResult {
   accessToken: string;
   userId: string;
@@ -26,4 +35,6 @@ export interface InstagramGateway {
   getMediaInsights(mediaId: string, accessToken: string): Promise<{ comments: number; views: number; reach: number; shares: number; saved: number; totalInteractions: number; raw: Record<string, number> }>;
   replyToComment(commentId: string, message: string, accessToken: string): Promise<{ id: string }>;
   sendPrivateReply(userId: string, commentId: string, message: string, accessToken: string): Promise<{ recipientId: string; messageId: string }>;
+  getUserFollowStatus(scopedUserId: string, accessToken: string): Promise<boolean>;
+  sendTextMessage(recipientId: string, message: string, accessToken: string): Promise<{ recipientId: string; messageId: string }>;
 }

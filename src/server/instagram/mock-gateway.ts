@@ -18,4 +18,6 @@ export class MockInstagramGateway implements InstagramGateway {
   async getMediaInsights(mediaId: string) { const index = Math.max(0, demoStore().media.findIndex(({ externalId }) => externalId === mediaId)); return { comments: 64 - index * 11, views: 18200 - index * 3100, reach: 13900 - index * 2200, shares: 312 - index * 48, saved: 528 - index * 73, totalInteractions: 1840 - index * 260, raw: {} }; }
   async replyToComment(commentId: string) { return { id: `reply-${commentId}` }; }
   async sendPrivateReply(_userId: string, commentId: string) { return { recipientId: `recipient-${commentId}`, messageId: `message-${commentId}` }; }
+  async getUserFollowStatus() { return true; }
+  async sendTextMessage(recipientId: string) { return { recipientId, messageId: `message-follow-${recipientId}` }; }
 }

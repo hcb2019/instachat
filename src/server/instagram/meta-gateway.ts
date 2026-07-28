@@ -144,7 +144,7 @@ export class MetaInstagramGateway implements InstagramGateway {
   }
 
   async subscribeToComments(userId: string, accessToken: string) {
-    await metaFetch(`/${encodeURIComponent(userId)}/subscribed_apps?subscribed_fields=comments`, { method: "POST", accessToken });
+    await metaFetch(`/${encodeURIComponent(userId)}/subscribed_apps?subscribed_fields=comments,messages`, { method: "POST", accessToken });
   }
 
   async hasCommentSubscription(userId: string, accessToken: string) {
@@ -152,7 +152,10 @@ export class MetaInstagramGateway implements InstagramGateway {
       `/${encodeURIComponent(userId)}/subscribed_apps`,
       { method: "GET", accessToken },
     );
-    return (result.data ?? []).some((subscription) => subscription.subscribed_fields?.includes("comments"));
+    return (result.data ?? []).some((subscription) =>
+      subscription.subscribed_fields?.includes("comments")
+      && subscription.subscribed_fields.includes("messages"),
+    );
   }
 
   async listReels(_userId: string, accessToken: string) {
@@ -288,6 +291,26 @@ export class MetaInstagramGateway implements InstagramGateway {
         method: "POST",
         accessToken,
         body: JSON.stringify({ recipient: { comment_id: commentId }, message: { text: message } }),
+      },
+    );
+    return { recipientId: data.recipient_id, messageId: data.message_id };
+  }
+
+  async getUserFollowStatus(scopedUserId: string, accessToken: string) {
+    const data = await metaFetch<{ is_user_follow_business?: boolean }>(
+      `/${encodeURIComponent(scopedUserId)}?fields=is_user_follow_business`,
+      { accessToken },
+    );
+    return data.is_user_follow_business === true;
+  }
+
+  async sendTextMessage(recipientId: string, message: string, accessToken: string) {
+    const data = await metaFetch<{ recipient_id: string; message_id: string }>(
+      "/me/messages",
+      {
+        method: "POST",
+        accessToken,
+        body: JSON.stringify({ recipient: { id: recipientId }, message: { text: message } }),
       },
     );
     return { recipientId: data.recipient_id, messageId: data.message_id };

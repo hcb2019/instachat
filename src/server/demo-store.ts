@@ -50,6 +50,9 @@ const automationSeed: Automation[] = [
     publicReply: "Enviei para você. Confira seu direct.",
     dmMessage: "Aqui está o material que prometi — espero que seja útil:",
     destinationUrl: "https://example.com/produto-1991",
+    requireFollow: false,
+    followGateMessage: "Se você já me segue, digite PRONTO. Se não, me segue e depois volta aqui e digita PRONTO.",
+    notFollowingMessage: "Poxa… você quer o conteúdo e ainda não me segue? 😅 Me segue primeiro e depois digita PRONTO aqui de novo.",
     status: "active",
     version: 2,
     createdAt: new Date(now - 86400000 * 12).toISOString(),
@@ -67,6 +70,9 @@ const automationSeed: Automation[] = [
     publicReply: "O guia já está a caminho ✦",
     dmMessage: "Seu checklist está aqui:",
     destinationUrl: "https://example.com/guia",
+    requireFollow: false,
+    followGateMessage: "Se você já me segue, digite PRONTO. Se não, me segue e depois volta aqui e digita PRONTO.",
+    notFollowingMessage: "Poxa… você quer o conteúdo e ainda não me segue? 😅 Me segue primeiro e depois digita PRONTO aqui de novo.",
     status: "paused",
     version: 1,
     createdAt: new Date(now - 86400000 * 7).toISOString(),
@@ -89,6 +95,9 @@ const runSeed: AutomationRun[] = Array.from({ length: 8 }, (_, index) => ({
   dmStatus: index === 5 || index === 7 ? "failed" : "succeeded",
   publicReplyAttempts: 1,
   dmAttempts: index === 5 ? 3 : 1,
+  requireFollow: false,
+  followStatus: "not_required",
+  contentDeliveredAt: index === 5 || index === 7 ? null : new Date(now - 3600000 * (index + 1)).toISOString(),
   errorCode: index === 5 ? "META_RATE_LIMIT" : index === 7 ? "TOKEN_EXPIRED" : null,
   errorMessage: index === 5 ? "Limite temporário da integração." : index === 7 ? "Conexão precisa ser renovada." : null,
   firstClickedAt: index < 4 ? new Date(now - 3600000 * (index + 2)).toISOString() : null,
@@ -137,6 +146,9 @@ export function saveDemoAutomation(input: {
   publicReply: string;
   dmMessage: string;
   destinationUrl: string;
+  requireFollow: boolean;
+  followGateMessage: string;
+  notFollowingMessage: string;
   status: "draft" | "active";
 }) {
   const store = demoStore();
