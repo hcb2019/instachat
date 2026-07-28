@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireOwner } from "@/lib/auth";
-import { automationSchema, normalizeKeyword } from "@/lib/domain";
+import { automationSchema, keywordMatches, normalizeKeyword } from "@/lib/domain";
 import { isDemoMode } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { saveDemoAutomation, demoStore } from "@/server/demo-store";
@@ -19,7 +19,7 @@ export type AutomationSuggestionsResult =
   | { suggestions: AutomationMessageSuggestion[]; caption: string }
   | { error: string };
 
-export async function suggestAutomationMessages(mediaId: string): Promise<AutomationSuggestionsResult> {
+export async function suggestAutomationMessages(mediaId: string, variationSeed = 0): Promise<AutomationSuggestionsResult> {
   const owner = await requireOwner();
   if (!/^[0-9a-f-]{36}$/i.test(mediaId)) return { error: "Escolha um Reel antes de gerar sugestões." };
 
@@ -39,7 +39,7 @@ export async function suggestAutomationMessages(mediaId: string): Promise<Automa
   if (caption === null) return { error: "Este Reel não foi encontrado na sua conta." };
 
   return {
-    suggestions: await generateAutomationMessageSuggestions(caption),
+    suggestions: await generateAutomationMessageSuggestions(caption, variationSeed),
     caption,
   };
 }
@@ -48,11 +48,13 @@ export async function saveAutomation(_state: AutomationActionState, formData: Fo
   const owner = await requireOwner();
   const publicReplyVariants = formData.getAll("publicReplyVariants").map(String);
   const dmMessageVariants = formData.getAll("dmMessageVariants").map(String);
+  const keywordVariants = formData.getAll("keywordVariants").map(String);
   const parsed = automationSchema.safeParse({
     id: formData.get("id") || undefined,
     name: formData.get("name") ?? "",
     mediaId: formData.get("mediaId") ?? "",
     keyword: formData.get("keyword") ?? "",
+    keywordVariants,
     publicReply: publicReplyVariants.find((value) => value.trim()) ?? "",
     publicReplyVariants,
     dmMessage: dmMessageVariants.find((value) => value.trim()) ?? "",
@@ -67,7 +69,12 @@ export async function saveAutomation(_state: AutomationActionState, formData: Fo
 
   const input = parsed.data;
   if (isDemoMode) {
-    const duplicate = demoStore().automations.find((item) => item.id !== input.id && item.mediaId === input.mediaId && item.keywordNormalized === normalizeKeyword(input.keyword) && item.status !== "deleted");
+    const duplicate = demoStore().automations.find((item) =>
+      item.id !== input.id
+      && item.mediaId === input.mediaId
+      && item.status !== "deleted"
+      && [input.keyword, ...input.keywordVariants].some((term) => keywordMatches(term, item.keyword, item.keywordVariants)),
+    );
     if (duplicate) return { error: "Já existe uma automação com essa palavra-chave neste Reel." };
     const saved = saveDemoAutomation({ ...input, status: input.intent });
     revalidatePath("/dashboard", "layout");
@@ -78,6 +85,18 @@ export async function saveAutomation(_state: AutomationActionState, formData: Fo
   const connectionResult = await supabase.from("instagram_connections").select("id,status").eq("owner_id", owner.id).maybeSingle();
   if (!connectionResult.data) return { error: "Conecte uma conta do Instagram antes de salvar." };
   if (input.intent === "active" && connectionResult.data.status !== "connected") return { error: "A conexão precisa estar ativa para publicar a automação." };
+  const { data: existingAutomations } = await supabase
+    .from("automations")
+    .select("id,keyword,keyword_variants")
+    .eq("media_id", input.mediaId)
+    .is("deleted_at", null);
+  const duplicate = (existingAutomations ?? []).some((item) =>
+    item.id !== input.id
+    && [input.keyword, ...input.keywordVariants].some((term) =>
+      keywordMatches(term, item.keyword, Array.isArray(item.keyword_variants) ? item.keyword_variants : []),
+    ),
+  );
+  if (duplicate) return { error: "Uma palavra-chave ou variação já é usada por outra automação neste Reel." };
 
   const payload = {
     owner_id: owner.id,
@@ -86,6 +105,7 @@ export async function saveAutomation(_state: AutomationActionState, formData: Fo
     name: input.name,
     keyword: input.keyword,
     keyword_normalized: normalizeKeyword(input.keyword),
+    keyword_variants: input.keywordVariants,
     public_reply: input.publicReply,
     public_reply_variants: input.publicReplyVariants,
     dm_message: input.dmMessage,

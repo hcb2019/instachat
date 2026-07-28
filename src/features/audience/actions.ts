@@ -63,6 +63,7 @@ export async function createAutomationFromInsight(formData: FormData) {
       name: `Radar — ${insight.title}`.slice(0, 80),
       mediaId: insight.mediaIds[0] ?? "",
       keyword: suggestion.keyword,
+      keywordVariants: [],
       publicReply: suggestion.publicReply,
       publicReplyVariants: [suggestion.publicReply, "", ""],
       dmMessage: suggestion.dmMessage,

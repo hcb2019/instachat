@@ -47,6 +47,7 @@ export interface Automation {
   name: string;
   keyword: string;
   keywordNormalized: string;
+  keywordVariants: string[];
   publicReply: string;
   publicReplyVariants: string[];
   dmMessage: string;
@@ -101,6 +102,7 @@ export interface AutomationInput {
   name: string;
   mediaId: string;
   keyword: string;
+  keywordVariants: string[];
   publicReply: string;
   publicReplyVariants: string[];
   dmMessage: string;

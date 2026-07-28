@@ -23,29 +23,51 @@ export function reelTopicFromCaption(caption: string) {
   const firstThought = normalized.split(/[.!?\n]/u)[0]?.trim() ?? "";
   const topic = firstThought || normalized;
   if (!topic) return "este conteúdo";
-  return topic.length > 88 ? `${topic.slice(0, 85).trimEnd()}…` : topic;
+  return topic.length > 54 ? `${topic.slice(0, 51).trimEnd()}…` : topic;
 }
 
-export function buildFallbackAutomationSuggestions(caption: string): AutomationMessageSuggestion[] {
+function hashText(value: string) {
+  let hash = 2166136261;
+  for (const character of value.normalize("NFKC")) {
+    hash ^= character.codePointAt(0) ?? 0;
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function rotate<T>(items: T[], offset: number) {
+  return items.map((_, index) => items[(index + offset) % items.length]!);
+}
+
+export function buildFallbackAutomationSuggestions(caption: string, variationSeed = 0): AutomationMessageSuggestion[] {
   const topic = reelTopicFromCaption(caption);
-  return [
-    {
-      label: "Direta",
-      publicReply: "Pronto! Enviei os detalhes no seu direct. Dá uma olhadinha por lá.",
-      dmMessage: `Olá! Vi que você se interessou pelo Reel sobre “${topic}”. Separei o próximo passo para ajudar você a colocar essa ideia em prática:`,
-      rationale: "Confirma o envio de forma objetiva e conecta a DM diretamente ao assunto do Reel.",
-    },
-    {
-      label: "Acolhedora",
-      publicReply: "Que bom que esse conteúdo chamou sua atenção! Acabei de te enviar uma mensagem no direct.",
-      dmMessage: `Que bom ter você por aqui! Como o Reel sobre “${topic}” chamou sua atenção, deixei este conteúdo complementar para você continuar:`,
-      rationale: "Cria proximidade sem prometer resultados ou materiais que não aparecem na automação.",
-    },
-    {
-      label: "Orientada à ação",
-      publicReply: "Seu próximo passo já está no direct. Depois me conta o que achou!",
-      dmMessage: `Vamos avançar? A partir do que mostrei no Reel sobre “${topic}”, este é o próximo passo que recomendo para você:`,
-      rationale: "Transforma o interesse no Reel em uma ação clara, mantendo um tom natural.",
-    },
-  ];
+  const offset = (hashText(`${caption}:${variationSeed}`) + variationSeed) % 6;
+  const publicTemplates = rotate([
+    `Pronto! Te mandei sobre “${topic}” no direct ✨`,
+    `Chegou na sua DM: o próximo passo sobre “${topic}”.`,
+    `Enviei no direct o conteúdo de “${topic}”. Dá uma olhada!`,
+    `Boa! A continuação de “${topic}” já está na sua DM.`,
+    `Acabei de te enviar os detalhes de “${topic}” no direct.`,
+    `Tudo certo — o conteúdo sobre “${topic}” está na sua DM.`,
+  ], offset);
+  const dmTemplates = rotate([
+    `Aqui está o conteúdo sobre “${topic}”:`,
+    `Separei para você o próximo passo de “${topic}”:`,
+    `Como prometido, aqui vai o material de “${topic}”:`,
+    `Vamos continuar? Veja os detalhes de “${topic}”:`,
+    `Este é o conteúdo complementar de “${topic}”:`,
+    `Para avançar em “${topic}”, comece por aqui:`,
+  ], (offset + 2) % 6);
+  const styles = [
+    ["Direta", "Confirma o envio com clareza e cita o assunto do Reel."],
+    ["Próxima", "Mantém um tom humano, curto e relacionado ao conteúdo."],
+    ["Ação", "Convida a pessoa a abrir a DM sem criar uma promessa artificial."],
+  ] as const;
+
+  return styles.map(([label, rationale], index) => ({
+    label,
+    publicReply: publicTemplates[index]!,
+    dmMessage: dmTemplates[index]!,
+    rationale,
+  }));
 }

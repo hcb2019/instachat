@@ -1,7 +1,7 @@
 import "server-only";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { env, isDemoMode } from "@/lib/env";
-import { normalizeKeyword, selectReplyVariant } from "@/lib/domain";
+import { keywordMatches, normalizeKeyword, selectReplyVariant } from "@/lib/domain";
 import { createTrackingToken, decryptSecret } from "@/server/crypto";
 import { instagramGateway } from "@/server/instagram";
 import { MetaApiError } from "@/server/instagram/meta-gateway";
@@ -166,7 +166,13 @@ async function processEvent(eventId: string) {
     return;
   }
   const { data: candidates } = await supabase.from("automations").select("*").eq("media_id", media.id).eq("status", "active").is("deleted_at", null);
-  const automation = (candidates ?? []).find((item) => item.keyword_normalized === normalizeKeyword(event.comment_text));
+  const automation = (candidates ?? []).find((item) =>
+    keywordMatches(
+      event.comment_text,
+      item.keyword,
+      Array.isArray(item.keyword_variants) ? item.keyword_variants : [],
+    ),
+  );
   if (!automation) {
     await supabase.from("comment_events").update({ outcome: "not_matched", processed_at: new Date().toISOString() }).eq("id", eventId);
     return;

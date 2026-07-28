@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { automationSchema, formatPercent, keywordMatches, normalizeKeyword, selectReplyVariant } from "@/lib/domain";
+import { automationSchema, buildKeywordVariants, formatPercent, keywordMatches, normalizeKeyword, selectReplyVariant } from "@/lib/domain";
 
 describe("keyword normalization", () => {
   it("normaliza caixa, unicode e espaços", () => {
@@ -7,8 +7,17 @@ describe("keyword normalization", () => {
     expect(keywordMatches("  １９９１ ", "1991")).toBe(true);
   });
 
-  it("mantém pontuação relevante", () => {
-    expect(keywordMatches("1991!", "1991")).toBe(false);
+  it("aceita pontuação final sem abrir correspondência parcial", () => {
+    expect(keywordMatches("1991!", "1991")).toBe(true);
+    expect(keywordMatches("quero 1991", "1991")).toBe(false);
+  });
+
+  it("gera plural, pontuação e erros simples com uma letra ausente", () => {
+    const variants = buildKeywordVariants("Guia");
+    expect(variants).toEqual(expect.arrayContaining(["guia.", "guia!", "guia?", "guias"]));
+    const longerVariants = buildKeywordVariants("Material");
+    expect(longerVariants).toContain("materia");
+    expect(keywordMatches("materia", "material", longerVariants)).toBe(true);
   });
 
   it("seleciona uma variação estável para o mesmo comentário", () => {

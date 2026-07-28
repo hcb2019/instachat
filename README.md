@@ -1,6 +1,6 @@
 # InstaChat
 
-Automação oficial para Instagram e inteligência de audiência: comentário exato em um Reel → resposta pública → resposta privada com link rastreável, além de temas, oportunidades e ideias de conteúdo extraídos dos comentários.
+Automação oficial para Instagram e inteligência de audiência: comentário por palavra-chave em um Reel → resposta pública → resposta privada com link rastreável, além de temas, oportunidades e ideias de conteúdo extraídos dos comentários.
 
 ## Stack
 
@@ -21,6 +21,8 @@ pnpm dev
 O arquivo de exemplo define `DEMO_MODE=true`. Abra `http://localhost:3000`: o painel usa fixtures em memória e nunca chama a Meta. Sem configuração explícita, a aplicação adota o padrão seguro `DEMO_MODE=false`.
 
 O menu **Radar** inclui comentários, temas, oportunidades, evidências e um Estúdio de ideias completamente simulado. Criar uma automação pelo Radar produz somente um rascunho; publicação, envio e ativação continuam manuais.
+
+Ao criar uma automação, o formulário sugere variações revisáveis da palavra-chave (pontuação final, singular/plural e uma letra ausente) e três pares de respostas baseados na legenda do Reel. Com `OPENAI_API_KEY`, as sugestões usam Structured Outputs; sem a chave, um gerador local determinístico mantém o modo demonstração e instalações open source funcionais.
 
 O menu **Guia de conexão** conduz da conversão para conta profissional ao teste ponta a ponta, mostra as URLs exatas deste deploy e separa os caminhos Standard Access (uso próprio/template) e Advanced Access (SaaS). O progresso é salvo somente no navegador, sem credenciais.
 

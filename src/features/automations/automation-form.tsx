@@ -10,7 +10,7 @@ import {
 } from "@/features/automations/actions";
 import { Button, Card } from "@/components/ui";
 import type { AutomationMessageSuggestion } from "@/lib/automation-suggestions";
-import { DEFAULT_FOLLOW_GATE_MESSAGE, DEFAULT_NOT_FOLLOWING_MESSAGE } from "@/lib/domain";
+import { buildKeywordVariants, DEFAULT_FOLLOW_GATE_MESSAGE, DEFAULT_NOT_FOLLOWING_MESSAGE } from "@/lib/domain";
 import type { Automation, InstagramMedia } from "@/types/domain";
 
 function FieldError({ messages }: { messages?: string[] }) {
@@ -22,6 +22,11 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
   const [suggestionPending, startSuggestionTransition] = useTransition();
   const [name, setName] = useState(automation?.name ?? "");
   const [keyword, setKeyword] = useState(automation?.keyword ?? "");
+  const [keywordVariants, setKeywordVariants] = useState(
+    automation?.keywordVariants?.length
+      ? automation.keywordVariants
+      : buildKeywordVariants(automation?.keyword ?? ""),
+  );
   const [publicReplies, setPublicReplies] = useState(() => {
     const existing = automation?.publicReplyVariants?.length
       ? automation.publicReplyVariants
@@ -46,6 +51,7 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
   const [reelQuery, setReelQuery] = useState("");
   const [suggestions, setSuggestions] = useState<AutomationMessageSuggestion[]>([]);
   const [suggestionError, setSuggestionError] = useState("");
+  const [suggestionGeneration, setSuggestionGeneration] = useState(0);
   const normalizedQuery = reelQuery.trim().toLocaleLowerCase("pt-BR");
   const visibleMedia = normalizedQuery
     ? media.filter((item) => item.caption.toLocaleLowerCase("pt-BR").includes(normalizedQuery))
@@ -62,8 +68,10 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
   function generateSuggestions() {
     if (!selectedMediaId) return;
     setSuggestionError("");
+    const nextGeneration = suggestionGeneration + 1;
+    setSuggestionGeneration(nextGeneration);
     startSuggestionTransition(async () => {
-      const result = await suggestAutomationMessages(selectedMediaId);
+      const result = await suggestAutomationMessages(selectedMediaId, nextGeneration);
       if ("error" in result) {
         setSuggestions([]);
         setSuggestionError(result.error);
@@ -71,6 +79,19 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
       }
       setSuggestions(result.suggestions);
     });
+  }
+
+  function updateKeyword(value: string) {
+    setKeyword(value);
+    setKeywordVariants(buildKeywordVariants(value));
+  }
+
+  function applyAllSuggestions() {
+    setPublicReplies((current) => {
+      const extras = current.slice(3);
+      return [...suggestions.map((item) => item.publicReply), ...extras];
+    });
+    setDmMessages(suggestions.map((item) => item.dmMessage));
   }
 
   function applySuggestion(suggestion: AutomationMessageSuggestion) {
@@ -139,7 +160,21 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
         </fieldset>
       </Card>
       <Card className="form-section"><div className="section-kicker">02 · Gatilho</div><h2>Qual comentário inicia o fluxo?</h2>
-        <label><span>Palavra-chave</span><input name="keyword" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="1991" maxLength={80} aria-invalid={Boolean(state.fields?.keyword) && !keyword.trim()} /><small>Correspondência exata, sem diferenciar maiúsculas e espaços extras. Pontuação conta.</small><FieldError messages={state.fields?.keyword} /></label>
+        <label><span>Palavra-chave</span><input name="keyword" value={keyword} onChange={(event) => updateKeyword(event.target.value)} placeholder="1991" maxLength={80} aria-invalid={Boolean(state.fields?.keyword) && !keyword.trim()} /><small>Aceitamos maiúsculas, espaços extras, pontuação final, plural e erros simples com uma letra ausente.</small><FieldError messages={state.fields?.keyword} /></label>
+        {keyword.trim() && <div className="keyword-variants">
+          <div className="keyword-variants-head">
+            <div><strong>Variações aceitas automaticamente</strong><small>Você pode remover uma opção que não faça sentido para este Reel.</small></div>
+            <button type="button" onClick={() => setKeywordVariants(buildKeywordVariants(keyword))}>Restaurar sugestões</button>
+          </div>
+          <div className="keyword-variant-list">
+            <span className="keyword-variant primary">{keyword.trim()} <small>principal</small></span>
+            {keywordVariants.map((variant) => <span className="keyword-variant" key={variant}>
+              {variant}
+              <input type="hidden" name="keywordVariants" value={variant} />
+              <button type="button" onClick={() => setKeywordVariants((current) => current.filter((item) => item !== variant))} aria-label={`Remover variação ${variant}`}>×</button>
+            </span>)}
+          </div>
+        </div>}
       </Card>
       <Card className="form-section"><div className="section-kicker">03 · Respostas</div><h2>O que a pessoa recebe?</h2>
         <div className="message-suggestion-box">
@@ -155,14 +190,17 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
             </button>
           </div>
           {suggestionError && <p className="suggestion-error" role="alert">{suggestionError}</p>}
-          {suggestions.length > 0 && <div className="suggestion-grid" aria-live="polite">
+          {suggestions.length > 0 && <>
+            <div className="suggestion-apply-all"><span>Três opções diferentes, prontas para revisar.</span><button type="button" onClick={applyAllSuggestions}><Sparkles size={14} /> Usar as 3 sugestões</button></div>
+            <div className="suggestion-grid" aria-live="polite">
             {suggestions.map((suggestion) => <article className="suggestion-card" key={suggestion.label}>
               <div className="suggestion-card-head"><strong>{suggestion.label}</strong><button type="button" onClick={() => applySuggestion(suggestion)}>Usar mensagem</button></div>
               <span>Público</span><p>{suggestion.publicReply}</p>
               <span>Direct</span><p>{suggestion.dmMessage}</p>
               <small>{suggestion.rationale}</small>
             </article>)}
-          </div>}
+            </div>
+          </>}
         </div>
         <div className={`reply-variations${state.fields?.publicReplyVariants ? " field-invalid" : ""}`}>
           <div className="reply-variations-head">

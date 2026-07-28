@@ -7,8 +7,56 @@ export function normalizeKeyword(value: string) {
   return value.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("pt-BR");
 }
 
-export function keywordMatches(comment: string, keyword: string) {
-  return normalizeKeyword(comment) === normalizeKeyword(keyword);
+export function normalizeKeywordForMatching(value: string) {
+  return normalizeKeyword(value).replace(/[.!?,;:…]+$/gu, "").trimEnd();
+}
+
+export function buildKeywordVariants(value: string) {
+  const base = normalizeKeyword(value);
+  if (!base) return [];
+
+  const variants = new Set<string>();
+  const add = (candidate: string) => {
+    const normalized = normalizeKeyword(candidate);
+    if (normalized && normalized !== base && normalized.length <= 80) variants.add(normalized);
+  };
+
+  add(`${base}.`);
+  add(`${base}!`);
+  add(`${base}?`);
+
+  const words = base.split(" ");
+  const lastWord = words.at(-1) ?? "";
+  if (/^\p{L}{3,}$/u.test(lastWord)) {
+    const stem = words.slice(0, -1);
+    if (lastWord.endsWith("s") && lastWord.length >= 4) {
+      add([...stem, lastWord.slice(0, -1)].join(" "));
+    } else {
+      add([...stem, `${lastWord}s`].join(" "));
+    }
+  }
+
+  const longestWordIndex = words.reduce(
+    (best, word, index) => word.length > (words[best]?.length ?? 0) ? index : best,
+    0,
+  );
+  const typoWord = words[longestWordIndex] ?? "";
+  if (/^\p{L}{5,}$/u.test(typoWord)) {
+    for (let index = 0; index < typoWord.length && variants.size < 12; index += 1) {
+      const typoWords = [...words];
+      typoWords[longestWordIndex] = `${typoWord.slice(0, index)}${typoWord.slice(index + 1)}`;
+      add(typoWords.join(" "));
+    }
+  }
+
+  return [...variants].slice(0, 12);
+}
+
+export function keywordMatches(comment: string, keyword: string, variants: string[] = []) {
+  const normalizedComment = normalizeKeywordForMatching(comment);
+  return [keyword, ...variants].some(
+    (candidate) => normalizeKeywordForMatching(candidate) === normalizedComment,
+  );
 }
 
 export function selectReplyVariant(commentId: string, variants: string[]) {
@@ -34,6 +82,7 @@ export const automationSchema = z
     name: z.string().trim().max(80, "Use até 80 caracteres."),
     mediaId: z.string().trim().max(120),
     keyword: z.string().trim().max(80, "Use até 80 caracteres."),
+    keywordVariants: z.array(z.string().trim().min(1).max(80, "Use até 80 caracteres.")).max(12, "Use no máximo doze variações.").default([]),
     publicReply: z.string().trim().max(500, "Use até 500 caracteres."),
     publicReplyVariants: z.array(z.string().trim().max(500, "Use até 500 caracteres.")).max(5, "Use no máximo cinco variações.").default([]),
     dmMessage: z.string().trim().max(900, "Use até 900 caracteres."),

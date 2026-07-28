@@ -47,6 +47,7 @@ const automationSeed: Automation[] = [
     name: "Reel — História de 1991",
     keyword: "1991",
     keywordNormalized: "1991",
+    keywordVariants: ["1991.", "1991!", "1991?"],
     publicReply: "Enviei para você. Confira seu direct.",
     publicReplyVariants: [
       "Enviei para você. Confira seu direct.",
@@ -73,6 +74,7 @@ const automationSeed: Automation[] = [
     name: "Checklist de lançamento",
     keyword: "GUIA",
     keywordNormalized: "guia",
+    keywordVariants: ["guia.", "guia!", "guia?", "guias"],
     publicReply: "O guia já está a caminho ✦",
     publicReplyVariants: [
       "O guia já está a caminho ✦",
@@ -155,6 +157,7 @@ export function saveDemoAutomation(input: {
   name: string;
   mediaId: string;
   keyword: string;
+  keywordVariants: string[];
   publicReply: string;
   publicReplyVariants: string[];
   dmMessage: string;

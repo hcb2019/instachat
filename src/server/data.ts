@@ -8,7 +8,9 @@ function mapAutomation(row: Record<string, unknown>): Automation {
   return {
     id: String(row.id), ownerId: String(row.owner_id), connectionId: String(row.connection_id),
     mediaId: row.media_id ? String(row.media_id) : null, name: String(row.name), keyword: String(row.keyword),
-    keywordNormalized: String(row.keyword_normalized), publicReply: String(row.public_reply),
+    keywordNormalized: String(row.keyword_normalized),
+    keywordVariants: Array.isArray(row.keyword_variants) ? row.keyword_variants.map(String) : [],
+    publicReply: String(row.public_reply),
     publicReplyVariants: Array.isArray(row.public_reply_variants)
       ? row.public_reply_variants.map(String)
       : [String(row.public_reply)],
