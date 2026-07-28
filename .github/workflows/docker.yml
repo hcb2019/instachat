@@ -1,0 +1,47 @@
+name: Docker
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - compose.yaml
+      - package.json
+      - pnpm-lock.yaml
+      - scripts/check-env.mjs
+  pull_request:
+    branches:
+      - main
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - compose.yaml
+      - package.json
+      - pnpm-lock.yaml
+      - scripts/check-env.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: instachat:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

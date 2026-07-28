@@ -1,12 +1,14 @@
 # Relatório de segurança — InstaChat MVP
 
-Data da revisão: 18/07/2026.
+Última revisão: 28/07/2026.
 
 ## Resultado
 
 Nenhuma vulnerabilidade conhecida de dependência permanece após a revisão. O workspace fixa versões corrigidas de PostCSS, `fast-uri` e `sharp`; `pnpm audit --audit-level moderate` encerra sem achados.
 
 Não foram encontrados segredos versionados, APIs de execução dinâmica (`eval`, `new Function`), processos filhos ou uso de `dangerouslySetInnerHTML` no código da aplicação. Os nomes de variáveis sensíveis aparecem somente em validação/configuração server-side e na documentação operacional.
+
+A preparação para abertura pública também verificou o histórico Git em busca de chaves OpenAI, tokens GitHub, chaves privadas e JWTs Supabase de alta confiança, sem achados. Arquivos `.env*`, certificados e chaves privadas permanecem ignorados, exceto `.env.example`, que contém somente placeholders.
 
 ## Controles verificados
 
@@ -23,6 +25,8 @@ Não foram encontrados segredos versionados, APIs de execução dinâmica (`eval
 - O Radar substitui usernames/IDs por aliases efêmeros, usa `store: false`, Structured Outputs e validação Zod; comentários não podem disparar ferramentas ou ações externas.
 - Fingerprint, limite diário e teto de comentários controlam repetição e custo. Toda sugestão gera somente rascunho e exige aprovação humana.
 - Callbacks públicos de desautorização/exclusão aceitam somente `signed_request` com HMAC-SHA256 válido e removem dados derivados da conexão de forma idempotente.
+- A imagem Docker executa como usuário sem privilégios, sem capabilities Linux, com `no-new-privileges` e filesystem somente leitura.
+- O repositório público inclui CodeQL, Dependabot, revisão de dependências, CODEOWNERS, relato privado de vulnerabilidade e CI obrigatório para contribuições.
 
 ## Riscos residuais e operação
 

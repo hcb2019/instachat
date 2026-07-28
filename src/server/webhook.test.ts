@@ -240,7 +240,7 @@ describe("Meta webhooks", () => {
             text: "quero",
             from: {
               id: "ig-owner",
-              username: "hernando.ia",
+              username: "creator.demo",
               self_ig_scoped_id: "ig-owner",
             },
             media: { id: "reel-1", media_product_type: "REELS" },

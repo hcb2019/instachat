@@ -1,0 +1,29 @@
+name: Sugerir uma melhoria
+description: Proponha uma funcionalidade ou melhoria de experiência.
+title: "[Ideia]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Qual problema isso resolve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Como você imagina a solução?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Segurança e escopo
+      options:
+        - label: A proposta mantém ativação, publicação e envio sob aprovação humana.
+        - label: A proposta usa APIs oficiais e não exige coleta indevida de dados.

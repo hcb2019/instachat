@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Relatar vulnerabilidade em privado
+    url: https://github.com/hcb2019/instachat/security/advisories/new
+    about: Não publique vulnerabilidades, tokens ou dados pessoais em issues.

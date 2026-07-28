@@ -1,83 +1,107 @@
-# Publicação do InstaChat
+# Publicação com Vercel e Supabase
 
-Este documento descreve a arquitetura recomendada para colocar o InstaChat online sem manter um servidor próprio.
+Este é o caminho com menor manutenção para colocar o InstaChat online.
 
-## Arquitetura hospedada
+## Arquitetura
 
-- **GitHub:** código-fonte, histórico de versões e CI.
-- **Vercel:** aplicação Next.js, rotas OAuth, webhook da Meta, redirecionador e workers HTTP.
+- **GitHub:** código, Pull Requests e CI.
+- **Vercel:** aplicação Next.js, OAuth, webhooks e workers HTTP.
 - **Supabase:** PostgreSQL, autenticação, RLS, filas e Cron.
-- **Cloudflare:** DNS de `hernandoia.com`.
-- **OpenAI:** análises do Radar, quando `OPENAI_API_KEY` estiver configurada.
+- **OpenAI:** análise do Radar, opcional.
+- **Seu provedor de DNS:** domínio e subdomínio.
 
-Um VPS não é necessário para o MVP. Ele só faria sentido futuramente se o volume ou o custo justificarem trocar os serviços gerenciados.
+## 1. Faça seu próprio fork
 
-## Ambientes
+Abra <https://github.com/hcb2019/instachat> e clique em **Fork**. Conecte esse fork à Vercel. Assim, cada pessoa mantém sua própria instalação e suas próprias credenciais.
 
-### Demonstração
+## 2. Teste uma demonstração
 
-Pode ser publicada sem Supabase, Meta ou OpenAI:
+Configure:
 
 ```dotenv
 DEMO_MODE=true
 NEXT_PUBLIC_DEMO_MODE=true
-APP_ORIGIN=https://instachat.hernandoia.com
+APP_ORIGIN=https://instachat.seudominio.com
 OWNER_EMAIL=seu-email@example.com
 ```
 
-O painel usa dados simulados e não realiza chamadas externas.
+Publique e confirme `/`, `/dashboard`, `/radar` e `/connection-guide`.
 
-### Produção real
+## 3. Crie o Supabase
 
-Defina `DEMO_MODE=false` e configure todas as variáveis necessárias de `.env.example` no Vercel. Segredos nunca devem ser incluídos no Git ou em variáveis com prefixo `NEXT_PUBLIC_`.
+1. Crie um projeto.
+2. Vincule a CLI ao projeto.
+3. Aplique as migrations:
 
-Ordem recomendada:
+   ```bash
+   npx supabase login
+   npx supabase link --project-ref SEU_PROJECT_REF
+   npx supabase db push
+   ```
 
-1. Criar o projeto remoto no Supabase e aplicar as migrations.
-2. Configurar autenticação, URL do site e redirects no Supabase.
-3. Gerar `TOKEN_ENCRYPTION_KEY` e `WORKER_SECRET` com valores aleatórios independentes.
-4. Configurar as variáveis no Vercel separadamente para Preview e Production.
-5. Publicar primeiro um Preview e executar o smoke test.
-6. Promover o mesmo build para Production.
-7. Adicionar `instachat.hernandoia.com` ao projeto Vercel.
-8. Criar no Cloudflare o CNAME fornecido pelo Vercel, inicialmente com proxy desativado (DNS only).
-9. Atualizar `APP_ORIGIN`, redirects do Supabase e URLs da Meta para o domínio definitivo.
-10. Configurar Cron, webhook e realizar um teste real controlado.
+4. Em Authentication:
+   - configure a Site URL;
+   - adicione `https://instachat.seudominio.com/auth/callback`;
+   - convide o `OWNER_EMAIL`;
+   - mantenha cadastro público desativado.
 
-## Custos e limites
+## 4. Configure os segredos
 
-Em julho de 2026, o Vercel Hobby é gratuito, porém restrito pelos termos a uso pessoal e não comercial. Ele serve para demonstração e piloto pessoal. Para vender o serviço ou operar para clientes, use Vercel Pro.
+Copie `.env.example` e cadastre os valores no painel da Vercel. Em produção:
 
-O Supabase Free é adequado ao desenvolvimento e piloto, mas projetos gratuitos podem pausar por inatividade. Para disponibilidade de produção e backups, use Supabase Pro.
+```dotenv
+DEMO_MODE=false
+NEXT_PUBLIC_DEMO_MODE=false
+APP_ORIGIN=https://instachat.seudominio.com
+```
 
-Consulte sempre os valores e termos atuais antes do lançamento comercial:
+Gere:
 
-- [Preços do Vercel](https://vercel.com/pricing)
-- [Limites do Vercel Hobby](https://vercel.com/docs/plans/hobby)
-- [Preços do Supabase](https://supabase.com/pricing)
+```bash
+openssl rand -base64 32
+openssl rand -hex 32
+openssl rand -hex 32
+```
 
-## Domínio
+Use valores independentes para `TOKEN_ENCRYPTION_KEY`, `WORKER_SECRET` e `META_WEBHOOK_VERIFY_TOKEN`.
 
-O subdomínio recomendado é `instachat.hernandoia.com`, preservando `app.hernandoia.com` para um possível portal central no futuro. O valor exato do CNAME deve ser copiado da inspeção do domínio no próprio projeto Vercel; não use um valor genérico sem confirmar.
+Segredos nunca podem usar prefixo `NEXT_PUBLIC_`.
 
-O Vercel emitirá e renovará o certificado TLS automaticamente depois que o DNS for validado.
+## 5. Conecte a Meta
 
-## Checklist de publicação
+Siga [Configuração da Meta](meta-setup.md). Cadastre as URLs do domínio definitivo e reautorize o Instagram sempre que mudar o App ID, segredo ou permissões.
+
+## 6. Configure os jobs
+
+Programe chamadas `POST` autenticadas com `WORKER_SECRET`:
+
+- `/api/internal/jobs/process`;
+- `/api/internal/jobs/analyze`.
+
+Use Supabase Cron, Vercel Cron compatível com seu plano ou outro agendador seguro.
+
+## 7. Adicione o domínio
+
+Cadastre o domínio na Vercel e copie exatamente o registro DNS fornecido. Depois de validar HTTPS, atualize `APP_ORIGIN`, Supabase e Meta.
+
+## Custos
+
+Planos e limites mudam. Confira os termos atuais antes de uso comercial:
+
+- [Vercel](https://vercel.com/pricing);
+- [Supabase](https://supabase.com/pricing);
+- [OpenAI](https://openai.com/api/pricing/);
+- [Meta for Developers](https://developers.facebook.com/docs/).
+
+## Checklist
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm audit --audit-level=high
+pnpm config:check
+pnpm audit --prod --audit-level high
 pnpm check
 pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-Depois do deploy, validar:
-
-- `/`, `/dashboard`, `/radar` e `/connection-guide`;
-- headers de segurança e ausência de cache em páginas autenticadas;
-- logs sem tokens, segredos ou payloads integrais;
-- `/api/meta/webhook` com challenge e assinatura válidos;
-- worker e análise protegidos pelo `WORKER_SECRET`;
-- redirecionamento `/r/{token}` sem armazenamento de IP;
-- URLs de privacidade e exclusão de dados cadastradas na Meta.
+Depois do deploy, valide o checklist de produção em [Instalação local e VPS](self-hosting.md).

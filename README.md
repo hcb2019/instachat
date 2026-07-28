@@ -1,44 +1,96 @@
-# InstaChat
+<p align="center">
+  <img src="public/brand/instachat-logo-concept-v1.png" alt="InstaChat" width="360">
+</p>
 
-Automação oficial para Instagram e inteligência de audiência: comentário por palavra-chave em um Reel → resposta pública → resposta privada com link rastreável, além de temas, oportunidades e ideias de conteúdo extraídos dos comentários.
+<p align="center">
+  Automação oficial para comentários do Instagram e inteligência de audiência para Reels.
+</p>
 
-## Stack
+<p align="center">
+  <a href="https://github.com/hcb2019/instachat/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/hcb2019/instachat/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/hcb2019/instachat/security/code-scanning"><img alt="CodeQL" src="https://github.com/hcb2019/instachat/actions/workflows/codeql.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-17140f"></a>
+  <img alt="Node.js 24" src="https://img.shields.io/badge/Node.js-24-43853d">
+</p>
 
-- Next.js 16, React 19, TypeScript e Tailwind CSS 4
-- Supabase Postgres, Auth, RLS, Queues (`pgmq`) e Cron
-- Instagram API with Instagram Login
-- OpenAI Responses API com Structured Outputs (opcional; mock por padrão)
-- Vitest, Playwright e Sentry opcional
+> Projeto independente, não afiliado, patrocinado ou endossado pela Meta ou pelo Instagram. Use somente a API oficial e respeite os termos da plataforma.
 
-## Rodar agora, sem credenciais
+![Painel do InstaChat em modo demonstração](docs/images/dashboard-demo.png)
+
+## O que o InstaChat faz
+
+- identifica palavras-chave e variações em comentários de Reels;
+- alterna respostas públicas para evitar aparência robótica;
+- envia a resposta privada permitida pela API, com link rastreável;
+- pode liberar o conteúdo após confirmação de seguidor;
+- mostra histórico, falhas e métricas;
+- analisa comentários no Radar e sugere temas, oportunidades e ideias;
+- funciona em modo demonstração sem credenciais;
+- mantém envio e ativação sob aprovação humana.
+
+Stack: Next.js 16, React 19, TypeScript, Supabase, Instagram API with Instagram Login, OpenAI opcional, Vitest e Playwright.
+
+## Teste em cinco minutos
+
+Requisitos: Node.js 24 e pnpm 11.
 
 ```bash
+git clone https://github.com/hcb2019/instachat.git
+cd instachat
+corepack enable
+pnpm install --frozen-lockfile
 cp .env.example .env.local
-pnpm install
+pnpm config:check
 pnpm dev
 ```
 
-O arquivo de exemplo define `DEMO_MODE=true`. Abra `http://localhost:3000`: o painel usa fixtures em memória e nunca chama a Meta. Sem configuração explícita, a aplicação adota o padrão seguro `DEMO_MODE=false`.
+Abra <http://localhost:3000>. O modo demonstração não chama Supabase, Meta ou OpenAI.
 
-O menu **Radar** inclui comentários, temas, oportunidades, evidências e um Estúdio de ideias completamente simulado. Criar uma automação pelo Radar produz somente um rascunho; publicação, envio e ativação continuam manuais.
-
-Ao criar uma automação, o formulário sugere variações revisáveis da palavra-chave (pontuação final, singular/plural e uma letra ausente) e três pares de respostas baseados na legenda do Reel. Com `OPENAI_API_KEY`, as sugestões usam Structured Outputs; sem a chave, um gerador local determinístico mantém o modo demonstração e instalações open source funcionais.
-
-O menu **Guia de conexão** conduz da conversão para conta profissional ao teste ponta a ponta, mostra as URLs exatas deste deploy e separa os caminhos Standard Access (uso próprio/template) e Advanced Access (SaaS). O progresso é salvo somente no navegador, sem credenciais.
-
-## Rodar com Supabase local
-
-Docker precisa estar ativo.
+Com Docker:
 
 ```bash
-pnpm db:start
-pnpm db:reset
-pnpm db:types
+cp .env.example .env.local
+docker compose --env-file .env.local up --build
 ```
 
-Copie a URL, chave publicável e chave secreta mostradas pela CLI para `.env.local`, crie o `OWNER_EMAIL` no Studio local e altere `DEMO_MODE=false`. O schema é totalmente reproduzido pelas migrations.
+## Instalação real
 
-## Verificações
+Escolha uma opção:
+
+- [Vercel + Supabase, recomendado](docs/deployment.md);
+- [computador local ou VPS com Docker](docs/self-hosting.md);
+- [configuração completa da Meta](docs/meta-setup.md);
+- guia visual em `/connection-guide` depois de iniciar o aplicativo.
+
+Nunca copie credenciais de outra instalação. Cada pessoa precisa criar seu próprio Supabase, aplicativo Meta e segredos.
+
+## Variáveis e segurança
+
+Use `.env.example` apenas como modelo. `.env.local` é ignorado pelo Git.
+
+```bash
+openssl rand -base64 32 # TOKEN_ENCRYPTION_KEY
+openssl rand -hex 32    # WORKER_SECRET
+openssl rand -hex 32    # META_WEBHOOK_VERIFY_TOKEN
+pnpm config:check
+```
+
+Controles principais:
+
+- owner-only por magic link e `OWNER_EMAIL`;
+- RLS por `owner_id`;
+- OAuth com `state` de uso único;
+- webhook HMAC sobre o corpo bruto;
+- token Meta cifrado com AES-256-GCM;
+- links opacos armazenados somente como hash;
+- CSP, HSTS, `no-store` e bloqueio de framing;
+- validação Zod e erros sanitizados;
+- dados pessoais com retenção limitada;
+- CodeQL, Dependabot e CI em Pull Requests.
+
+Leia [SECURITY.md](SECURITY.md), o [modelo de ameaças](instachat-threat-model.md) e o [relatório de segurança](security_best_practices_report.md).
+
+## Desenvolvimento
 
 ```bash
 pnpm lint
@@ -49,17 +101,24 @@ pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-## Segurança operacional
+Supabase local:
 
-- Nunca coloque `SUPABASE_SECRET_KEY`, `META_APP_SECRET`, `META_WEBHOOK_APP_SECRET`, `TOKEN_ENCRYPTION_KEY` ou `WORKER_SECRET` em variáveis `NEXT_PUBLIC_*`.
-- `OPENAI_API_KEY` também é exclusivamente server-side. Usernames e IDs externos são substituídos por aliases temporários antes de qualquer chamada à OpenAI.
-- Gere `TOKEN_ENCRYPTION_KEY` com `openssl rand -base64 32` e `WORKER_SECRET` com pelo menos 32 bytes aleatórios.
-- O token Meta é cifrado com AES-256-GCM antes de chegar ao banco.
-- O webhook verifica `X-Hub-Signature-256` no corpo bruto antes do JSON parse.
-- Links guardam apenas SHA-256 do token opaco; IPs não são armazenados.
+```bash
+pnpm db:start
+pnpm db:reset
+pnpm db:types
+```
 
-Veja [publicação](docs/deployment.md), [configuração da Meta](docs/meta-setup.md), [runbook](docs/runbook.md), [decisões arquiteturais](docs/architecture/README.md) e [threat model](instachat-threat-model.md).
+## Como colaborar
 
-## Radar em produção
+- Ideias e erros: abra uma Issue.
+- Código: faça um Fork e envie um Pull Request.
+- Vulnerabilidades: use um relato privado na aba Security.
 
-Configure `OPENAI_API_KEY`, `OPENAI_AUDIENCE_MODEL`, `AI_MAX_COMMENTS_PER_RUN` e `AI_MAX_DAILY_RUNS`. Programe o Supabase Cron para fazer `POST /api/internal/jobs/analyze` diariamente com `Authorization: Bearer $WORKER_SECRET`; o job sincroniza comentários/Insights, enfileira conjuntos novos e consome até duas análises. O webhook somente persiste e enfileira: nunca chama IA durante a entrega da Meta.
+Veja [CONTRIBUTING.md](CONTRIBUTING.md), o [Código de Conduta](CODE_OF_CONDUCT.md) e o [guia do GitHub para iniciantes](docs/github-for-beginners.md).
+
+Contribuições não alteram `main` automaticamente. O mantenedor revisa e decide o que será incorporado.
+
+## Licença
+
+Distribuído sob a [Licença MIT](LICENSE). Você pode usar, modificar e redistribuir o código mantendo o aviso de copyright e a licença.

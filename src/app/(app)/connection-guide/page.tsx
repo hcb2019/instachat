@@ -229,7 +229,7 @@ export default async function ConnectionGuidePage() {
       </StepShell>
 
       <StepShell id="server" number="05" location="Vercel → Settings → Environment Variables" title="Salve as credenciais no servidor" intro="Esta é a ponte entre o aplicativo da Meta e o InstaChat. Cada valor tem uma origem definida.">
-        <div className="setup-action-row"><ExternalAction href="https://vercel.com/hernando-candidos-projects/instachat/settings/environment-variables">Abrir variáveis na Vercel</ExternalAction><span>Cadastre em Production, Preview e Development.</span></div>
+        <div className="setup-action-row"><ExternalAction href="https://vercel.com/dashboard">Abrir painel da Vercel</ExternalAction><span>Abra seu projeto e cadastre as variáveis em Production, Preview e Development.</span></div>
         <div className="setup-env-table">
           <div><code>META_APP_ID</code><span>Copie o ID do app do Instagram mostrado na etapa 3.</span></div>
           <div><code>META_APP_SECRET</code><span>Copie a chave secreta do app do Instagram. Nunca exponha esse valor.</span></div>
