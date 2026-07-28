@@ -1,6 +1,11 @@
 import { after } from "next/server";
 import { env, isDemoMode } from "@/lib/env";
-import { ingestEvents, processIncomingMessages, processQueueBatch } from "@/server/jobs";
+import {
+  ingestEvents,
+  processIncomingMessages,
+  processQueueBatch,
+  recoverPendingFollowerMessages,
+} from "@/server/jobs";
 import { queueScheduledAudienceAnalyses } from "@/server/audience/jobs";
 import { parseCommentEvents, parseMessageEvents, verifyWebhookSignatureWithSecrets } from "@/server/webhook";
 
@@ -53,6 +58,14 @@ export async function POST(request: Request) {
   try {
     const result = await ingestEvents(events);
     const messages = await processIncomingMessages(messageEvents);
+    const recovery = messageEvents.length === 0 && rawBody.includes('"messaging"')
+      ? await recoverPendingFollowerMessages().catch((error) => {
+          console.warn("Instagram messaging fallback failed", {
+            error: error instanceof Error ? error.name : "UnknownError",
+          });
+          return { checked: 0, recovered: 0, processed: 0 };
+        })
+      : { checked: 0, recovered: 0, processed: 0 };
     let processed = 0;
     if (result.queued > 0) {
       try {
@@ -70,7 +83,10 @@ export async function POST(request: Request) {
     after(async () => {
       await queueScheduledAudienceAnalyses(20).catch(() => undefined);
     });
-    return Response.json({ ...result, processed, messages }, { headers: { "Cache-Control": "no-store" } });
+    return Response.json(
+      { ...result, processed, messages, recovery },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
     console.error("Instagram webhook ingestion failed", {
       error: error instanceof Error ? error.message : "UnknownError",

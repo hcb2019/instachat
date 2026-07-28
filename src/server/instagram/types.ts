@@ -37,4 +37,10 @@ export interface InstagramGateway {
   sendPrivateReply(userId: string, commentId: string, message: string, accessToken: string): Promise<{ recipientId: string; messageId: string }>;
   getUserFollowStatus(scopedUserId: string, accessToken: string): Promise<boolean>;
   sendTextMessage(instagramUserId: string, recipientId: string, message: string, accessToken: string): Promise<{ recipientId: string; messageId: string }>;
+  listRecentInboundMessages(
+    instagramUserId: string,
+    scopedUserId: string,
+    since: Date,
+    accessToken: string,
+  ): Promise<Array<{ messageId: string; text: string; createdAt: string }>>;
 }

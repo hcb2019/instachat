@@ -405,3 +405,78 @@ export async function processIncomingMessages(events: InstagramMessageEvent[]) {
 
   return { received, processed };
 }
+
+export async function recoverPendingFollowerMessages(limit = 10) {
+  if (isDemoMode) return { checked: 0, recovered: 0, processed: 0 };
+  const supabase = createSupabaseAdminClient();
+  const oldestAllowed = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: pendingRuns, error } = await supabase
+    .from("automation_runs")
+    .select("id,owner_id,dm_recipient_id,created_at")
+    .eq("require_follow_snapshot", true)
+    .in("follow_status", ["awaiting_reply", "not_following"])
+    .not("dm_recipient_id", "is", null)
+    .gte("created_at", oldestAllowed)
+    .order("created_at", { ascending: false })
+    .limit(Math.min(Math.max(limit, 1), 20));
+  if (error) throw new Error("Não foi possível consultar confirmações pendentes.");
+
+  const gateway = instagramGateway();
+  const recoveredEvents: InstagramMessageEvent[] = [];
+  const checkedRecipients = new Set<string>();
+  for (const run of pendingRuns ?? []) {
+    const recipientId = run.dm_recipient_id as string;
+    const lookupKey = `${run.owner_id}:${recipientId}`;
+    if (checkedRecipients.has(lookupKey)) continue;
+    checkedRecipients.add(lookupKey);
+
+    const { data: connection } = await supabase
+      .from("instagram_connections")
+      .select("*")
+      .eq("owner_id", run.owner_id)
+      .eq("status", "connected")
+      .maybeSingle();
+    if (!connection) continue;
+
+    try {
+      const accessToken = decryptSecret({
+        ciphertext: connection.token_ciphertext,
+        iv: connection.token_iv,
+        tag: connection.token_tag,
+      });
+      const messages = await gateway.listRecentInboundMessages(
+        connection.instagram_user_id,
+        recipientId,
+        new Date(run.created_at),
+        accessToken,
+      );
+      const confirmation = messages.find((message) => normalizeKeyword(message.text) === "pronto");
+      if (!confirmation) continue;
+      recoveredEvents.push({
+        instagramUserId: connection.instagram_user_id,
+        messageId: confirmation.messageId,
+        senderScopedId: recipientId,
+        recipientId: connection.instagram_user_id,
+        text: confirmation.text,
+        isEcho: false,
+      });
+    } catch (recoveryError) {
+      console.warn("Instagram conversation recovery failed", {
+        error: recoveryError instanceof MetaApiError
+          ? metaDiagnosticCode(recoveryError)
+          : recoveryError instanceof Error
+            ? recoveryError.name
+            : "UnknownError",
+      });
+    }
+  }
+
+  const result = recoveredEvents.length
+    ? await processIncomingMessages(recoveredEvents)
+    : { received: 0, processed: 0 };
+  return {
+    checked: checkedRecipients.size,
+    recovered: result.received,
+    processed: result.processed,
+  };
+}

@@ -20,4 +20,5 @@ export class MockInstagramGateway implements InstagramGateway {
   async sendPrivateReply(_userId: string, commentId: string) { return { recipientId: `recipient-${commentId}`, messageId: `message-${commentId}` }; }
   async getUserFollowStatus() { return true; }
   async sendTextMessage(_instagramUserId: string, recipientId: string) { return { recipientId, messageId: `message-follow-${recipientId}` }; }
+  async listRecentInboundMessages() { return []; }
 }

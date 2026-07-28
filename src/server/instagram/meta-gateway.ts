@@ -327,4 +327,53 @@ export class MetaInstagramGateway implements InstagramGateway {
     );
     return { recipientId: data.recipient_id, messageId: data.message_id };
   }
+
+  async listRecentInboundMessages(
+    instagramUserId: string,
+    scopedUserId: string,
+    since: Date,
+    accessToken: string,
+  ) {
+    const conversationQuery = new URLSearchParams({
+      user_id: scopedUserId,
+      limit: "1",
+    });
+    const conversations = await metaFetch<{
+      data?: Array<{ id: string }>;
+    }>(
+      `/${encodeURIComponent(instagramUserId)}/conversations?${conversationQuery}`,
+      { accessToken },
+    );
+    const conversationId = conversations.data?.[0]?.id;
+    if (!conversationId) return [];
+
+    const fields = encodeURIComponent("messages.limit(20){id,created_time,from,to,message}");
+    const conversation = await metaFetch<{
+      messages?: {
+        data?: Array<{
+          id?: string;
+          created_time?: string;
+          from?: { id?: string };
+          message?: string;
+        }>;
+      };
+    }>(
+      `/${encodeURIComponent(conversationId)}?fields=${fields}`,
+      { accessToken },
+    );
+    const sinceTime = since.getTime();
+    return (conversation.messages?.data ?? [])
+      .filter((message) =>
+        Boolean(message.id)
+        && message.from?.id === scopedUserId
+        && Boolean(message.message?.trim())
+        && new Date(message.created_time ?? 0).getTime() >= sinceTime,
+      )
+      .map((message) => ({
+        messageId: message.id!,
+        text: message.message!.slice(0, 1000),
+        createdAt: new Date(message.created_time!).toISOString(),
+      }))
+      .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+  }
 }
