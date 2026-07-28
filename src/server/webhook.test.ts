@@ -135,6 +135,83 @@ describe("Meta webhooks", () => {
     }]);
   });
 
+  it("keeps a valid message when Meta sends unrelated messaging events in the same envelope", () => {
+    const mixedPayload = JSON.stringify({
+      object: "instagram",
+      entry: [{
+        id: "ig-owner",
+        messaging: [
+          {
+            sender: { id: "ig-scoped-person" },
+            recipient: { id: "ig-owner" },
+            read: { mid: "message-read" },
+          },
+          {
+            sender: { id: "ig-scoped-person" },
+            recipient: { id: "ig-owner" },
+            timestamp: 1785197000000,
+            message: { mid: "message-ready", text: "pronto" },
+          },
+        ],
+      }],
+    });
+
+    expect(parseMessageEvents(mixedPayload)).toEqual([{
+      instagramUserId: "ig-owner",
+      messageId: "message-ready",
+      senderScopedId: "ig-scoped-person",
+      recipientId: "ig-owner",
+      text: "pronto",
+      isEcho: false,
+    }]);
+  });
+
+  it("accepts the direct messages variant and derives a stable id when Meta omits mid", () => {
+    const directPayload = JSON.stringify({
+      object: "instagram_business_account",
+      entry: [{
+        id: "ig-owner",
+        field: "messages",
+        value: {
+          sender: { id: "ig-scoped-person" },
+          recipient: { id: "ig-owner" },
+          timestamp: "1785197000000",
+          message: { text: "PRONTO" },
+        },
+      }],
+    });
+
+    const first = parseMessageEvents(directPayload);
+    const second = parseMessageEvents(directPayload);
+    expect(first).toHaveLength(1);
+    expect(first[0]).toMatchObject({
+      instagramUserId: "ig-owner",
+      senderScopedId: "ig-scoped-person",
+      recipientId: "ig-owner",
+      text: "PRONTO",
+      isEcho: false,
+    });
+    expect(first[0]?.messageId).toMatch(/^derived:[a-f0-9]{64}$/);
+    expect(second[0]?.messageId).toBe(first[0]?.messageId);
+  });
+
+  it("ignores seen and reaction notifications instead of rejecting the webhook", () => {
+    const unrelatedPayload = JSON.stringify({
+      object: "instagram",
+      entry: [{
+        id: "ig-owner",
+        messaging: [{
+          sender: { id: "ig-scoped-person" },
+          recipient: { id: "ig-owner" },
+          read: { mid: "message-1" },
+        }],
+      }],
+    });
+
+    expect(parseMessageEvents(unrelatedPayload)).toEqual([]);
+    expect(parseCommentEvents(unrelatedPayload)).toEqual([]);
+  });
+
   it("marks app echoes so they are never processed as follower replies", () => {
     const echoPayload = JSON.stringify({
       object: "instagram",

@@ -324,7 +324,12 @@ export async function processIncomingMessages(events: InstagramMessageEvent[]) {
     try {
       const follows = await gateway.getUserFollowStatus(event.senderScopedId, accessToken);
       if (!follows) {
-        await gateway.sendTextMessage(event.senderScopedId, run.not_following_message_snapshot, accessToken);
+        await gateway.sendTextMessage(
+          connection.instagram_user_id,
+          event.senderScopedId,
+          run.not_following_message_snapshot,
+          accessToken,
+        );
         await supabase.from("automation_runs").update({
           follow_status: "not_following",
           follow_checked_at: checkedAt,
@@ -343,6 +348,7 @@ export async function processIncomingMessages(events: InstagramMessageEvent[]) {
       const { token, hash } = createTrackingToken();
       const trackingUrl = `${env.APP_ORIGIN}/r/${token}`;
       const reply = await gateway.sendTextMessage(
+        connection.instagram_user_id,
         event.senderScopedId,
         `${run.dm_message_snapshot}\n\n${trackingUrl}`,
         accessToken,

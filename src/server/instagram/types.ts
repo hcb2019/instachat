@@ -36,5 +36,5 @@ export interface InstagramGateway {
   replyToComment(commentId: string, message: string, accessToken: string): Promise<{ id: string }>;
   sendPrivateReply(userId: string, commentId: string, message: string, accessToken: string): Promise<{ recipientId: string; messageId: string }>;
   getUserFollowStatus(scopedUserId: string, accessToken: string): Promise<boolean>;
-  sendTextMessage(recipientId: string, message: string, accessToken: string): Promise<{ recipientId: string; messageId: string }>;
+  sendTextMessage(instagramUserId: string, recipientId: string, message: string, accessToken: string): Promise<{ recipientId: string; messageId: string }>;
 }

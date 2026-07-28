@@ -316,9 +316,9 @@ export class MetaInstagramGateway implements InstagramGateway {
     return data.is_user_follow_business === true;
   }
 
-  async sendTextMessage(recipientId: string, message: string, accessToken: string) {
+  async sendTextMessage(instagramUserId: string, recipientId: string, message: string, accessToken: string) {
     const data = await metaFetch<{ recipient_id: string; message_id: string }>(
-      "/me/messages",
+      `/${encodeURIComponent(instagramUserId)}/messages`,
       {
         method: "POST",
         accessToken,

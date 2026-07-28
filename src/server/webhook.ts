@@ -1,5 +1,5 @@
 import "server-only";
-import { createHmac } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 import { z } from "zod";
 import { constantTimeTextEqual } from "@/server/crypto";
 import type { InstagramCommentEvent, InstagramMessageEvent } from "@/server/instagram/types";
@@ -35,17 +35,39 @@ const webhookSchema = z.object({
       field: z.string(),
       value: z.unknown(),
     }).passthrough()).optional(),
-    messaging: z.array(z.object({
-      sender: z.object({ id: metaIdSchema }),
-      recipient: z.object({ id: metaIdSchema }),
-      message: z.object({
-        mid: metaIdSchema,
-        text: z.string().max(1000).optional(),
-        is_echo: z.boolean().optional(),
-      }).passthrough(),
-    }).passthrough()).optional(),
+    messaging: z.array(z.unknown()).optional(),
   }).passthrough()),
 }).passthrough();
+
+const messagingEventSchema = z.object({
+  sender: z.object({ id: metaIdSchema }),
+  recipient: z.object({ id: metaIdSchema }),
+  timestamp: metaIdSchema.optional(),
+  is_self: z.boolean().optional(),
+  message: z.object({
+    mid: metaIdSchema.optional(),
+    id: metaIdSchema.optional(),
+    text: z.union([z.string(), z.number().transform(String)]).default(""),
+    is_echo: z.boolean().optional(),
+    is_self: z.boolean().optional(),
+  }).passthrough(),
+}).passthrough();
+
+function messageIdFor(
+  entryId: string,
+  event: z.infer<typeof messagingEventSchema>,
+) {
+  const suppliedId = event.message.mid ?? event.message.id;
+  if (suppliedId) return suppliedId;
+  const fingerprint = [
+    entryId,
+    event.sender.id,
+    event.recipient.id,
+    event.timestamp ?? "",
+    event.message.text,
+  ].join("\u001f");
+  return `derived:${createHash("sha256").update(fingerprint).digest("hex")}`;
+}
 
 export function verifyWebhookSignature(rawBody: string, signature: string | null, secret: string) {
   if (!signature?.startsWith("sha256=")) return false;
@@ -100,16 +122,29 @@ export function parseCommentEvents(rawBody: string): InstagramCommentEvent[] {
 
 export function parseMessageEvents(rawBody: string): InstagramMessageEvent[] {
   const payload = webhookSchema.parse(JSON.parse(rawBody));
-  return payload.entry.flatMap((entry) =>
-    (entry.messaging ?? []).map((event) => ({
-      instagramUserId: entry.id,
-      messageId: event.message.mid,
-      senderScopedId: event.sender.id,
-      recipientId: event.recipient.id,
-      text: event.message.text ?? "",
-      isEcho: event.message.is_echo === true
-        || event.sender.id === entry.id
-        || event.recipient.id !== entry.id,
-    })),
-  );
+  return payload.entry.flatMap((entry) => {
+    const directValues = entry.field === "messages" ? [entry.value] : [];
+    const changedValues = (entry.changes ?? [])
+      .filter((change) => change.field === "messages")
+      .map((change) => change.value);
+    const candidates = [...(entry.messaging ?? []), ...directValues, ...changedValues];
+
+    return candidates.flatMap((candidate) => {
+      const parsed = messagingEventSchema.safeParse(candidate);
+      if (!parsed.success) return [];
+      const event = parsed.data;
+      return [{
+        instagramUserId: entry.id,
+        messageId: messageIdFor(entry.id, event),
+        senderScopedId: event.sender.id,
+        recipientId: event.recipient.id,
+        text: event.message.text,
+        isEcho: event.is_self === true
+          || event.message.is_echo === true
+          || event.message.is_self === true
+          || event.sender.id === entry.id
+          || event.recipient.id !== entry.id,
+      }];
+    });
+  });
 }
