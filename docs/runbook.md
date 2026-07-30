@@ -2,7 +2,7 @@
 
 ## Worker e fila
 
-O webhook chama o worker via `after()`. Para recuperação, configure Supabase Cron para fazer POST a cada minuto em `/api/internal/jobs/process` com `Authorization: Bearer WORKER_SECRET`. Guarde URL e segredo no Vault; nunca no SQL versionado.
+O webhook chama o worker via `after()`. Para recuperação, configure Supabase Cron para fazer POST a cada minuto em `/api/internal/jobs/process` com `Authorization: Bearer WORKER_SECRET`. Guarde URL e segredo no Vault; nunca no SQL versionado. Esse worker também verifica o vencimento do token do Instagram e o renova quando restarem 14 dias ou menos.
 
 Mensagens permanecem na fila por 60 segundos quando um worker falha. Runs têm constraints idempotentes, portanto reentregas não enviam uma segunda DM ao mesmo usuário.
 
@@ -19,6 +19,9 @@ Configure um job diário para fazer POST em `/api/internal/jobs/analyze` com o m
 ## Falhas
 
 - `connection_unavailable`: renovar a conexão no painel antes de reativar automações.
+- `Renovação do token: Meta (190)`: o token já expirou ou foi revogado e não
+  pode mais ser renovado; reautorize uma vez. Conexões ainda válidas são
+  renovadas automaticamente.
 - `partial`: uma das duas etapas funcionou; não reenvie manualmente sem verificar o Instagram.
 - `ambiguous`: houve timeout após a chamada; conferir na interface do Instagram antes de qualquer nova tentativa.
 - `429`/`5xx`: o cliente tenta até três vezes com backoff e `Retry-After`.

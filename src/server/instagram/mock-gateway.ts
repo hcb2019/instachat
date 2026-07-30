@@ -10,6 +10,9 @@ export class MockInstagramGateway implements InstagramGateway {
       permissions: ["instagram_business_basic", "instagram_business_manage_comments", "instagram_business_manage_messages", "instagram_business_manage_insights"],
     };
   }
+  async renewAccessToken() {
+    return { accessToken: "demo-token-renewed", expiresIn: 5_184_000 };
+  }
   async getProfile() { return { userId: demoStore().connection.instagramUserId, username: demoStore().connection.username }; }
   async subscribeToComments() {}
   async hasCommentSubscription() { return true; }

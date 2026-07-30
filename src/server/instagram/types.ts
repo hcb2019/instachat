@@ -27,6 +27,7 @@ export interface InstagramTokenResult {
 
 export interface InstagramGateway {
   exchangeCode(code: string, redirectUri: string): Promise<InstagramTokenResult>;
+  renewAccessToken(accessToken: string): Promise<{ accessToken: string; expiresIn: number }>;
   getProfile(accessToken: string): Promise<{ userId: string; username: string }>;
   subscribeToComments(userId: string, accessToken: string): Promise<void>;
   hasCommentSubscription(userId: string, accessToken: string): Promise<boolean>;

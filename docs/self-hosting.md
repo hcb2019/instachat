@@ -180,8 +180,10 @@ Authorization: Bearer SEU_WORKER_SECRET
 
 Endpoints:
 
-- `/api/internal/jobs/process`: fila e confirmações de DM;
+- `/api/internal/jobs/process`: fila, confirmações de DM e renovação preventiva do token;
 - `/api/internal/jobs/analyze`: sincronização e análise do Radar.
+- `/api/internal/jobs/maintenance`: somente manutenção diária do token; aceita
+  `WORKER_SECRET` ou um `CRON_SECRET` separado.
 
 Não coloque o segredo diretamente em um repositório, painel público ou comando compartilhado.
 

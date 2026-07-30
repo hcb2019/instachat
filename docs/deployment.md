@@ -61,9 +61,11 @@ Gere:
 openssl rand -base64 32
 openssl rand -hex 32
 openssl rand -hex 32
+openssl rand -hex 32
 ```
 
-Use valores independentes para `TOKEN_ENCRYPTION_KEY`, `WORKER_SECRET` e `META_WEBHOOK_VERIFY_TOKEN`.
+Use valores independentes para `TOKEN_ENCRYPTION_KEY`, `WORKER_SECRET`,
+`CRON_SECRET` e `META_WEBHOOK_VERIFY_TOKEN`.
 
 Segredos nunca podem usar prefixo `NEXT_PUBLIC_`.
 
@@ -79,6 +81,12 @@ Programe chamadas `POST` autenticadas com `WORKER_SECRET`:
 - `/api/internal/jobs/analyze`.
 
 Use Supabase Cron, Vercel Cron compatível com seu plano ou outro agendador seguro.
+
+O deploy da Vercel também registra uma chamada diária para
+`/api/internal/jobs/maintenance`. Cadastre `CRON_SECRET` nos ambientes de
+produção da Vercel. Essa rotina renova o token do Instagram 14 dias antes do
+vencimento. O worker de processamento executa a mesma verificação como
+redundância.
 
 ## 7. Adicione o domínio
 

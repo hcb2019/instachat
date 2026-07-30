@@ -32,7 +32,8 @@ export async function getConnection(): Promise<InstagramConnection | null> {
   if (!data) return null;
   return {
     id: data.id, ownerId: data.owner_id, instagramUserId: data.instagram_user_id, username: data.username,
-    status: data.status, tokenExpiresAt: data.token_expires_at, lastSyncAt: data.last_sync_at, lastError: data.last_error,
+    status: data.status, tokenExpiresAt: data.token_expires_at, tokenRefreshedAt: data.token_refreshed_at,
+    lastSyncAt: data.last_sync_at, lastError: data.last_error,
   } as InstagramConnection;
 }
 

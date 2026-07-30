@@ -17,6 +17,7 @@ export interface InstagramConnection {
   username: string;
   status: ConnectionStatus;
   tokenExpiresAt: string | null;
+  tokenRefreshedAt: string | null;
   lastSyncAt: string | null;
   lastError: string | null;
 }

@@ -139,6 +139,7 @@ export function demoStore(): DemoState {
       username: "instachat.demo",
       status: "connected",
       tokenExpiresAt: new Date(now + 86400000 * 42).toISOString(),
+      tokenRefreshedAt: new Date(now - 86400000 * 7).toISOString(),
       lastSyncAt: new Date(now - 1000 * 60 * 18).toISOString(),
       lastError: null,
     },

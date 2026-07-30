@@ -71,6 +71,7 @@ Use `.env.example` apenas como modelo. `.env.local` é ignorado pelo Git.
 ```bash
 openssl rand -base64 32 # TOKEN_ENCRYPTION_KEY
 openssl rand -hex 32    # WORKER_SECRET
+openssl rand -hex 32    # CRON_SECRET (Vercel)
 openssl rand -hex 32    # META_WEBHOOK_VERIFY_TOKEN
 pnpm config:check
 ```
@@ -82,6 +83,7 @@ Controles principais:
 - OAuth com `state` de uso único;
 - webhook HMAC sobre o corpo bruto;
 - token Meta cifrado com AES-256-GCM;
+- troca automática do token inicial pelo token de longa duração e renovação preventiva;
 - links opacos armazenados somente como hash;
 - CSP, HSTS, `no-store` e bloqueio de framing;
 - validação Zod e erros sanitizados;

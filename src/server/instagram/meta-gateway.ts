@@ -28,6 +28,12 @@ function safeMetaMessage(message?: string) {
 
 type MetaFetchOptions = RequestInit & { accessToken?: string; unversioned?: boolean };
 
+type MetaTokenResponse = {
+  access_token: string;
+  token_type?: string;
+  expires_in?: number;
+};
+
 async function metaFetch<T>(path: string, options: MetaFetchOptions, attempt = 1): Promise<T> {
   const { accessToken, unversioned = false, ...init } = options;
   const endpoint = unversioned
@@ -59,6 +65,56 @@ async function metaFetch<T>(path: string, options: MetaFetchOptions, attempt = 1
     return metaFetch<T>(path, options, attempt + 1);
   }
   throw error;
+}
+
+async function tokenFetch(path: "/access_token" | "/refresh_access_token", params: URLSearchParams) {
+  const endpoint = new URL(path, "https://graph.instagram.com");
+  endpoint.search = params.toString();
+  const response = await fetch(endpoint, {
+    method: "GET",
+    redirect: "error",
+    signal: AbortSignal.timeout(12_000),
+    headers: { Accept: "application/json" },
+  }).catch((cause) => {
+    throw new MetaApiError(
+      cause instanceof Error && cause.name === "TimeoutError"
+        ? "Tempo limite da Meta excedido."
+        : "Meta indisponível.",
+      0,
+      "NETWORK",
+      undefined,
+      true,
+    );
+  });
+  if (response.ok) {
+    const data = await response.json() as MetaTokenResponse;
+    if (!data.access_token) throw new MetaApiError("A Meta não devolveu um token válido.", 502, "INVALID_TOKEN_RESPONSE");
+    return {
+      accessToken: data.access_token,
+      expiresIn: data.expires_in ?? 5_184_000,
+    };
+  }
+  const body = await response.json().catch(() => ({})) as {
+    error?: { message?: string; code?: number; error_subcode?: number };
+  };
+  throw new MetaApiError(
+    safeMetaMessage(body.error?.message),
+    response.status,
+    String(body.error?.code ?? "TOKEN_HTTP_ERROR"),
+    Number(response.headers.get("retry-after") ?? 0) || undefined,
+    false,
+    body.error?.error_subcode ? String(body.error.error_subcode) : undefined,
+    response.headers.get("x-fb-request-id") ?? undefined,
+  );
+}
+
+async function exchangeForLongLivedToken(shortLivedToken: string) {
+  if (!env.META_APP_SECRET) throw new Error("Meta não configurada.");
+  return tokenFetch("/access_token", new URLSearchParams({
+    grant_type: "ig_exchange_token",
+    client_secret: env.META_APP_SECRET,
+    access_token: shortLivedToken,
+  }));
 }
 
 function isUnsupportedMediaEdge(error: unknown) {
@@ -131,12 +187,34 @@ export class MetaInstagramGateway implements InstagramGateway {
     const response = await fetch("https://api.instagram.com/oauth/access_token", { method: "POST", body, redirect: "error", signal: AbortSignal.timeout(12_000) });
     if (!response.ok) throw new MetaApiError("Não foi possível concluir o OAuth.", response.status);
     const data = await response.json() as { access_token: string; user_id: number; expires_in?: number; permissions?: string[] };
+    const longLived = await exchangeForLongLivedToken(data.access_token);
     return {
-      accessToken: data.access_token,
+      accessToken: longLived.accessToken,
       userId: String(data.user_id),
-      expiresIn: data.expires_in ?? null,
+      expiresIn: longLived.expiresIn,
       permissions: Array.isArray(data.permissions) ? data.permissions : null,
     };
+  }
+
+  async renewAccessToken(accessToken: string) {
+    try {
+      return await tokenFetch("/refresh_access_token", new URLSearchParams({
+        grant_type: "ig_refresh_token",
+        access_token: accessToken,
+      }));
+    } catch (refreshError) {
+      // Connections created by older InstaChat versions may still contain the
+      // short-lived OAuth token. Give those installations one safe upgrade
+      // attempt before requiring the owner to reconnect.
+      if (refreshError instanceof MetaApiError && !refreshError.transient) {
+        try {
+          return await exchangeForLongLivedToken(accessToken);
+        } catch {
+          throw refreshError;
+        }
+      }
+      throw refreshError;
+    }
   }
 
   getProfile(accessToken: string) {

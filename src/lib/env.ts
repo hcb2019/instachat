@@ -17,6 +17,7 @@ const schema = z.object({
   META_WEBHOOK_VERIFY_TOKEN: z.string().optional(),
   TOKEN_ENCRYPTION_KEY: z.string().optional(),
   WORKER_SECRET: z.string().optional(),
+  CRON_SECRET: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_AUDIENCE_MODEL: z.string().min(1).max(100).default("gpt-5.6-terra"),
   AI_MAX_COMMENTS_PER_RUN: z.coerce.number().int().min(1).max(2000).default(2000),
