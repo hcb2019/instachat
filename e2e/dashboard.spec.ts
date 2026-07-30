@@ -17,13 +17,58 @@ test("navigates through the demo dashboard", async ({ page }) => {
 test("shows responsive navigation on a small viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/automations");
-  await expect(page.getByRole("navigation", { name: "Navegação principal" })).toBeVisible();
+  const navigation = page.getByRole("navigation", { name: "Navegação principal" });
+  await expect(navigation).toBeVisible();
+  await expect(navigation.getByRole("link")).toHaveCount(6);
+  for (const link of await navigation.getByRole("link").all()) await expect(link).toBeInViewport();
   await expect(page.getByRole("heading", { name: "Automações" })).toBeVisible();
   const widths = await page.evaluate(() => ({
     viewport: window.innerWidth,
     document: document.documentElement.scrollWidth,
   }));
   expect(widths.document).toBeLessThanOrEqual(widths.viewport);
+});
+
+test("keeps history actions and integration controls accessible on mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto("/history");
+  await expect(page.locator(".history-row").first()).toBeVisible();
+  await expect(page.locator(".history-row").first().locator(".history-public")).toHaveAttribute("data-label", "Resposta pública");
+  const retryButton = page.getByRole("button", { name: "Reenviar DM" }).first();
+  await retryButton.scrollIntoViewIfNeeded();
+  await expect(retryButton).toBeInViewport();
+  await expect(retryButton).toHaveCSS("min-height", "48px");
+
+  await page.goto("/settings");
+  const connectionAction = page.locator(".connection-actions .button").first();
+  await expect(connectionAction).toBeVisible();
+  await connectionAction.scrollIntoViewIfNeeded();
+  await expect(connectionAction).toBeInViewport();
+  const layout = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    document: document.documentElement.scrollWidth,
+    actionRight: document.querySelector(".connection-actions .button")?.getBoundingClientRect().right ?? 0,
+  }));
+  expect(layout.document).toBeLessThanOrEqual(layout.viewport);
+  expect(layout.actionRight).toBeLessThanOrEqual(layout.viewport);
+});
+
+test("keeps every main screen inside a compact viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  for (const route of ["/dashboard", "/radar", "/connection-guide", "/automations", "/automations/new", "/history", "/settings"]) {
+    await page.goto(route);
+    if (route === "/radar") await page.getByText(/Ver \d+ evidências?/).first().click();
+    const overflow = await page.evaluate(() => {
+      const offenders = [...document.querySelectorAll<HTMLElement>("body *")].filter((element) => {
+        const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return style.display !== "none" && style.visibility !== "hidden" && (rect.left < -1 || rect.right > window.innerWidth + 1);
+      });
+      return { document: document.documentElement.scrollWidth, viewport: window.innerWidth, offenders: offenders.length };
+    });
+    expect(overflow.document, route).toBeLessThanOrEqual(overflow.viewport);
+    expect(overflow.offenders, route).toBe(0);
+  }
 });
 
 test("keeps automation fields readable without iOS input zoom", async ({ page }) => {
