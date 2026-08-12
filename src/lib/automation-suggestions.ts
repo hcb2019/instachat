@@ -13,17 +13,17 @@ export const automationMessageSuggestionsSchema = z.object({
 
 export type AutomationMessageSuggestion = z.infer<typeof automationMessageSuggestionSchema>;
 
-export function reelTopicFromCaption(caption: string) {
-  const normalized = caption
-    .normalize("NFKC")
-    .replace(/https?:\/\/\S+/gi, "")
-    .replace(/#[\p{L}\p{N}_]+/gu, "")
-    .replace(/\s+/g, " ")
-    .trim();
-  const firstThought = normalized.split(/[.!?\n]/u)[0]?.trim() ?? "";
-  const topic = firstThought || normalized;
-  if (!topic) return "este conteúdo";
-  return topic.length > 54 ? `${topic.slice(0, 51).trimEnd()}…` : topic;
+const GENERIC_MESSAGE_TERMS = new Set([
+  "acesso", "aqui", "conteudo", "direct", "enviar", "enviei", "material",
+  "mensagem", "pedido", "pronto", "prometido", "reel", "reels", "video",
+]);
+
+function normalizedWords(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("pt-BR")
+    .match(/[a-z0-9]+/g) ?? [];
 }
 
 function hashText(value: string) {
@@ -39,29 +39,46 @@ function rotate<T>(items: T[], offset: number) {
   return items.map((_, index) => items[(index + offset) % items.length]!);
 }
 
+export function suggestionReferencesCaption(suggestion: AutomationMessageSuggestion, caption: string) {
+  const message = `${suggestion.publicReply} ${suggestion.dmMessage}`;
+  if (/@[\p{L}\p{N}_.]+/u.test(message)) return true;
+
+  const specificTerms = new Set(
+    normalizedWords(caption)
+      .filter((term) => term.length >= 5 && !GENERIC_MESSAGE_TERMS.has(term)),
+  );
+  if (!specificTerms.size) return false;
+
+  const messageTerms = new Set(normalizedWords(message));
+  return [...specificTerms].some((term) => messageTerms.has(term));
+}
+
+export function suggestionsAreSafeForCaption(suggestions: AutomationMessageSuggestion[], caption: string) {
+  return suggestions.every((suggestion) => !suggestionReferencesCaption(suggestion, caption));
+}
+
 export function buildFallbackAutomationSuggestions(caption: string, variationSeed = 0): AutomationMessageSuggestion[] {
-  const topic = reelTopicFromCaption(caption);
   const offset = (hashText(`${caption}:${variationSeed}`) + variationSeed) % 6;
   const publicTemplates = rotate([
-    `Pronto! Te mandei sobre “${topic}” no direct ✨`,
-    `Chegou na sua DM: o próximo passo sobre “${topic}”.`,
-    `Enviei no direct o conteúdo de “${topic}”. Dá uma olhada!`,
-    `Boa! A continuação de “${topic}” já está na sua DM.`,
-    `Acabei de te enviar os detalhes de “${topic}” no direct.`,
-    `Tudo certo — o conteúdo sobre “${topic}” está na sua DM.`,
+    "Prontinho! Enviei no seu direct — dá uma conferida ✨",
+    "Chegou na sua DM. Pode abrir por lá!",
+    "Tudo certo! Acabei de mandar no direct.",
+    "Enviei por mensagem. Depois me conta se chegou 🙌",
+    "Já está no seu direct — confere lá!",
+    "Feito! Dá uma olhadinha nas suas mensagens.",
   ], offset);
   const dmTemplates = rotate([
-    `Aqui está o conteúdo sobre “${topic}”:`,
-    `Separei para você o próximo passo de “${topic}”:`,
-    `Como prometido, aqui vai o material de “${topic}”:`,
-    `Vamos continuar? Veja os detalhes de “${topic}”:`,
-    `Este é o conteúdo complementar de “${topic}”:`,
-    `Para avançar em “${topic}”, comece por aqui:`,
+    "Como prometido, deixei o conteúdo logo abaixo:",
+    "Prontinho! Aqui está o que você pediu:",
+    "Separei tudo para você. É só acessar:",
+    "Aqui vai o conteúdo. Espero que ajude:",
+    "Está na mão! Você pode conferir por aqui:",
+    "Conforme combinado, o acesso está logo abaixo:",
   ], (offset + 2) % 6);
   const styles = [
-    ["Direta", "Confirma o envio com clareza e cita o assunto do Reel."],
-    ["Próxima", "Mantém um tom humano, curto e relacionado ao conteúdo."],
-    ["Ação", "Convida a pessoa a abrir a DM sem criar uma promessa artificial."],
+    ["Direta", "Confirma o envio com clareza, sem repetir a legenda do Reel."],
+    ["Acolhedora", "Mantém um tom humano e curto, sem copiar trechos do conteúdo."],
+    ["Ação", "Convida a pessoa a abrir a DM sem parecer uma resposta robótica."],
   ] as const;
 
   return styles.map(([label, rationale], index) => ({

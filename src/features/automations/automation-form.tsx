@@ -182,7 +182,7 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
             <span className="suggestion-icon"><Lightbulb size={18} /></span>
             <div>
               <strong>Sugestões para este conteúdo</strong>
-              <p>{selectedMedia ? "Analisamos a legenda do Reel e preparamos mensagens que você pode revisar e usar." : "Escolha um Reel para gerar respostas relacionadas ao conteúdo."}</p>
+              <p>{selectedMedia ? "Usamos apenas o contexto do Reel. As sugestões não copiam a legenda, o título nem @usuários." : "Escolha um Reel para gerar respostas naturais e prontas para revisar."}</p>
             </div>
             <button type="button" className="button button-secondary" onClick={generateSuggestions} disabled={!selectedMediaId || suggestionPending}>
               {suggestionPending ? <LoaderCircle className="spin" size={15} /> : <Sparkles size={15} />}
@@ -228,7 +228,7 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
             {dmMessages.map((message, index) => <label key={index}>
               <span>Mensagem {index + 1}{index === 0 && <em> obrigatória</em>}</span>
               <div>
-                <textarea name="dmMessageVariants" value={message} onChange={(event) => updateDmMessage(index, event.target.value)} placeholder={index === 0 ? "Aqui está o material que prometi:" : "Prontinho! Separei o conteúdo para você:"} maxLength={900} rows={4} aria-invalid={Boolean(state.fields?.dmMessageVariants) && !message.trim()} />
+                <textarea name="dmMessageVariants" value={message} onChange={(event) => updateDmMessage(index, event.target.value)} placeholder={index === 0 ? "Como prometido, deixei o conteúdo logo abaixo:" : "Prontinho! Aqui está o que você pediu:"} maxLength={900} rows={4} aria-invalid={Boolean(state.fields?.dmMessageVariants) && !message.trim()} />
                 {dmMessages.length > 1 && <button type="button" className="icon-button" onClick={() => removeDmMessage(index)} aria-label={`Remover mensagem privada ${index + 1}`}><Trash2 size={15} /></button>}
               </div>
             </label>)}

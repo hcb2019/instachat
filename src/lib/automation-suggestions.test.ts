@@ -2,21 +2,35 @@ import { describe, expect, it } from "vitest";
 import {
   automationMessageSuggestionsSchema,
   buildFallbackAutomationSuggestions,
-  reelTopicFromCaption,
+  suggestionReferencesCaption,
+  suggestionsAreSafeForCaption,
 } from "@/lib/automation-suggestions";
 
 describe("automation message suggestions", () => {
-  it("extracts a concise topic without links or hashtags", () => {
-    expect(reelTopicFromCaption("Como organizar seu lançamento! https://exemplo.com #marketing")).toBe("Como organizar seu lançamento");
-  });
-
-  it("returns three valid contextual message pairs", () => {
+  it("returns three valid message pairs without copying the Reel caption", () => {
     const suggestions = buildFallbackAutomationSuggestions("Três maneiras de usar inteligência artificial no atendimento.");
     expect(suggestions).toHaveLength(3);
-    expect(suggestions.every(({ dmMessage, publicReply }) => dmMessage.includes("inteligência artificial") && publicReply.includes("inteligência artificial"))).toBe(true);
+    expect(suggestionsAreSafeForCaption(suggestions, "Três maneiras de usar inteligência artificial no atendimento.")).toBe(true);
     expect(suggestions.every(({ dmMessage }) => dmMessage.length <= 150)).toBe(true);
     expect(new Set(suggestions.map(({ publicReply }) => publicReply)).size).toBe(3);
+    expect(new Set(suggestions.map(({ dmMessage }) => dmMessage)).size).toBe(3);
     expect(automationMessageSuggestionsSchema.safeParse({ suggestions }).success).toBe(true);
+  });
+
+  it("never turns a call to follow an account into generated copy", () => {
+    const caption = "Segue @hernando para acompanhar os próximos conteúdos.";
+    const suggestions = buildFallbackAutomationSuggestions(caption);
+    const combined = suggestions.flatMap(({ publicReply, dmMessage }) => [publicReply, dmMessage]).join(" ").toLocaleLowerCase("pt-BR");
+    expect(combined).not.toContain("@hernando");
+    expect(combined).not.toContain("segue");
+    expect(suggestionsAreSafeForCaption(suggestions, caption)).toBe(true);
+  });
+
+  it("rejects AI copy that leaks a username or a specific caption term", () => {
+    const caption = "Segue @hernando para conhecer o método Farol.";
+    const base = buildFallbackAutomationSuggestions(caption)[0]!;
+    expect(suggestionReferencesCaption({ ...base, publicReply: "Enviei o método Farol no direct." }, caption)).toBe(true);
+    expect(suggestionReferencesCaption({ ...base, dmMessage: "Segue @hernando e confira:" }, caption)).toBe(true);
   });
 
   it("rotates the copy when the user generates again", () => {
@@ -27,6 +41,7 @@ describe("automation message suggestions", () => {
 
   it("keeps working when a Reel has no caption", () => {
     const suggestions = buildFallbackAutomationSuggestions("");
-    expect(suggestions[0]?.dmMessage).toContain("este conteúdo");
+    expect(suggestions).toHaveLength(3);
+    expect(suggestionsAreSafeForCaption(suggestions, "")).toBe(true);
   });
 });
