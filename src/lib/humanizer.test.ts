@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HUMANIZER_VERSION, humanizeText, inspectHumanizedText, textPassesHumanizer } from "@/lib/humanizer";
+import { HUMANIZER_VERSION, formatInstagramCaption, humanizeText, inspectHumanizedText, textPassesHumanizer } from "@/lib/humanizer";
 
 describe("humanizer", () => {
   it("remove fala de assistente e enchimento sem perder o conteúdo", () => {
@@ -24,5 +24,10 @@ describe("humanizer", () => {
     expect(findings.map(({ pattern }) => pattern)).toContain("paralelismo artificial");
     expect(textPassesHumanizer("Testa isso com um cliente antes de mudar o processo inteiro.")).toBe(true);
     expect(HUMANIZER_VERSION).toBe("humanizer-v1");
+  });
+
+  it("preserva a formatação pronta para colar no Instagram", () => {
+    const caption = "@hernando.ia  \n\nPrimeiro parágrafo.   Segunda frase.\n\n\nComente GUIA para receber.";
+    expect(formatInstagramCaption(caption)).toBe("@hernando.ia\n\nPrimeiro parágrafo. Segunda frase.\n\nComente GUIA para receber.");
   });
 });

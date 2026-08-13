@@ -25,6 +25,8 @@
 - pode liberar o conteúdo após confirmação de seguidor;
 - mostra histórico, falhas e métricas;
 - analisa comentários no Radar e sugere temas, oportunidades e ideias;
+- cria no Estúdio um pacote conectado de hook, legenda formatada, material e automação;
+- copia textos prontos para o Instagram preservando parágrafos e linhas em branco;
 - funciona em modo demonstração sem credenciais;
 - mantém envio e ativação sob aprovação humana.
 

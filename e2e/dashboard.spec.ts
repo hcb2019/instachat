@@ -19,7 +19,7 @@ test("shows responsive navigation on a small viewport", async ({ page }) => {
   await page.goto("/automations");
   const navigation = page.getByRole("navigation", { name: "Navegação principal" });
   await expect(navigation).toBeVisible();
-  await expect(navigation.getByRole("link")).toHaveCount(6);
+  await expect(navigation.getByRole("link")).toHaveCount(7);
   for (const link of await navigation.getByRole("link").all()) await expect(link).toBeInViewport();
   await expect(page.getByRole("heading", { name: "Automações" })).toBeVisible();
   const widths = await page.evaluate(() => ({
@@ -55,7 +55,7 @@ test("keeps history actions and integration controls accessible on mobile", asyn
 
 test("keeps every main screen inside a compact viewport", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
-  for (const route of ["/dashboard", "/radar", "/connection-guide", "/automations", "/automations/new", "/history", "/settings"]) {
+  for (const route of ["/dashboard", "/radar", "/studio", "/studio/new", "/connection-guide", "/automations", "/automations/new", "/history", "/settings"]) {
     await page.goto(route);
     if (route === "/radar") await page.getByText(/Ver \d+ evidências?/).first().click();
     const overflow = await page.evaluate(() => {
@@ -69,6 +69,26 @@ test("keeps every main screen inside a compact viewport", async ({ page }) => {
     expect(overflow.document, route).toBeLessThanOrEqual(overflow.viewport);
     expect(overflow.offenders, route).toBe(0);
   }
+});
+
+test("creates a content package and copies the exact Instagram formatting", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: "http://localhost:3000" });
+  await page.goto("/studio/new");
+  await page.getByLabel("Nome interno").fill("Primeira automação com IA");
+  await page.getByLabel("Assunto do Reel").fill("Como escolher uma tarefa repetitiva para automatizar com inteligência artificial");
+  await page.getByRole("button", { name: "Gerar 3 ideias" }).click();
+  await expect(page.locator(".studio-concept-card")).toHaveCount(3, { timeout: 15_000 });
+  await expect(page.locator(".studio-concept-card").first().getByRole("button", { name: "Copiar" }).first()).toBeVisible();
+  await page.getByRole("button", { name: /Escolher e gerar pacote/ }).first().click();
+  await expect(page.getByRole("heading", { name: "Três tamanhos, a mesma ideia" })).toBeVisible({ timeout: 15_000 });
+
+  const exactCaption = "@hernando.ia\n\nPrimeiro bloco, curto e direto.\n\n1. Primeiro passo\n2. Segundo passo\n\nComente MAPA para receber.";
+  const medium = page.locator('textarea[name="mediumCaption"]');
+  await medium.fill(exactCaption);
+  await medium.locator("xpath=..").getByRole("button", { name: "Copiar" }).click();
+  await expect(medium.locator("xpath=..").getByRole("button", { name: "Copiado" })).toBeVisible();
+  const clipboard = await page.evaluate(() => navigator.clipboard.readText());
+  expect(clipboard).toBe(exactCaption);
 });
 
 test("keeps automation fields readable without iOS input zoom", async ({ page }) => {
@@ -94,15 +114,15 @@ test("selects a Reel from the visual gallery", async ({ page }) => {
   await expect(page.getByText("1 de 3 Reels")).toBeVisible();
 });
 
-test("explores Radar evidence and creates a reviewable draft", async ({ page }) => {
+test("explores Radar evidence and opens a connected Studio project", async ({ page }) => {
   await page.goto("/radar");
   await expect(page.getByRole("heading", { name: /O que sua audiência/ })).toBeVisible();
   await expect(page.getByText("Caixa de oportunidades", { exact: true })).toBeVisible();
   await page.getByText(/Ver \d+ evidências?/).first().click();
   await expect(page.locator(".evidence-list blockquote").first()).toBeVisible();
-  await page.getByRole("button", { name: /Criar rascunho/ }).first().click();
-  await expect(page.getByText(/Rascunho criado pelo Radar/)).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByLabel("Palavra-chave")).not.toHaveValue("");
+  await page.getByRole("link", { name: /Criar no Estúdio/ }).first().click();
+  await expect(page.getByRole("heading", { name: "Vamos encontrar o melhor ângulo." })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByLabel("Assunto do Reel")).not.toHaveValue("");
 });
 
 test("generates keyword and message variations for the selected Reel", async ({ page }) => {

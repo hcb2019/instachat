@@ -76,6 +76,31 @@ export function humanizeText(input: string) {
   return value.replace(/^([a-záàâãéêíóôõúç])/, (letter) => letter.toLocaleUpperCase("pt-BR"));
 }
 
+/**
+ * Prepara uma legenda para colar no Instagram. Mantém listas e quebras
+ * intencionais, remove espaços invisíveis e divide blocos longos em parágrafos.
+ */
+export function formatInstagramCaption(input: string) {
+  const cleaned = humanizeText(input)
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n");
+
+  return cleaned.split(/\n\n+/).flatMap((paragraph) => {
+    if (paragraph.length <= 260 || /^(?:[-•]|\d+[.)])\s/mu.test(paragraph)) return [paragraph];
+    const sentences = paragraph.match(/[^.!?]+[.!?]+(?:["']|$)|[^.!?]+$/gu)?.map((item) => item.trim()).filter(Boolean) ?? [paragraph];
+    const blocks: string[] = [];
+    for (const sentence of sentences) {
+      const last = blocks.at(-1);
+      if (last && `${last} ${sentence}`.length <= 240) blocks[blocks.length - 1] = `${last} ${sentence}`;
+      else blocks.push(sentence);
+    }
+    return blocks;
+  }).filter(Boolean).join("\n\n").trim();
+}
+
 export interface HumanizerFinding {
   pattern: string;
   excerpt: string;

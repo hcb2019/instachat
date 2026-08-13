@@ -3,6 +3,7 @@ import type { Automation, AutomationRun, InstagramConnection, InstagramMedia } f
 import type { AudienceRadarData } from "@/types/audience";
 import { normalizeKeyword } from "@/lib/domain";
 import { createDemoAudienceData } from "@/server/demo-audience";
+import type { ContentProject, CreatorProfile } from "@/types/content-studio";
 
 const ownerId = "00000000-0000-4000-8000-000000000001";
 const connectionId = "10000000-0000-4000-8000-000000000001";
@@ -124,6 +125,8 @@ interface DemoState {
   automations: Automation[];
   runs: AutomationRun[];
   audience: AudienceRadarData;
+  creatorProfile: CreatorProfile;
+  contentProjects: ContentProject[];
 }
 
 declare global {
@@ -147,9 +150,20 @@ export function demoStore(): DemoState {
     automations: structuredClone(automationSeed),
     runs: structuredClone(runSeed),
     audience: structuredClone(createDemoAudienceData(mediaSeed)),
+    creatorProfile: {
+      instagramHandle: "@hernando.ia",
+      niche: "Inteligência artificial aplicada a negócios e à vida cotidiana",
+      audience: "Pequenos empresários, profissionais autônomos e criadores que querem começar a usar IA",
+      voice: "Direto, conversado, informal e específico",
+      preferredTerms: ["na prática", "testa isso"],
+      avoidedTerms: ["revolucionário", "jornada"],
+      defaultCta: "Comente a palavra-chave para receber o material no direct.",
+    },
+    contentProjects: [],
   };
   // Preserve HMR state while safely introducing new demo domains.
   globalThis.__instachatDemoState.audience ??= structuredClone(createDemoAudienceData(globalThis.__instachatDemoState.media));
+  globalThis.__instachatDemoState.contentProjects ??= [];
   return globalThis.__instachatDemoState;
 }
 
