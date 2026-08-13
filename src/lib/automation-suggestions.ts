@@ -68,12 +68,12 @@ export function buildFallbackAutomationSuggestions(caption: string, variationSee
     "Feito! Dá uma olhadinha nas suas mensagens.",
   ], offset);
   const dmTemplates = rotate([
-    "Como prometido, deixei o conteúdo logo abaixo:",
-    "Prontinho! Aqui está o que você pediu:",
-    "Separei tudo para você. É só acessar:",
-    "Aqui vai o conteúdo. Espero que ajude:",
-    "Está na mão! Você pode conferir por aqui:",
-    "Conforme combinado, o acesso está logo abaixo:",
+    "Deixei o conteúdo logo abaixo:",
+    "Prontinho! O que você pediu está aqui:",
+    "Separei tudo. É só abrir:",
+    "Pode acessar por aqui:",
+    "Está na mão! Dá uma olhada:",
+    "O acesso está logo abaixo:",
   ], (offset + 2) % 6);
   const styles = [
     ["Direta", "Confirma o envio com clareza, sem repetir a legenda do Reel."],

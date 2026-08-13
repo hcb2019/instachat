@@ -5,10 +5,34 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { demoStore } from "@/server/demo-store";
 import type { AudienceEvidence, AudienceInsight, AudienceRadarData, AudienceTheme } from "@/types/audience";
 import type { InstagramMedia } from "@/types/domain";
+import { humanizeText } from "@/lib/humanizer";
 
 export interface AudienceFilters {
   periodDays: 7 | 30 | 90;
   mediaId: string | null;
+}
+
+function humanizeContentSuggestion(value: AudienceInsight["contentSuggestion"]) {
+  if (!value) return null;
+  return {
+    ...value,
+    hook: humanizeText(value.hook),
+    angle: humanizeText(value.angle),
+    outline: value.outline.map(humanizeText),
+    cta: humanizeText(value.cta),
+    publicReply: humanizeText(value.publicReply),
+    dmMessage: humanizeText(value.dmMessage),
+  };
+}
+
+function humanizeInsight(insight: AudienceInsight): AudienceInsight {
+  return {
+    ...insight,
+    title: humanizeText(insight.title),
+    summary: humanizeText(insight.summary),
+    recommendation: humanizeText(insight.recommendation),
+    contentSuggestion: humanizeContentSuggestion(insight.contentSuggestion),
+  };
 }
 
 function filterDemoRadar(filters: AudienceFilters): AudienceRadarData {
@@ -17,12 +41,12 @@ function filterDemoRadar(filters: AudienceFilters): AudienceRadarData {
   const includeEvidence = (item: AudienceEvidence) => new Date(item.publishedAt).getTime() >= since && (!filters.mediaId || item.mediaId === filters.mediaId);
   const insights = source.insights.map((insight) => {
     const evidence = insight.evidence.filter(includeEvidence);
-    return { ...insight, evidence, evidenceCount: evidence.length, isEarlySignal: evidence.length < 2 };
+    return humanizeInsight({ ...insight, evidence, evidenceCount: evidence.length, isEarlySignal: evidence.length < 2 });
   }).filter(({ evidenceCount }) => evidenceCount > 0);
   const factor = filters.periodDays === 7 ? 0.42 : filters.periodDays === 90 ? 1.34 : 1;
   const themes = source.themes.map((theme) => {
     const evidence = theme.evidence.filter(includeEvidence);
-    return { ...theme, evidence, volume: Math.max(evidence.length, Math.round(theme.volume * factor)) };
+    return { ...theme, label: humanizeText(theme.label), summary: humanizeText(theme.summary), evidence, volume: Math.max(evidence.length, Math.round(theme.volume * factor)) };
   }).filter(({ evidence }) => evidence.length > 0);
   return {
     metrics: {
@@ -77,7 +101,7 @@ export async function getAudienceRadarData(filters: AudienceFilters): Promise<Au
     const evidence = ((row.evidence_ids as string[] | null) ?? []).map(toEvidence).filter((item): item is AudienceEvidence => Boolean(item));
     const suggestion = contentSuggestionSchema.safeParse(row.content_suggestion);
     return {
-      id: String(row.id), category: row.category as AudienceInsight["category"], title: String(row.title), summary: String(row.summary), recommendation: String(row.recommendation), confidence: Number(row.confidence), evidenceCount: evidence.length, isEarlySignal: evidence.length < 2, status: row.status as AudienceInsight["status"], feedback: row.feedback as AudienceInsight["feedback"], priority: Number(row.priority), mediaIds: (row.media_ids as string[] | null) ?? [], evidence, contentSuggestion: suggestion.success ? suggestion.data : null, createdAutomationId: row.created_automation_id ? String(row.created_automation_id) : null, createdAt: String(row.created_at),
+      id: String(row.id), category: row.category as AudienceInsight["category"], title: humanizeText(String(row.title)), summary: humanizeText(String(row.summary)), recommendation: humanizeText(String(row.recommendation)), confidence: Number(row.confidence), evidenceCount: evidence.length, isEarlySignal: evidence.length < 2, status: row.status as AudienceInsight["status"], feedback: row.feedback as AudienceInsight["feedback"], priority: Number(row.priority), mediaIds: (row.media_ids as string[] | null) ?? [], evidence, contentSuggestion: suggestion.success ? humanizeContentSuggestion(suggestion.data) : null, createdAutomationId: row.created_automation_id ? String(row.created_automation_id) : null, createdAt: String(row.created_at),
     };
   });
 
@@ -85,7 +109,7 @@ export async function getAudienceRadarData(filters: AudienceFilters): Promise<Au
   const themes: AudienceTheme[] = Array.from(grouped, ([label, items], index) => {
     const evidence = items.map(({ comment_event_id }) => toEvidence(comment_event_id)).filter((item): item is AudienceEvidence => Boolean(item)).slice(0, 3);
     const relatedMediaIds = [...new Set(evidence.map(({ mediaId }) => mediaId).filter(Boolean))];
-    return { id: `theme-${index}-${label}`, label, summary: insights.find((insight) => insight.evidence.some(({ id }) => items.some(({ comment_event_id }) => comment_event_id === id)))?.summary ?? "Tema recorrente identificado nos comentários.", volume: items.length, share: classifications.length ? items.length / classifications.length : 0, trend: 0, confidence: items.reduce((sum, item) => sum + Number(item.confidence), 0) / items.length, relatedMediaIds, evidence };
+    return { id: `theme-${index}-${label}`, label: humanizeText(label), summary: insights.find((insight) => insight.evidence.some(({ id }) => items.some(({ comment_event_id }) => comment_event_id === id)))?.summary ?? "Esse assunto apareceu várias vezes nos comentários.", volume: items.length, share: classifications.length ? items.length / classifications.length : 0, trend: 0, confidence: items.reduce((sum, item) => sum + Number(item.confidence), 0) / items.length, relatedMediaIds, evidence };
   }).sort((a, b) => b.volume - a.volume);
   const count = (category: AudienceInsight["category"]) => classifications.filter((item) => item.category === category).length;
   return {

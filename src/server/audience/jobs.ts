@@ -5,7 +5,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { audienceIntelligenceProvider } from "@/server/audience";
 import type { AudienceProviderResult } from "@/types/audience";
 
-const PROMPT_VERSION = "audience-v1";
+const PROMPT_VERSION = "audience-v2-humanizer";
 
 export async function queueAudienceAnalysis(ownerId: string, periodDays: 7 | 30 | 90, mediaId: string | null) {
   if (isDemoMode) return { id: "70000000-0000-4000-8000-000000000001", outcome: "queued" as const };
@@ -27,7 +27,7 @@ export async function queueAudienceAnalysis(ownerId: string, periodDays: 7 | 30 
   const { data: comments, error } = await query;
   if (error) throw new Error("Não foi possível preparar a análise.");
   if (!comments?.length) return { id: null, outcome: "no_comments" as const };
-  const fingerprint = audienceFingerprint(comments.map((item) => ({ id: item.id, text: item.comment_text, publishedAt: item.published_at })), periodDays, mediaId);
+  const fingerprint = audienceFingerprint(comments.map((item) => ({ id: item.id, text: item.comment_text, publishedAt: item.published_at })), periodDays, mediaId, PROMPT_VERSION);
   const { data: existing } = await supabase.from("audience_analysis_runs").select("id,status").eq("owner_id", ownerId).eq("fingerprint", fingerprint).maybeSingle();
   if (existing) return { id: existing.id, outcome: "duplicate" as const };
   const { data: run, error: insertError } = await supabase.from("audience_analysis_runs").insert({ owner_id: ownerId, media_id: mediaId, period_days: periodDays, model: env.OPENAI_AUDIENCE_MODEL, prompt_version: PROMPT_VERSION, fingerprint, comment_count: comments.length, status: "queued" }).select("id").single();

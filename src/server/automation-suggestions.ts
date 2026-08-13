@@ -8,6 +8,7 @@ import {
   type AutomationMessageSuggestion,
 } from "@/lib/automation-suggestions";
 import { env } from "@/lib/env";
+import { HUMANIZER_PROMPT, humanizeText, textPassesHumanizer } from "@/lib/humanizer";
 
 const SYSTEM_PROMPT = `Você escreve mensagens curtas para automações de comentários em Reels do Instagram.
 Use a legenda somente para compreender o contexto e gere exatamente três pares de mensagens em português do Brasil.
@@ -17,10 +18,22 @@ A mensagem privada deve ter no máximo 150 caracteres, ser natural e terminar pr
 As três respostas públicas e as três mensagens privadas devem ser claramente diferentes entre si.
 REGRA OBRIGATÓRIA: nunca copie, cite, resuma ou encaixe palavras, frases, títulos, chamadas, @usuários, hashtags ou a palavra-chave da legenda nas mensagens. Não use construções como "sobre [tema]", "continuação de [título]" ou "próximo passo de [legenda]". A legenda serve apenas como contexto interno.
 Não inclua URL, hashtags ou nome de usuário. Não invente produto, desconto, benefício ou resultado.
-Evite linguagem agressiva, promessas comerciais e frases com aparência de spam.`;
+Evite linguagem agressiva, promessas comerciais e frases com aparência de spam.
+
+${HUMANIZER_PROMPT}`;
+
+function humanizeSuggestions(suggestions: AutomationMessageSuggestion[]) {
+  return suggestions.map((suggestion) => ({
+    ...suggestion,
+    label: humanizeText(suggestion.label),
+    publicReply: humanizeText(suggestion.publicReply),
+    dmMessage: humanizeText(suggestion.dmMessage),
+    rationale: humanizeText(suggestion.rationale),
+  }));
+}
 
 export async function generateAutomationMessageSuggestions(caption: string, variationSeed = 0): Promise<AutomationMessageSuggestion[]> {
-  const fallback = buildFallbackAutomationSuggestions(caption, variationSeed);
+  const fallback = humanizeSuggestions(buildFallbackAutomationSuggestions(caption, variationSeed));
   if (!env.OPENAI_API_KEY) return fallback;
 
   try {
@@ -37,7 +50,13 @@ export async function generateAutomationMessageSuggestions(caption: string, vari
       text: { format: zodTextFormat(automationMessageSuggestionsSchema, "automation_message_suggestions") },
     });
     const suggestions = response.output_parsed?.suggestions;
-    return suggestions && suggestionsAreSafeForCaption(suggestions, caption) ? suggestions : fallback;
+    if (!suggestions) return fallback;
+    const humanized = humanizeSuggestions(suggestions);
+    const allTextPassed = automationMessageSuggestionsSchema.safeParse({ suggestions: humanized }).success
+      && humanized.every(({ publicReply, dmMessage, rationale }) =>
+      [publicReply, dmMessage, rationale].every(textPassesHumanizer),
+      );
+    return allTextPassed && suggestionsAreSafeForCaption(humanized, caption) ? humanized : fallback;
   } catch (error) {
     console.warn("Automation message suggestions fell back to local generation", {
       error: error instanceof Error ? error.name : "UnknownError",

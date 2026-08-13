@@ -5,11 +5,42 @@ import { audienceModelOutputSchema, audienceSynthesisSchema, providerResultSchem
 import { env } from "@/lib/env";
 import type { AudienceIntelligenceInput, AudienceIntelligenceProvider } from "@/server/audience/types";
 import type { AudienceProviderResult } from "@/types/audience";
+import { HUMANIZER_PROMPT, humanizeText, textPassesHumanizer } from "@/lib/humanizer";
 
 const SYSTEM_PROMPT = `Você é o analista de audiência do InstaChat. Analise comentários em português do Brasil sem inventar fatos.
 Use somente os aliases recebidos como evidências. Agrupe linguagem equivalente, diferencie intenção de compra, dúvida, objeção, pedido de conteúdo, suporte, elogio e irrelevante.
 Toda recomendação deve ser específica e executável. Gere sugestão de conteúdo apenas quando houver uma oportunidade clara. Nunca sugira enviar ou publicar algo automaticamente.
-Retorne no máximo 12 insights, ordenados por prioridade. Um insight deve citar de 1 a 5 aliases existentes.`;
+Retorne no máximo 12 insights, ordenados por prioridade. Um insight deve citar de 1 a 5 aliases existentes.
+
+${HUMANIZER_PROMPT}`;
+
+function humanizeSuggestion(suggestion: AudienceProviderResult["insights"][number]["suggestion"]) {
+  if (!suggestion) return null;
+  return {
+    hook: humanizeText(suggestion.hook),
+    angle: humanizeText(suggestion.angle),
+    outline: suggestion.outline.map(humanizeText),
+    cta: humanizeText(suggestion.cta),
+    keyword: suggestion.keyword.normalize("NFKC").trim(),
+    publicReply: humanizeText(suggestion.publicReply),
+    dmMessage: humanizeText(suggestion.dmMessage),
+  };
+}
+
+function humanizeInsights(insights: AudienceProviderResult["insights"]) {
+  return insights.map((insight) => ({
+    ...insight,
+    title: humanizeText(insight.title),
+    summary: humanizeText(insight.summary),
+    recommendation: humanizeText(insight.recommendation),
+    suggestion: humanizeSuggestion(insight.suggestion),
+  })).filter((insight) => {
+    const suggestionText = insight.suggestion
+      ? [insight.suggestion.hook, insight.suggestion.angle, ...insight.suggestion.outline, insight.suggestion.cta, insight.suggestion.publicReply, insight.suggestion.dmMessage]
+      : [];
+    return [insight.title, insight.summary, insight.recommendation, ...suggestionText].every(textPassesHumanizer);
+  });
+}
 
 export class OpenAIAudienceIntelligenceProvider implements AudienceIntelligenceProvider {
   private readonly client: OpenAI;
@@ -31,11 +62,17 @@ export class OpenAIAudienceIntelligenceProvider implements AudienceIntelligenceP
     const knownAliases = new Set(input.comments.map(({ alias }) => alias));
     const parsed = providerResultSchema.parse({
       ...response.output_parsed,
-      classifications: response.output_parsed.classifications.filter(({ alias }) => knownAliases.has(alias)),
-      insights: response.output_parsed.insights.map((insight) => ({
+      classifications: response.output_parsed.classifications
+        .filter(({ alias }) => knownAliases.has(alias))
+        .map((classification) => ({
+          ...classification,
+          theme: humanizeText(classification.theme),
+          opportunity: humanizeText(classification.opportunity),
+        })),
+      insights: humanizeInsights(response.output_parsed.insights.map((insight) => ({
         ...insight,
         evidenceAliases: insight.evidenceAliases.filter((alias) => knownAliases.has(alias)),
-      })).filter((insight) => insight.evidenceAliases.length > 0),
+      })).filter((insight) => insight.evidenceAliases.length > 0)),
       usage: { inputTokens: response.usage?.input_tokens ?? 0, outputTokens: response.usage?.output_tokens ?? 0 },
     });
     return parsed;
@@ -53,7 +90,7 @@ export class OpenAIAudienceIntelligenceProvider implements AudienceIntelligenceP
     if (!response.output_parsed) throw new Error("A síntese não retornou uma resposta estruturada.");
     const knownAliases = new Set(input.results.flatMap(({ classifications }) => classifications.map(({ alias }) => alias)));
     return {
-      insights: response.output_parsed.insights.map((insight) => ({ ...insight, evidenceAliases: insight.evidenceAliases.filter((alias) => knownAliases.has(alias)) })).filter(({ evidenceAliases }) => evidenceAliases.length > 0),
+      insights: humanizeInsights(response.output_parsed.insights.map((insight) => ({ ...insight, evidenceAliases: insight.evidenceAliases.filter((alias) => knownAliases.has(alias)) })).filter(({ evidenceAliases }) => evidenceAliases.length > 0)),
       usage: { inputTokens: response.usage?.input_tokens ?? 0, outputTokens: response.usage?.output_tokens ?? 0 },
     };
   }
