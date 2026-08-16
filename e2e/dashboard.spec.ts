@@ -97,33 +97,28 @@ test("creates a content package and copies the exact Instagram formatting", asyn
   // Keep the test on Playwright's configured origin. APP_ORIGIN can use a
   // different localhost alias in CI, which prevents Next dev hydration.
   await page.goto(new URL(materialUrl!, page.url()).pathname);
-  await expect(page.getByText("PASSO A PASSO DIRETO", { exact: true })).toBeVisible();
-  await expect(page.locator(".quick-step")).toHaveCount(5);
-  await expect(page.getByRole("button", { name: "Copiar este prompt" })).toHaveCount(2);
-  const firstPrompt = page.locator(".quick-copy").first().locator("pre");
-  await page.locator(".quick-copy").first().getByRole("button", { name: "Copiar este prompt" }).click();
+  await expect(page.getByText("EXECUÇÃO GUIADA", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Passo 1 de 5" })).toBeVisible();
+  await expect(page.locator(".quick-step")).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Copiar este prompt" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Concluir e continuar" }).click();
+  await expect(page.getByRole("heading", { name: "Passo 2 de 5" })).toBeVisible();
+  const firstPrompt = page.locator(".quick-copy pre");
+  await page.getByRole("button", { name: "Copiar este prompt" }).click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(await firstPrompt.innerText());
+  for (let step = 2; step <= 5; step += 1) {
+    await page.getByRole("button", { name: "Concluir e continuar" }).click();
+    if (step < 5) await expect(page.getByRole("heading", { name: `Passo ${step + 1} de 5` })).toBeVisible();
+  }
+  await expect(page.getByRole("heading", { name: "Seu material está pronto para aplicar" })).toBeVisible();
   const aiResult = "Prompt final adaptado ao meu caso com três critérios e tabela de avaliação.";
   await page.locator(".material-result-box textarea").fill(aiResult);
   await page.reload();
   await expect(page.locator(".material-result-box textarea")).toHaveValue(aiResult);
-  await expect(page.locator(".material-step").first()).not.toBeVisible();
-  await page.getByText("Preciso entender melhor antes de executar").click();
-  await expect(page.locator(".material-step")).toHaveCount(5);
-  await expect(page.getByText("FAÇA AGORA", { exact: true })).toHaveCount(5);
-  await expect(page.locator(".material-workspace textarea")).toHaveCount(5);
-  const firstAnswer = "O cliente envia serviço e cidade; a equipe devolve somente as perguntas que faltam.";
-  await page.locator(".material-workspace textarea").first().fill(firstAnswer);
-  await page.reload();
-  await expect(page.locator(".material-workspace textarea").first()).toHaveValue(firstAnswer);
-  await page.getByText("Preciso entender melhor antes de executar").click();
-  await page.getByRole("button", { name: "Copiar plano completo" }).click();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(firstAnswer);
-  await expect(page.locator(".material-template-card")).toHaveCount(2);
-  const firstTemplate = page.locator(".material-template-card").first();
-  const templateText = await firstTemplate.locator("pre").innerText();
-  await firstTemplate.getByRole("button", { name: "Copiar modelo" }).click();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(templateText);
+  await expect(page.getByText("Preciso entender melhor antes de executar")).toHaveCount(0);
+  await expect(page.locator(".material-step")).toHaveCount(0);
+  await page.getByRole("button", { name: "Rever o passo a passo" }).click();
+  await expect(page.getByRole("heading", { name: "Passo 1 de 5" })).toBeVisible();
   const materialWidth = await page.evaluate(() => ({ viewport: window.innerWidth, document: document.documentElement.scrollWidth }));
   expect(materialWidth.document).toBeLessThanOrEqual(materialWidth.viewport);
 });

@@ -1,22 +1,39 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bot, Check, CheckCircle2, ClipboardCheck, ClipboardPaste, Copy, PlayCircle, Target } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bot, Check, CheckCircle2, ClipboardCheck, ClipboardPaste, Copy, PlayCircle, RotateCcw, Target } from "lucide-react";
 import type { DeliverableExecutionStep, DeliverableSection, DeliverableTemplate } from "@/types/content-studio";
 
 export function MaterialQuickFlow({ flow, resultPrompt, resultPlaceholder, finalApplication, storageKey }: { flow: DeliverableExecutionStep[]; resultPrompt: string; resultPlaceholder: string; finalApplication: string; storageKey: string }) {
   const [copied, setCopied] = useState<number | null>(null);
   const [result, setResult] = useState("");
+  const [activeStep, setActiveStep] = useState(0);
+  const [completed, setCompleted] = useState<Set<number>>(() => new Set());
   const [ready, setReady] = useState(false);
   const actionLabel = { prepare: "PREPARE", copy: "COPIE", use: "USE NA IA", apply: "APLIQUE" } as const;
+  const finished = activeStep >= flow.length;
+  const progress = flow.length ? Math.round((completed.size / flow.length) * 100) : 0;
 
   useEffect(() => {
     let active = true;
-    queueMicrotask(() => { if (active) { setResult(localStorage.getItem(storageKey) ?? ""); setReady(true); } });
+    queueMicrotask(() => {
+      if (!active) return;
+      setResult(localStorage.getItem(storageKey) ?? "");
+      try {
+        const saved = JSON.parse(localStorage.getItem(`${storageKey}-progress`) ?? "null") as { activeStep?: number; completed?: number[] } | null;
+        if (typeof saved?.activeStep === "number") setActiveStep(Math.min(Math.max(saved.activeStep, 0), flow.length));
+        if (saved?.completed) setCompleted(new Set(saved.completed.filter((index) => index >= 0 && index < flow.length)));
+      } catch { /* An invalid local draft must not block the guide. */ }
+      setReady(true);
+    });
     return () => { active = false; };
-  }, [storageKey]);
+  }, [flow.length, storageKey]);
 
-  useEffect(() => { if (ready) localStorage.setItem(storageKey, result); }, [ready, result, storageKey]);
+  useEffect(() => {
+    if (!ready) return;
+    localStorage.setItem(storageKey, result);
+    localStorage.setItem(`${storageKey}-progress`, JSON.stringify({ activeStep, completed: [...completed] }));
+  }, [activeStep, completed, ready, result, storageKey]);
 
   async function copyStep(content: string, index: number) {
     await navigator.clipboard.writeText(content);
@@ -24,7 +41,25 @@ export function MaterialQuickFlow({ flow, resultPrompt, resultPlaceholder, final
     window.setTimeout(() => setCopied(null), 1400);
   }
 
-  return <section className="material-quick-flow"><header><p>PASSO A PASSO DIRETO</p><h2>Faça nesta ordem</h2><span>Não precisa ler tudo antes. Termine um cartão e avance para o próximo.</span></header><div className="material-quick-steps">{flow.map((step,index)=><article className={`quick-step action-${step.action}`} id={`passo-${index+1}`} key={`${index}-${step.title}`}><div className="quick-step-number"><span>{index+1}</span><small>{actionLabel[step.action]}</small></div><div className="quick-step-body"><h3>{step.title}</h3><p>{step.instruction}</p>{step.customization.length>0&&<div className="quick-customize"><strong>Altere antes de usar:</strong><ul>{step.customization.map((item)=><li key={item}>{item}</li>)}</ul></div>}{step.copyableContent&&<div className="quick-copy"><pre>{step.copyableContent}</pre><button type="button" onClick={()=>copyStep(step.copyableContent,index)}><Copy size={15}/>{copied===index?"Copiado. Agora cole na IA":"Copiar este prompt"}</button></div>}<footer><CheckCircle2 size={15}/><span><small>O que deve acontecer</small>{step.expectedResult}</span></footer></div></article>)}</div><div className="material-result-box"><header><ClipboardPaste size={20}/><div><small>TRAGA O RESULTADO DE VOLTA</small><h3>{resultPrompt}</h3></div></header><textarea value={result} onChange={(event)=>setResult(event.target.value)} placeholder={resultPlaceholder}/><span>O texto fica salvo neste navegador.</span><div><Bot size={17}/><p><strong>Depois faça isto:</strong> {finalApplication}</p></div></div></section>;
+  function completeAndContinue() {
+    setCompleted((current) => new Set(current).add(activeStep));
+    setActiveStep((current) => Math.min(current + 1, flow.length));
+  }
+
+  function restart() {
+    setActiveStep(0);
+    setCompleted(new Set());
+  }
+
+  const step = flow[activeStep];
+
+  return <section className="material-quick-flow">
+    <header><div><p>EXECUÇÃO GUIADA</p><h2>{finished ? "Seu material está pronto para aplicar" : `Passo ${activeStep + 1} de ${flow.length}`}</h2><span>{finished ? "Cole o resultado abaixo e siga a última orientação." : "Faça somente esta ação agora. Depois, avance."}</span></div><strong>{progress}%</strong></header>
+    <progress className="quick-progress" max={flow.length || 1} value={completed.size}>{progress}%</progress>
+    <ol className="quick-roadmap" aria-label="Progresso das etapas">{flow.map((item, index) => <li className={completed.has(index) ? "completed" : index === activeStep ? "active" : ""} key={item.title}><button type="button" onClick={() => setActiveStep(index)} aria-label={`Abrir passo ${index + 1}: ${item.title}`}><span>{completed.has(index) ? <Check size={13}/> : index + 1}</span><small>{item.title}</small></button></li>)}</ol>
+    {!finished && step && <article className={`quick-step action-${step.action}`} id={`passo-${activeStep+1}`}><div className="quick-step-number"><span>{activeStep+1}</span><small>{actionLabel[step.action]}</small></div><div className="quick-step-body"><h3>{step.title}</h3><p>{step.instruction}</p>{step.customization.length>0&&<div className="quick-customize"><strong>Altere antes de usar:</strong><ul>{step.customization.map((item)=><li key={item}>{item}</li>)}</ul></div>}{step.copyableContent&&<div className="quick-copy"><pre>{step.copyableContent}</pre><button type="button" onClick={()=>copyStep(step.copyableContent,activeStep)}><Copy size={15}/>{copied===activeStep?"Copiado. Agora cole na IA":"Copiar este prompt"}</button></div>}<footer><CheckCircle2 size={15}/><span><small>Você concluiu quando</small>{step.expectedResult}</span></footer><div className="quick-navigation">{activeStep > 0 && <button className="quick-back" type="button" onClick={() => setActiveStep((current) => current - 1)}><ArrowLeft size={15}/>Voltar</button>}<button className="quick-next" type="button" onClick={completeAndContinue}>Concluir e continuar<ArrowRight size={15}/></button></div></div></article>}
+    {finished && <div className="material-result-box"><header><ClipboardPaste size={20}/><div><small>ÚLTIMA ETAPA</small><h3>{resultPrompt}</h3></div></header><textarea value={result} onChange={(event)=>setResult(event.target.value)} placeholder={resultPlaceholder}/><span>O texto fica salvo neste navegador.</span><div><Bot size={17}/><p><strong>Agora aplique:</strong> {finalApplication}</p></div><button className="quick-restart" type="button" onClick={restart}><RotateCcw size={15}/>Rever o passo a passo</button></div>}
+  </section>;
 }
 
 export function MaterialChecklist({ sections, storageKey }: { sections: DeliverableSection[]; storageKey: string }) {
