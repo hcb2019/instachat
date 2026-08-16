@@ -60,7 +60,7 @@ describe("content studio schemas", () => {
     if (!packageResult.success) return;
     expect(richContentPackageSchema.safeParse(packageResult.data).success).toBe(false);
 
-    const section = { heading: "Mapeie a tarefa", body: "Use um caso real antes de escolher qualquer ferramenta.", items: ["Separe uma entrada real", "Defina o resultado esperado"], practicalTip: "Se não existe exemplo real, o recorte ainda está amplo demais." };
+    const section = { heading: "Mapeie a tarefa", body: "Use um caso real antes de escolher qualquer ferramenta.", items: ["Separe uma entrada real", "Defina o resultado esperado"], practicalTip: "Se não existe exemplo real, o recorte ainda está amplo demais.", objective: "Transformar uma ideia ampla em um caso que possa ser testado.", action: "Abra um caso concluído nesta semana e descreva a entrada e a saída.", example: "Exemplo: o cliente envia cidade e serviço e recebe as perguntas que faltam.", responsePrompt: "Quem pede a tarefa, o que envia e qual resultado recebe?", responsePlaceholder: "O cliente envia... e recebe...", completionCriterion: "Outra pessoa consegue identificar a entrada e a saída lendo uma frase." };
     const richResult = richContentPackageSchema.safeParse({
       ...packageResult.data,
       deliverable: {
@@ -72,6 +72,9 @@ describe("content studio schemas", () => {
         estimatedMinutes: 25,
         difficulty: "beginner",
         prerequisites: ["Uma tarefa executada nesta semana", "Um exemplo de resposta aprovada"],
+        startHere: "Abra uma tarefa concluída nesta semana e mantenha a entrada e a resposta final ao lado.",
+        finalArtifact: "Um plano de piloto preenchido com tarefa, prompt, casos de teste e critérios de aprovação.",
+        completionCriteria: ["A tarefa cabe em uma frase", "Três casos foram avaliados pelos mesmos critérios"],
         sections: [section, { ...section, heading: "Dê uma nota" }, { ...section, heading: "Monte o teste" }, { ...section, heading: "Valide o resultado" }],
         examples: [{ title: "Pedido de orçamento", scenario: "A equipe recebe mensagens incompletas.", application: "A IA identifica os dados ausentes antes da resposta.", result: "O teste passa quando não inventa informações em três casos." }],
         templates: [{ title: "Diagnóstico", description: "Preencha antes do teste.", content: "Tarefa: [NOME]\nEntrada: [DADOS]\nSaída esperada: [RESULTADO]" }, { title: "Piloto", description: "Use com exemplos reais.", content: "Contexto: [SITUAÇÃO]\nCritérios: [LISTA]\nNão faça: [LIMITES]" }],

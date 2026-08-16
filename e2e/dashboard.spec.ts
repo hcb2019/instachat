@@ -97,8 +97,17 @@ test("creates a content package and copies the exact Instagram formatting", asyn
   // Keep the test on Playwright's configured origin. APP_ORIGIN can use a
   // different localhost alias in CI, which prevents Next dev hydration.
   await page.goto(new URL(materialUrl!, page.url()).pathname);
-  await expect(page.getByText("RESULTADO ESPERADO", { exact: true })).toBeVisible();
+  await expect(page.getByText(/COMECE POR AQUI/)).toBeVisible();
+  await expect(page.getByText("O QUE VOCÊ VAI CONSTRUIR", { exact: true })).toBeVisible();
   await expect(page.locator(".material-step")).toHaveCount(5);
+  await expect(page.getByText("FAÇA AGORA", { exact: true })).toHaveCount(5);
+  await expect(page.locator(".material-workspace textarea")).toHaveCount(5);
+  const firstAnswer = "O cliente envia serviço e cidade; a equipe devolve somente as perguntas que faltam.";
+  await page.locator(".material-workspace textarea").first().fill(firstAnswer);
+  await page.reload();
+  await expect(page.locator(".material-workspace textarea").first()).toHaveValue(firstAnswer);
+  await page.getByRole("button", { name: "Copiar plano completo" }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(firstAnswer);
   await expect(page.locator(".material-template-card")).toHaveCount(2);
   const firstTemplate = page.locator(".material-template-card").first();
   const templateText = await firstTemplate.locator("pre").innerText();

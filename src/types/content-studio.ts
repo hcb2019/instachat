@@ -37,6 +37,12 @@ export interface DeliverableSection {
   body: string;
   items: string[];
   practicalTip?: string;
+  objective?: string;
+  action?: string;
+  example?: string;
+  responsePrompt?: string;
+  responsePlaceholder?: string;
+  completionCriterion?: string;
 }
 
 export interface DeliverableExample {
@@ -72,6 +78,9 @@ export interface GeneratedDeliverable {
   templates?: DeliverableTemplate[];
   pitfalls?: DeliverablePitfall[];
   nextSteps?: string[];
+  startHere?: string;
+  finalArtifact?: string;
+  completionCriteria?: string[];
 }
 
 export interface ContentPackage {

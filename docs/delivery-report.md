@@ -13,7 +13,7 @@ Data: 18/07/2026.
 - Backfill dos 20 Reels/2.000 comentários, snapshots de Insights, fila `audience_analysis`, execução diária e gatilho ao acumular 20 comentários.
 - `AudienceIntelligenceProvider` mock/OpenAI, aliases efêmeros, Responses API com Structured Outputs, fingerprint e limites configuráveis de custo.
 - Conversão idempotente de uma oportunidade em rascunho pré-preenchido; nenhuma publicação, mensagem ou ativação automática.
-- Estúdio de ideias com perfil editorial, três conceitos, pacote humanizado de hook/legendas/CTA, entregável público aprofundado (resultado esperado, pré-requisitos, checklist interativo, exemplos, modelos copiáveis, erros comuns e próximos passos) e rascunho de automação conectado.
+- Estúdio de ideias com perfil editorial, três conceitos, pacote humanizado de hook/legendas/CTA, entregável público em formato de jornada guiada (primeira ação, objetivo e instrução por etapa, exemplo preenchido, campo de trabalho com salvamento local, critério de conclusão, plano final copiável, modelos e erros comuns) e rascunho de automação conectado.
 - Botões de cópia em todos os textos destinados ao Instagram, preservando exatamente parágrafos, listas e linhas em branco editados pelo usuário.
 - Central “Guia de conexão” com oito etapas, checklist persistente, URLs copiáveis por deploy, ilustrações próprias, referências oficiais e diagnóstico de erros.
 - Rotas públicas de privacidade, desautorização e exclusão de dados; callbacks da Meta validam `signed_request` com HMAC-SHA256 antes da remoção.
