@@ -25,7 +25,7 @@
 - pode liberar o conteúdo após confirmação de seguidor;
 - mostra histórico, falhas e métricas;
 - analisa comentários no Radar e sugere temas, oportunidades e ideias;
-- cria no Estúdio um pacote conectado de hook, legenda formatada, automação e um material público guiado, com primeira ação explícita, campos de trabalho salvos no navegador, critérios de conclusão, exemplos preenchidos e plano final copiável;
+- cria no Estúdio um pacote conectado de hook, legenda, automação e material público em fluxo “prepare, copie, use na IA e aplique”, com prompts prontos, campos persistentes e explicação aprofundada opcional;
 - copia textos prontos para o Instagram preservando parágrafos e linhas em branco;
 - funciona em modo demonstração sem credenciais;
 - mantém envio e ativação sob aprovação humana.

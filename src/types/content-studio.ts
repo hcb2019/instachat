@@ -63,6 +63,15 @@ export interface DeliverablePitfall {
   correction: string;
 }
 
+export interface DeliverableExecutionStep {
+  action: "prepare" | "copy" | "use" | "apply";
+  title: string;
+  instruction: string;
+  copyableContent: string;
+  customization: string[];
+  expectedResult: string;
+}
+
 export interface GeneratedDeliverable {
   title: string;
   summary: string;
@@ -81,6 +90,10 @@ export interface GeneratedDeliverable {
   startHere?: string;
   finalArtifact?: string;
   completionCriteria?: string[];
+  executionFlow?: DeliverableExecutionStep[];
+  resultPrompt?: string;
+  resultPlaceholder?: string;
+  finalApplication?: string;
 }
 
 export interface ContentPackage {

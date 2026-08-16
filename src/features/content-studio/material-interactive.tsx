@@ -1,8 +1,31 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, ClipboardCheck, Copy, PlayCircle, Target } from "lucide-react";
-import type { DeliverableSection, DeliverableTemplate } from "@/types/content-studio";
+import { Bot, Check, CheckCircle2, ClipboardCheck, ClipboardPaste, Copy, PlayCircle, Target } from "lucide-react";
+import type { DeliverableExecutionStep, DeliverableSection, DeliverableTemplate } from "@/types/content-studio";
+
+export function MaterialQuickFlow({ flow, resultPrompt, resultPlaceholder, finalApplication, storageKey }: { flow: DeliverableExecutionStep[]; resultPrompt: string; resultPlaceholder: string; finalApplication: string; storageKey: string }) {
+  const [copied, setCopied] = useState<number | null>(null);
+  const [result, setResult] = useState("");
+  const [ready, setReady] = useState(false);
+  const actionLabel = { prepare: "PREPARE", copy: "COPIE", use: "USE NA IA", apply: "APLIQUE" } as const;
+
+  useEffect(() => {
+    let active = true;
+    queueMicrotask(() => { if (active) { setResult(localStorage.getItem(storageKey) ?? ""); setReady(true); } });
+    return () => { active = false; };
+  }, [storageKey]);
+
+  useEffect(() => { if (ready) localStorage.setItem(storageKey, result); }, [ready, result, storageKey]);
+
+  async function copyStep(content: string, index: number) {
+    await navigator.clipboard.writeText(content);
+    setCopied(index);
+    window.setTimeout(() => setCopied(null), 1400);
+  }
+
+  return <section className="material-quick-flow"><header><p>PASSO A PASSO DIRETO</p><h2>Faça nesta ordem</h2><span>Não precisa ler tudo antes. Termine um cartão e avance para o próximo.</span></header><div className="material-quick-steps">{flow.map((step,index)=><article className={`quick-step action-${step.action}`} id={`passo-${index+1}`} key={`${index}-${step.title}`}><div className="quick-step-number"><span>{index+1}</span><small>{actionLabel[step.action]}</small></div><div className="quick-step-body"><h3>{step.title}</h3><p>{step.instruction}</p>{step.customization.length>0&&<div className="quick-customize"><strong>Altere antes de usar:</strong><ul>{step.customization.map((item)=><li key={item}>{item}</li>)}</ul></div>}{step.copyableContent&&<div className="quick-copy"><pre>{step.copyableContent}</pre><button type="button" onClick={()=>copyStep(step.copyableContent,index)}><Copy size={15}/>{copied===index?"Copiado. Agora cole na IA":"Copiar este prompt"}</button></div>}<footer><CheckCircle2 size={15}/><span><small>O que deve acontecer</small>{step.expectedResult}</span></footer></div></article>)}</div><div className="material-result-box"><header><ClipboardPaste size={20}/><div><small>TRAGA O RESULTADO DE VOLTA</small><h3>{resultPrompt}</h3></div></header><textarea value={result} onChange={(event)=>setResult(event.target.value)} placeholder={resultPlaceholder}/><span>O texto fica salvo neste navegador.</span><div><Bot size={17}/><p><strong>Depois faça isto:</strong> {finalApplication}</p></div></div></section>;
+}
 
 export function MaterialChecklist({ sections, storageKey }: { sections: DeliverableSection[]; storageKey: string }) {
   const [checked, setChecked] = useState<Set<string>>(() => new Set());
