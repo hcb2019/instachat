@@ -94,7 +94,9 @@ test("creates a content package and copies the exact Instagram formatting", asyn
   await expect(page.locator(".studio-deliverable-stats").getByText("2", { exact: true })).toBeVisible();
   const materialUrl = await page.getByRole("link", { name: /Abrir página pública/ }).getAttribute("href");
   expect(materialUrl).toBeTruthy();
-  await page.goto(materialUrl!);
+  // Keep the test on Playwright's configured origin. APP_ORIGIN can use a
+  // different localhost alias in CI, which prevents Next dev hydration.
+  await page.goto(new URL(materialUrl!, page.url()).pathname);
   await expect(page.getByText("RESULTADO ESPERADO", { exact: true })).toBeVisible();
   await expect(page.locator(".material-step")).toHaveCount(5);
   await expect(page.locator(".material-template-card")).toHaveCount(2);
