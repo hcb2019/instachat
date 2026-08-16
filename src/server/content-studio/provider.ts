@@ -1,12 +1,12 @@
 import "server-only";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
-import { contentConceptsOutputSchema, contentPackageSchema } from "@/lib/content-studio";
+import { contentConceptsOutputSchema, richContentPackageSchema } from "@/lib/content-studio";
 import { env, isDemoMode } from "@/lib/env";
 import { HUMANIZER_PROMPT, formatInstagramCaption, humanizeText } from "@/lib/humanizer";
 import type { ContentConcept, ContentPackage, ContentProject, CreatorProfile } from "@/types/content-studio";
 
-export const CONTENT_PROMPT_VERSION = "content-studio-v1-humanizer";
+export const CONTENT_PROMPT_VERSION = "content-studio-v2-high-value";
 
 const BASE_PROMPT = `Você é um estrategista de conteúdo brasileiro que escreve para Instagram.
 Crie conteúdo útil, específico e plausível. Não invente estatística, resultado, experiência pessoal ou autoridade.
@@ -15,6 +15,10 @@ O hook deve caber em 3 a 6 linhas, ter entre 18 e 32 palavras e criar curiosidad
 Nunca copie frases dos exemplos de referência. Nunca use "link na bio": a entrega acontece após um comentário com palavra-chave.
 Toda legenda deve começar exatamente com o @ informado. A palavra-chave, o CTA e o material precisam falar da mesma promessa.
 Formate a legenda para ser colada sem ajustes no Instagram: parágrafos curtos, uma linha em branco entre blocos, listas fáceis de escanear e CTA isolado. Nunca entregue um bloco longo de texto.
+O entregável não pode ser um resumo superficial. Ele deve permitir que uma pessoa aplique a ideia sem pesquisar outra fonte.
+Exija um resultado concreto, tempo estimado, pré-requisitos, 4 a 7 etapas detalhadas, exemplos preenchidos, pelo menos dois modelos copiáveis, erros comuns com correção e próximos passos.
+Cada etapa precisa explicar o que fazer, como fazer e como saber se ficou bom. Evite conselhos genéricos como "comece pequeno" sem mostrar a execução.
+Adapte a profundidade ao tipo de material: prompt deve incluir contexto, variáveis e exemplo de uso; checklist precisa de critérios verificáveis; guia precisa ensinar decisões; página prática precisa funcionar como ferramenta de trabalho.
 ${HUMANIZER_PROMPT}`;
 
 function cleanConcept(concept: ContentConcept): ContentConcept {
@@ -33,7 +37,7 @@ function cleanPackage(value: ContentPackage, handle: string): ContentPackage {
     selectedKeyword: value.selectedKeyword.normalize("NFKC").toLocaleUpperCase("pt-BR").replace(/[^\p{L}\p{N}]/gu, ""),
     keywordSuggestions: value.keywordSuggestions.map((item) => item.normalize("NFKC").toLocaleUpperCase("pt-BR").replace(/[^\p{L}\p{N}]/gu, "")) as [string,string,string],
     publicReplies: value.publicReplies.map(humanizeText) as [string,string,string], dmMessages: value.dmMessages.map(humanizeText) as [string,string,string],
-    deliverable: { ...value.deliverable, title: humanizeText(value.deliverable.title), summary: humanizeText(value.deliverable.summary), introduction: humanizeText(value.deliverable.introduction), sections: value.deliverable.sections.map((section) => ({ heading: humanizeText(section.heading), body: humanizeText(section.body), items: section.items.map(humanizeText) })), closing: humanizeText(value.deliverable.closing) },
+    deliverable: { ...value.deliverable, authorHandle: handle, title: humanizeText(value.deliverable.title), summary: humanizeText(value.deliverable.summary), introduction: humanizeText(value.deliverable.introduction), outcome: value.deliverable.outcome ? humanizeText(value.deliverable.outcome) : undefined, prerequisites: value.deliverable.prerequisites?.map(humanizeText), sections: value.deliverable.sections.map((section) => ({ heading: humanizeText(section.heading), body: humanizeText(section.body), items: section.items.map(humanizeText), practicalTip: section.practicalTip ? humanizeText(section.practicalTip) : undefined })), examples: value.deliverable.examples?.map((example) => ({ title: humanizeText(example.title), scenario: humanizeText(example.scenario), application: humanizeText(example.application), result: humanizeText(example.result) })), templates: value.deliverable.templates?.map((template) => ({ title: humanizeText(template.title), description: humanizeText(template.description), content: template.content.trim() })), pitfalls: value.deliverable.pitfalls?.map((pitfall) => ({ mistake: humanizeText(pitfall.mistake), correction: humanizeText(pitfall.correction) })), nextSteps: value.deliverable.nextSteps?.map(humanizeText), closing: humanizeText(value.deliverable.closing) },
   };
 }
 
@@ -50,7 +54,37 @@ function fallbackPackage(project: ContentProject, concept: ContentConcept, profi
   const keyword = concept.keywords[0];
   const lead = `${profile.instagramHandle}\n\n${concept.hook}\n\nO problema costuma aparecer numa tarefa pequena, daquelas que você repete sem perceber. Quando soma a semana inteira, virou tempo perdido.`;
   const cta = `\n\nComente ${keyword} e eu mando o material no seu direct.`;
-  return cleanPackage({ onScreenHook: concept.hook, visualDirection: concept.visualDirection, shortCaption: `${lead}${cta}`, mediumCaption: `${lead}\n\nAntes de procurar outra ferramenta, anote a tarefa, o que entra e o resultado que precisa sair. Aí sim escolha a IA.${cta}`, fullCaption: `${lead}\n\nAntes de procurar outra ferramenta, faça um teste simples:\n\n1. Anote a tarefa que mais se repete.\n2. Separe o que muda e o que sempre fica igual.\n3. Defina como é uma resposta boa.\n\nIsso já dá contexto suficiente para montar um primeiro fluxo sem bagunçar seu processo inteiro.${cta}\n\nSalva para testar depois e segue ${profile.instagramHandle} para ver mais usos práticos de IA.`, selectedKeyword: keyword, keywordSuggestions: concept.keywords, publicReplies: ["Te mandei no direct. Confere lá!", "Prontinho, acabou de chegar na sua DM.", "Enviei agora. Dá uma olhada nas mensagens."], dmMessages: ["O material que você pediu está logo abaixo:", "Separei tudo por aqui. É só abrir:", "Pode acessar o material neste link:"], deliverable: { title: `${concept.title}: material prático`, summary: concept.deliverableIdea, introduction: `Use este material para aplicar ${project.topic.toLocaleLowerCase("pt-BR")} em uma tarefa real.`, sections: [{ heading: "Antes de começar", body: "Escolha uma tarefa pequena e repetitiva. Não tente automatizar o processo inteiro de uma vez.", items: ["O que inicia a tarefa?", "Quais dados ela usa?", "Como você sabe que terminou bem?"] }, { heading: "Teste rápido", body: "Rode uma primeira versão e confira o resultado antes de entregar para alguém.", items: ["Teste com um exemplo real", "Corrija instruções ambíguas", "Salve a versão que funcionou"] }], closing: "Comece pequeno. Se funcionar duas vezes do mesmo jeito, aí vale transformar em rotina." } }, profile.instagramHandle);
+  const topic = project.topic.toLocaleLowerCase("pt-BR").replace(/[.!?]+$/u, "");
+  return cleanPackage({ onScreenHook: concept.hook, visualDirection: concept.visualDirection, shortCaption: `${lead}${cta}`, mediumCaption: `${lead}\n\nAntes de procurar outra ferramenta, anote a tarefa, o que entra e o resultado que precisa sair. Aí sim escolha a IA.${cta}`, fullCaption: `${lead}\n\nAntes de procurar outra ferramenta, faça um teste simples:\n\n1. Anote a tarefa que mais se repete.\n2. Separe o que muda e o que sempre fica igual.\n3. Defina como é uma resposta boa.\n\nIsso já dá contexto suficiente para montar um primeiro fluxo sem bagunçar seu processo inteiro.${cta}\n\nSalva para testar depois e segue ${profile.instagramHandle} para ver mais usos práticos de IA.`, selectedKeyword: keyword, keywordSuggestions: concept.keywords, publicReplies: ["Te mandei no direct. Confere lá!", "Prontinho, acabou de chegar na sua DM.", "Enviei agora. Dá uma olhada nas mensagens."], dmMessages: ["O material que você pediu está logo abaixo:", "Separei tudo por aqui. É só abrir:", "Pode acessar o material neste link:"], deliverable: {
+    authorHandle: profile.instagramHandle,
+    title: `${concept.title}: plano de aplicação`,
+    summary: `${concept.deliverableIdea} Use o roteiro para sair de uma ideia ampla e chegar a um primeiro teste que possa ser conferido.`,
+    introduction: `Este material transforma o tema “${topic}” em um exercício de decisão e execução. Ao final, você terá uma tarefa priorizada, instruções claras para a IA e um teste pequeno o suficiente para revisar antes de colocar em rotina.`,
+    outcome: "Sair com uma tarefa priorizada, um prompt adaptado ao seu caso e um teste documentado para decidir se a solução merece virar rotina.",
+    estimatedMinutes: 25,
+    difficulty: "beginner",
+    prerequisites: ["Uma tarefa real que você ou sua equipe executou nesta semana", "Um exemplo de entrada e uma resposta considerada boa", "Acesso à ferramenta de IA que você já utiliza"],
+    sections: [
+      { heading: "Mapeie o trabalho real", body: "Escolha uma atividade que existe hoje, não uma automação imaginária. Descreva o início, as decisões e a entrega final sem tentar melhorar o processo ainda.", items: ["Escreva quem pede a tarefa e o que essa pessoa envia", "Liste quais informações sempre aparecem", "Marque onde você precisa tomar uma decisão", "Guarde um exemplo real de resultado aprovado"], practicalTip: "Se você não consegue mostrar uma entrada e uma saída reais, a tarefa ainda está ampla demais para o primeiro teste." },
+      { heading: "Dê uma nota para a oportunidade", body: "Use quatro critérios de 0 a 2. Some as notas e priorize tarefas com pelo menos 6 pontos.", items: ["Frequência: acontece toda semana ou todo dia?", "Repetição: boa parte segue o mesmo padrão?", "Risco: um erro pode ser percebido e corrigido antes do uso?", "Ganho: libera tempo ou reduz espera de alguém?"], practicalTip: "Não comece pela tarefa mais importante. Comece pela tarefa mais verificável." },
+      { heading: "Monte a primeira instrução", body: "Uma boa instrução separa contexto, entrada, critérios e formato de saída. Preencha o modelo desta página com dados reais.", items: ["Explique o papel da IA naquela tarefa", "Cole apenas os dados necessários", "Defina de três a cinco critérios de qualidade", "Peça uma saída em formato fácil de revisar"], practicalTip: "Troque palavras vagas como ‘bom’ e ‘profissional’ por critérios que você consegue apontar no resultado." },
+      { heading: "Teste lado a lado", body: "Use o mesmo caso na forma manual e com a IA. Compare qualidade, tempo e quantidade de correções, sem entregar o resultado automaticamente.", items: ["Rode três exemplos diferentes", "Anote o que precisou ser corrigido", "Confirme se algum dado sensível foi incluído", "Decida: descartar, ajustar ou repetir"], practicalTip: "Um acerto isolado não prova consistência. Procure o mesmo padrão de qualidade em três exemplos." },
+      { heading: "Transforme o teste em rotina", body: "Documente somente depois que o fluxo funcionar. Registre quem usa, quando usar, como revisar e quando interromper.", items: ["Salve a instrução com número de versão", "Defina uma pessoa responsável pela revisão", "Crie um exemplo de resposta aprovada", "Marque uma data para revisar o processo"], practicalTip: "Automação sem responsável vira erro repetido. Mantenha uma revisão humana clara." },
+    ],
+    examples: [{ title: "Exemplo preenchido: pedido de orçamento", scenario: "Uma empresa recebe mensagens com serviço, prazo e cidade, mas perde tempo pedindo as mesmas informações antes de preparar o orçamento.", application: "A IA recebe a mensagem, identifica dados presentes e ausentes e devolve uma resposta curta pedindo apenas o que falta. A equipe revisa antes de enviar.", result: "O teste é aprovado quando a resposta não inventa preço, não repete perguntas já respondidas e lista corretamente os dados ausentes em três mensagens diferentes." }],
+    templates: [
+      { title: "Diagnóstico da tarefa", description: "Preencha os colchetes antes de pedir qualquer solução.", content: "Quero avaliar a tarefa [NOME DA TAREFA].\n\nEla começa quando [GATILHO].\nRecebo estas informações: [ENTRADAS].\nHoje eu preciso decidir: [DECISÕES].\nO resultado final deve ser: [SAÍDA].\nUma resposta boa obrigatoriamente: [CRITÉRIOS].\nNão pode: [LIMITES E RISCOS].\n\nAnalise se essa tarefa é adequada para um primeiro teste com IA. Aponte o trecho mais repetitivo, o que ainda exige revisão humana e quais três exemplos devo usar no teste." },
+      { title: "Prompt para o primeiro piloto", description: "Modelo pronto para adaptar e testar com três casos reais.", content: "Você vai me ajudar com [TAREFA].\n\nContexto:\n[EXPLIQUE A SITUAÇÃO EM 3 A 5 LINHAS]\n\nEntrada:\n[COLE UM EXEMPLO REAL SEM DADOS SENSÍVEIS]\n\nSua resposta precisa:\n1. [CRITÉRIO 1]\n2. [CRITÉRIO 2]\n3. [CRITÉRIO 3]\n\nNão faça:\n- [LIMITE 1]\n- [LIMITE 2]\n\nFormato de saída:\n[DEFINA TÓPICOS, TABELA, TEXTO OU JSON]\n\nAntes de responder, liste qualquer informação indispensável que esteja faltando. Não invente dados." },
+    ],
+    pitfalls: [
+      { mistake: "Tentar automatizar um processo inteiro de uma vez", correction: "Recorte uma única decisão ou produção repetitiva que possa ser conferida em poucos minutos." },
+      { mistake: "Testar somente com um exemplo fácil", correction: "Use um caso comum, um incompleto e um caso que costuma gerar erro." },
+      { mistake: "Pedir uma resposta ‘profissional’ sem critério", correction: "Defina tamanho, tom, informações obrigatórias e situações em que a IA deve parar." },
+      { mistake: "Colocar o resultado em uso sem revisão", correction: "Mantenha aprovação humana até o fluxo repetir a qualidade esperada em casos diferentes." },
+    ],
+    nextSteps: ["Escolha uma tarefa executada nos últimos sete dias", "Preencha o diagnóstico copiável desta página", "Rode o piloto com três exemplos e anote as correções", "Só depois transforme a versão aprovada em automação"],
+    closing: "O objetivo deste exercício não é automatizar tudo. É provar, com exemplos reais, que uma parte específica do trabalho pode ficar mais previsível sem perder controle.",
+  } }, profile.instagramHandle);
 }
 
 export class ContentStudioProvider {
@@ -65,7 +99,7 @@ export class ContentStudioProvider {
 
   async generatePackage(project: ContentProject, concept: ContentConcept, profile: CreatorProfile) {
     if (isDemoMode || !this.client) return { package: fallbackPackage(project, concept, profile), usage: { inputTokens: 0, outputTokens: 0 } };
-    const response = await this.client.responses.parse({ model: env.OPENAI_AUDIENCE_MODEL, store: false, instructions: `${BASE_PROMPT}\nGere o pacote completo. As respostas públicas e DMs não devem repetir o hook nem citar o título do Reel. O entregável deve ter conteúdo de verdade, pronto para uso.`, input: JSON.stringify({ project, selectedConcept: concept, profile }), text: { format: zodTextFormat(contentPackageSchema, "content_package") } });
+    const response = await this.client.responses.parse({ model: env.OPENAI_AUDIENCE_MODEL, store: false, instructions: `${BASE_PROMPT}\nGere o pacote completo. As respostas públicas e DMs não devem repetir o hook nem citar o título do Reel. O entregável deve ter conteúdo de verdade, pronto para uso.`, input: JSON.stringify({ project, selectedConcept: concept, profile }), text: { format: zodTextFormat(richContentPackageSchema, "content_package") } });
     if (!response.output_parsed) throw new Error("A IA não retornou o pacote de conteúdo.");
     return { package: cleanPackage(response.output_parsed, profile.instagramHandle), usage: { inputTokens: response.usage?.input_tokens ?? 0, outputTokens: response.usage?.output_tokens ?? 0 } };
   }

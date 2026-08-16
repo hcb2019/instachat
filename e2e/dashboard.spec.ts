@@ -89,6 +89,21 @@ test("creates a content package and copies the exact Instagram formatting", asyn
   await expect(medium.locator("xpath=..").getByRole("button", { name: "Copiado" })).toBeVisible();
   const clipboard = await page.evaluate(() => navigator.clipboard.readText());
   expect(clipboard).toBe(exactCaption);
+
+  await expect(page.locator(".studio-deliverable-stats").getByText("5", { exact: true })).toBeVisible();
+  await expect(page.locator(".studio-deliverable-stats").getByText("2", { exact: true })).toBeVisible();
+  const materialUrl = await page.getByRole("link", { name: /Abrir página pública/ }).getAttribute("href");
+  expect(materialUrl).toBeTruthy();
+  await page.goto(materialUrl!);
+  await expect(page.getByText("RESULTADO ESPERADO", { exact: true })).toBeVisible();
+  await expect(page.locator(".material-step")).toHaveCount(5);
+  await expect(page.locator(".material-template-card")).toHaveCount(2);
+  const firstTemplate = page.locator(".material-template-card").first();
+  const templateText = await firstTemplate.locator("pre").innerText();
+  await firstTemplate.getByRole("button", { name: "Copiar modelo" }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(templateText);
+  const materialWidth = await page.evaluate(() => ({ viewport: window.innerWidth, document: document.documentElement.scrollWidth }));
+  expect(materialWidth.document).toBeLessThanOrEqual(materialWidth.viewport);
 });
 
 test("keeps automation fields readable without iOS input zoom", async ({ page }) => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contentConceptsOutputSchema, contentPackageSchema, contentProjectInputSchema } from "@/lib/content-studio";
+import { contentConceptsOutputSchema, contentPackageSchema, contentProjectInputSchema, richContentPackageSchema } from "@/lib/content-studio";
 
 describe("content studio schemas", () => {
   it("aceita um projeto completo e mantém o segundo objetivo opcional", () => {
@@ -57,5 +57,29 @@ describe("content studio schemas", () => {
     });
 
     expect(packageResult.success).toBe(true);
+    if (!packageResult.success) return;
+    expect(richContentPackageSchema.safeParse(packageResult.data).success).toBe(false);
+
+    const section = { heading: "Mapeie a tarefa", body: "Use um caso real antes de escolher qualquer ferramenta.", items: ["Separe uma entrada real", "Defina o resultado esperado"], practicalTip: "Se não existe exemplo real, o recorte ainda está amplo demais." };
+    const richResult = richContentPackageSchema.safeParse({
+      ...packageResult.data,
+      deliverable: {
+        ...packageResult.data.deliverable,
+        authorHandle: "@hernando.ia",
+        summary: "Um plano completo para escolher, testar e validar sua primeira automação com exemplos reais.",
+        introduction: "Este material ajuda você a sair de uma ideia ampla e chegar a um teste verificável, usando uma tarefa real, critérios claros e revisão humana antes de colocar qualquer resposta em produção.",
+        outcome: "Sair com uma tarefa priorizada, um primeiro prompt e critérios objetivos para aprovar ou rejeitar o teste.",
+        estimatedMinutes: 25,
+        difficulty: "beginner",
+        prerequisites: ["Uma tarefa executada nesta semana", "Um exemplo de resposta aprovada"],
+        sections: [section, { ...section, heading: "Dê uma nota" }, { ...section, heading: "Monte o teste" }, { ...section, heading: "Valide o resultado" }],
+        examples: [{ title: "Pedido de orçamento", scenario: "A equipe recebe mensagens incompletas.", application: "A IA identifica os dados ausentes antes da resposta.", result: "O teste passa quando não inventa informações em três casos." }],
+        templates: [{ title: "Diagnóstico", description: "Preencha antes do teste.", content: "Tarefa: [NOME]\nEntrada: [DADOS]\nSaída esperada: [RESULTADO]" }, { title: "Piloto", description: "Use com exemplos reais.", content: "Contexto: [SITUAÇÃO]\nCritérios: [LISTA]\nNão faça: [LIMITES]" }],
+        pitfalls: [{ mistake: "Automatizar tudo", correction: "Recorte uma única decisão verificável." }, { mistake: "Testar um caso", correction: "Use pelo menos três exemplos diferentes." }, { mistake: "Usar critério vago", correction: "Defina tamanho, formato e informações obrigatórias." }],
+        nextSteps: ["Escolha uma tarefa real", "Preencha o diagnóstico", "Teste com três exemplos"],
+        closing: "Use os resultados do teste para decidir se vale ajustar, descartar ou transformar o fluxo em rotina.",
+      },
+    });
+    expect(richResult.success).toBe(true);
   });
 });

@@ -32,8 +32,47 @@ export interface ContentConcept {
   keywords: [string, string, string];
 }
 
-export interface DeliverableSection { heading: string; body: string; items: string[] }
-export interface GeneratedDeliverable { title: string; summary: string; introduction: string; sections: DeliverableSection[]; closing: string }
+export interface DeliverableSection {
+  heading: string;
+  body: string;
+  items: string[];
+  practicalTip?: string;
+}
+
+export interface DeliverableExample {
+  title: string;
+  scenario: string;
+  application: string;
+  result: string;
+}
+
+export interface DeliverableTemplate {
+  title: string;
+  description: string;
+  content: string;
+}
+
+export interface DeliverablePitfall {
+  mistake: string;
+  correction: string;
+}
+
+export interface GeneratedDeliverable {
+  title: string;
+  summary: string;
+  introduction: string;
+  sections: DeliverableSection[];
+  closing: string;
+  authorHandle?: string;
+  outcome?: string;
+  estimatedMinutes?: number;
+  difficulty?: "beginner" | "intermediate";
+  prerequisites?: string[];
+  examples?: DeliverableExample[];
+  templates?: DeliverableTemplate[];
+  pitfalls?: DeliverablePitfall[];
+  nextSteps?: string[];
+}
 
 export interface ContentPackage {
   onScreenHook: string;

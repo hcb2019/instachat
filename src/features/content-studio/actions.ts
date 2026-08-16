@@ -53,7 +53,10 @@ export async function generateContentPackage(formData: FormData) {
   try {
     const profile = await getCreatorProfile();
     const generation = await new ContentStudioProvider().generatePackage(project, concept, profile);
-    const slug = randomBytes(16).toString("hex");
+    // Regenerating a material must improve the content in place. Keeping the
+    // slug avoids breaking links that may already be present in an automation,
+    // a Reel caption or a DM previously sent to the audience.
+    const slug = project.deliverableSlug ?? randomBytes(16).toString("hex");
     if (isDemoMode) {
       Object.assign(project, { selectedConceptIndex: selectedIndex, contentPackage: generation.package, status: "ready", deliverableSlug: slug, updatedAt: new Date().toISOString() });
     } else {
