@@ -2,11 +2,12 @@ import "server-only";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { contentConceptsOutputSchema, parseStoredContentConcepts, richContentPackageSchema } from "@/lib/content-studio";
+import { buildConceptGenerationInput, buildDemoConcepts, buildDemoPackage, buildPackageGenerationInput } from "@/lib/content-studio-generation";
 import { env, isDemoMode } from "@/lib/env";
-import { HUMANIZER_PROMPT, briefingToNaturalHook, formatInstagramCaption, humanizeContentHook, humanizeText } from "@/lib/humanizer";
+import { HUMANIZER_PROMPT, formatInstagramCaption, humanizeContentHook, humanizeText } from "@/lib/humanizer";
 import type { ContentConcept, ContentPackage, ContentProject, CreatorProfile } from "@/types/content-studio";
 
-export const CONTENT_PROMPT_VERSION = "content-studio-v4-copy-use-apply";
+export const CONTENT_PROMPT_VERSION = "content-studio-v5-project-isolation";
 
 const BASE_PROMPT = `Você é um estrategista de conteúdo brasileiro que escreve para Instagram.
 Crie conteúdo útil, específico e plausível. Não invente estatística, resultado, experiência pessoal ou autoridade.
@@ -14,26 +15,34 @@ O formato é um Reel de 7 a 10 segundos, sem fala obrigatória, com um único te
 O hook deve caber em 3 a 6 linhas, ter entre 18 e 32 palavras e criar curiosidade sem clickbait enganoso.
 Nunca copie frases dos exemplos de referência. Nunca use "link na bio": a entrega acontece após um comentário com palavra-chave.
 Toda legenda deve começar exatamente com o @ informado. A palavra-chave, o CTA e o material precisam falar da mesma promessa.
-O campo topic é um briefing, não é texto pronto. Remova comandos como "mostrar que", "ensinar", "explicar" e "falar sobre" antes de escrever. Nunca crie construções como "se você ainda faz mostrar que". Leia o hook em voz alta e reescreva qualquer encontro de verbos que soe truncado.
-Formate a legenda para ser colada sem ajustes no Instagram: parágrafos curtos, uma linha em branco entre blocos, listas fáceis de escanear e CTA isolado. Nunca entregue um bloco longo de texto.
-O entregável não pode ser um resumo superficial. Ele deve permitir que uma pessoa aplique a ideia sem pesquisar outra fonte.
-Exija um resultado concreto, tempo estimado, pré-requisitos, 4 a 7 etapas detalhadas, exemplos preenchidos, pelo menos dois modelos copiáveis, erros comuns com correção e próximos passos.
-Cada etapa precisa explicar o que fazer, como fazer e como saber se ficou bom. Evite conselhos genéricos como "comece pequeno" sem mostrar a execução.
-O material deve funcionar como uma jornada guiada, não como um artigo. As etapas precisam depender umas das outras e levar a um artefato final claramente nomeado.
-Logo no começo, diga qual é a primeira ação de cinco minutos e descreva exatamente o que estará pronto no fim. Não use perguntas reflexivas soltas: toda pergunta precisa produzir uma resposta que será usada na etapa seguinte.
-Em cada etapa, preencha objective, action, example, responsePrompt, responsePlaceholder e completionCriterion. O campo action deve usar verbo no imperativo e dizer onde registrar o resultado. O example deve mostrar uma resposta preenchida, não apenas explicar. O completionCriterion deve ser verificável por uma pessoa leiga.
-Os itens do checklist são ações, nunca perguntas vagas. Não escreva “isso se repete?”; escreva “anote quantas vezes a tarefa se repetiu nos últimos sete dias”.
-O campo finalArtifact deve nomear e descrever a saída prática montada com as respostas do usuário. completionCriteria deve permitir conferir se essa saída está realmente utilizável.
-Escreva finalArtifact em uma única frase de até 18 palavras. A tela principal deve ser escaneável em menos de um minuto.
-Crie também executionFlow com 4 a 6 passos curtos que serão a experiência principal. A sequência deve ser operacional: preparar o mínimo, copiar um conteúdo pronto, indicar exatamente o que substituir, colar em uma IA, reconhecer o resultado e aplicá-lo em um destino concreto.
-Cada instruction deve ter no máximo duas frases curtas. Use copyableContent para entregar o prompt ou modelo completo; deixe esse campo vazio apenas nos passos sem algo para copiar. Em customization, nomeie literalmente os trechos que o usuário deve alterar e diga com o que substituir.
-Não repita a explicação detalhada no executionFlow. resultPrompt deve dizer qual resultado da IA deve ser colado no material, e finalApplication deve explicar em uma ordem direta onde usar esse resultado.
-Vincule todo o conteúdo ao assunto, à promessa e ao tipo de entregável escolhidos. Não entregue um método genérico de IA quando a promessa for resolver uma situação específica.
-Adapte a profundidade ao tipo de material: prompt deve incluir contexto, variáveis e exemplo de uso; checklist precisa de critérios verificáveis; guia precisa ensinar decisões; página prática precisa funcionar como ferramenta de trabalho.
+O campo topic é um briefing, não é texto pronto. Remova comandos como "mostrar que", "ensinar", "explicar" e "falar sobre" antes de escrever. Leia o hook em voz alta e reescreva qualquer encontro de verbos que soe truncado.
+Formate a legenda para ser colada sem ajustes no Instagram: parágrafos curtos, uma linha em branco entre blocos, listas fáceis de escanear e CTA isolado.
+O entregável deve permitir que uma pessoa aplique a ideia sem pesquisar outra fonte.
+Exija resultado concreto, tempo estimado, pré-requisitos, 4 a 7 etapas detalhadas, exemplos preenchidos, dois modelos copiáveis, erros comuns e próximos passos.
+Cada etapa precisa explicar o que fazer, como fazer e como saber se ficou bom. Evite conselhos genéricos sem execução.
+O material deve funcionar como jornada guiada. As etapas dependem umas das outras e levam a um artefato final claramente nomeado.
+Logo no começo, diga a primeira ação de cinco minutos e o que estará pronto no fim. Toda pergunta deve produzir uma resposta usada na etapa seguinte.
+Em cada etapa, preencha objective, action, example, responsePrompt, responsePlaceholder e completionCriterion. Use imperativo, exemplo preenchido e critério verificável.
+Os itens do checklist são ações, nunca perguntas vagas. finalArtifact é uma única frase de até 18 palavras.
+Crie executionFlow com 4 a 6 passos: preparar, copiar, personalizar, usar e aplicar. instruction tem no máximo duas frases curtas. customization diz literalmente o que substituir.
+Use somente o briefing recebido nesta chamada. Cada chamada representa um projeto novo e isolado: não reutilize estrutura, exemplos, corpo, entregável ou frases de nenhum outro projeto.
+Vincule todas as partes ao assunto, à promessa e ao tipo de entregável escolhidos. Não entregue um método genérico quando a promessa resolver uma situação específica.
+Adapte a profundidade ao tipo: prompt inclui contexto, variáveis e exemplo; checklist usa critérios; guia ensina decisões; página funciona como ferramenta.
 ${HUMANIZER_PROMPT}`;
 
-function cleanConcept(concept: ContentConcept, topic?: string): ContentConcept {
-  const cleaned = { ...concept, title: humanizeText(concept.title), hook: humanizeContentHook(concept.hook, topic), angle: humanizeText(concept.angle), audiencePain: humanizeText(concept.audiencePain), promise: humanizeText(concept.promise), visualDirection: humanizeText(concept.visualDirection), deliverableIdea: humanizeText(concept.deliverableIdea), cta: humanizeText(concept.cta), keywords: concept.keywords.map((item) => item.normalize("NFKC").toLocaleUpperCase("pt-BR").replace(/[^\p{L}\p{N}]/gu, "").slice(0, 30)) as [string,string,string] };
+function cleanConcept(concept: ContentConcept, topic: string): ContentConcept {
+  const cleaned = {
+    ...concept,
+    title: humanizeText(concept.title),
+    hook: humanizeContentHook(concept.hook, topic),
+    angle: humanizeText(concept.angle),
+    audiencePain: humanizeText(concept.audiencePain),
+    promise: humanizeText(concept.promise),
+    visualDirection: humanizeText(concept.visualDirection),
+    deliverableIdea: humanizeText(concept.deliverableIdea),
+    cta: humanizeText(concept.cta),
+    keywords: concept.keywords.map((item) => item.normalize("NFKC").toLocaleUpperCase("pt-BR").replace(/[^\p{L}\p{N}]/gu, "").slice(0, 30)) as [string, string, string],
+  };
   return parseStoredContentConcepts([cleaned])[0] ?? concept;
 }
 
@@ -44,88 +53,47 @@ function cleanPackage(value: ContentPackage, handle: string): ContentPackage {
   };
   return {
     ...value,
-    onScreenHook: humanizeText(value.onScreenHook), visualDirection: humanizeText(value.visualDirection),
+    onScreenHook: humanizeText(value.onScreenHook),
+    visualDirection: humanizeText(value.visualDirection),
     shortCaption: caption(value.shortCaption), mediumCaption: caption(value.mediumCaption), fullCaption: caption(value.fullCaption),
     selectedKeyword: value.selectedKeyword.normalize("NFKC").toLocaleUpperCase("pt-BR").replace(/[^\p{L}\p{N}]/gu, ""),
-    keywordSuggestions: value.keywordSuggestions.map((item) => item.normalize("NFKC").toLocaleUpperCase("pt-BR").replace(/[^\p{L}\p{N}]/gu, "")) as [string,string,string],
-    publicReplies: value.publicReplies.map(humanizeText) as [string,string,string], dmMessages: value.dmMessages.map(humanizeText) as [string,string,string],
-    deliverable: { ...value.deliverable, authorHandle: handle, title: humanizeText(value.deliverable.title), summary: humanizeText(value.deliverable.summary), introduction: humanizeText(value.deliverable.introduction), outcome: value.deliverable.outcome ? humanizeText(value.deliverable.outcome) : undefined, startHere: value.deliverable.startHere ? humanizeText(value.deliverable.startHere) : undefined, finalArtifact: value.deliverable.finalArtifact ? humanizeText(value.deliverable.finalArtifact) : undefined, completionCriteria: value.deliverable.completionCriteria?.map(humanizeText), executionFlow: value.deliverable.executionFlow?.map((step) => ({ ...step, title: humanizeText(step.title), instruction: humanizeText(step.instruction), copyableContent: step.copyableContent.trim(), customization: step.customization.map(humanizeText), expectedResult: humanizeText(step.expectedResult) })), resultPrompt: value.deliverable.resultPrompt ? humanizeText(value.deliverable.resultPrompt) : undefined, resultPlaceholder: value.deliverable.resultPlaceholder ? humanizeText(value.deliverable.resultPlaceholder) : undefined, finalApplication: value.deliverable.finalApplication ? humanizeText(value.deliverable.finalApplication) : undefined, prerequisites: value.deliverable.prerequisites?.map(humanizeText), sections: value.deliverable.sections.map((section) => ({ heading: humanizeText(section.heading), body: humanizeText(section.body), items: section.items.map(humanizeText), practicalTip: section.practicalTip ? humanizeText(section.practicalTip) : undefined, objective: section.objective ? humanizeText(section.objective) : undefined, action: section.action ? humanizeText(section.action) : undefined, example: section.example ? humanizeText(section.example) : undefined, responsePrompt: section.responsePrompt ? humanizeText(section.responsePrompt) : undefined, responsePlaceholder: section.responsePlaceholder ? humanizeText(section.responsePlaceholder) : undefined, completionCriterion: section.completionCriterion ? humanizeText(section.completionCriterion) : undefined })), examples: value.deliverable.examples?.map((example) => ({ title: humanizeText(example.title), scenario: humanizeText(example.scenario), application: humanizeText(example.application), result: humanizeText(example.result) })), templates: value.deliverable.templates?.map((template) => ({ title: humanizeText(template.title), description: humanizeText(template.description), content: template.content.trim() })), pitfalls: value.deliverable.pitfalls?.map((pitfall) => ({ mistake: humanizeText(pitfall.mistake), correction: humanizeText(pitfall.correction) })), nextSteps: value.deliverable.nextSteps?.map(humanizeText), closing: humanizeText(value.deliverable.closing) },
+    keywordSuggestions: value.keywordSuggestions.map((item) => item.normalize("NFKC").toLocaleUpperCase("pt-BR").replace(/[^\p{L}\p{N}]/gu, "")) as [string, string, string],
+    publicReplies: value.publicReplies.map(humanizeText) as [string, string, string], dmMessages: value.dmMessages.map(humanizeText) as [string, string, string],
+    deliverable: {
+      ...value.deliverable,
+      authorHandle: handle,
+      title: humanizeText(value.deliverable.title), summary: humanizeText(value.deliverable.summary), introduction: humanizeText(value.deliverable.introduction),
+      outcome: value.deliverable.outcome ? humanizeText(value.deliverable.outcome) : undefined,
+      startHere: value.deliverable.startHere ? humanizeText(value.deliverable.startHere) : undefined,
+      finalArtifact: value.deliverable.finalArtifact ? humanizeText(value.deliverable.finalArtifact) : undefined,
+      completionCriteria: value.deliverable.completionCriteria?.map(humanizeText),
+      executionFlow: value.deliverable.executionFlow?.map((step) => ({ ...step, title: humanizeText(step.title), instruction: humanizeText(step.instruction), copyableContent: step.copyableContent.trim(), customization: step.customization.map(humanizeText), expectedResult: humanizeText(step.expectedResult) })),
+      resultPrompt: value.deliverable.resultPrompt ? humanizeText(value.deliverable.resultPrompt) : undefined,
+      resultPlaceholder: value.deliverable.resultPlaceholder ? humanizeText(value.deliverable.resultPlaceholder) : undefined,
+      finalApplication: value.deliverable.finalApplication ? humanizeText(value.deliverable.finalApplication) : undefined,
+      prerequisites: value.deliverable.prerequisites?.map(humanizeText),
+      sections: value.deliverable.sections.map((section) => ({ ...section, heading: humanizeText(section.heading), body: humanizeText(section.body), items: section.items.map(humanizeText), practicalTip: section.practicalTip ? humanizeText(section.practicalTip) : undefined, objective: section.objective ? humanizeText(section.objective) : undefined, action: section.action ? humanizeText(section.action) : undefined, example: section.example ? humanizeText(section.example) : undefined, responsePrompt: section.responsePrompt ? humanizeText(section.responsePrompt) : undefined, responsePlaceholder: section.responsePlaceholder ? humanizeText(section.responsePlaceholder) : undefined, completionCriterion: section.completionCriterion ? humanizeText(section.completionCriterion) : undefined })),
+      examples: value.deliverable.examples?.map((example) => ({ title: humanizeText(example.title), scenario: humanizeText(example.scenario), application: humanizeText(example.application), result: humanizeText(example.result) })),
+      templates: value.deliverable.templates?.map((template) => ({ title: humanizeText(template.title), description: humanizeText(template.description), content: template.content.trim() })),
+      pitfalls: value.deliverable.pitfalls?.map((pitfall) => ({ mistake: humanizeText(pitfall.mistake), correction: humanizeText(pitfall.correction) })),
+      nextSteps: value.deliverable.nextSteps?.map(humanizeText), closing: humanizeText(value.deliverable.closing),
+    },
   };
-}
-
-function fallbackConcepts(project: Pick<ContentProject,"topic"|"deliverableType">): ContentConcept[] {
-  const topic = project.topic.replace(/[.!?]+$/u, "");
-  const naturalHook = briefingToNaturalHook(project.topic);
-  return [
-    { title: "O detalhe que encerra a conversa", style: "safe", hook: naturalHook, angle: `Partir de uma situação real ligada a ${topic.toLocaleLowerCase("pt-BR")} e mostrar uma resposta mais útil.`, audiencePain: "A conversa termina antes que a pessoa entenda o valor da solução.", promise: "Uma resposta mais clara, que informa e mantém a conversa em andamento.", visualDirection: "Mostre a tela de uma conversa no Direct, sem nomes ou dados pessoais, com movimento discreto ao fundo.", deliverableIdea: `Um ${project.deliverableType === "prompt" ? "prompt" : "material"} curto para montar respostas naturais.`, cta: "Comente RESPOSTA para receber o material no direct.", keywords: ["RESPOSTA","VALOR","DIRECT"] },
-    { title: "A ferramenta não é o problema", style: "provocative", hook: "Você não precisa conhecer mais uma ferramenta de IA. Precisa parar de usar dez ferramentas sem resolver uma tarefa inteira.", angle: "Confrontar o consumo de novidades e trocar a busca por ferramentas por uma aplicação completa.", audiencePain: "Excesso de informação e pouca execução.", promise: "Um jeito de escolher a IA a partir do problema real.", visualDirection: "Mostre várias abas abertas e feche todas até sobrar apenas uma tarefa na tela.", deliverableIdea: "Um checklist para escolher o que vale automatizar primeiro.", cta: "Comente FOCO para receber o checklist.", keywords: ["FOCO","ESCOLHER","FLUXO"] },
-    { title: "Seu concorrente já automatizou", style: "strong", hook: "Enquanto você repete a mesma tarefa toda semana, alguém do seu mercado já entregou antes porque automatizou essa parte.", angle: "Criar urgência sem prometer dinheiro ou usar estatísticas inventadas.", audiencePain: "Processos manuais que atrasam atendimento, conteúdo ou venda.", promise: "Encontrar uma repetição que pode ser automatizada agora.", visualDirection: "Use um relógio, uma lista repetida ou a mesma ação sendo refeita no computador.", deliverableIdea: "Um mapa rápido para identificar tarefas repetitivas.", cta: "Comente MAPA para receber o material.", keywords: ["MAPA","AUTOMATIZAR","TEMPO"] },
-  ];
-}
-
-function fallbackPackage(project: ContentProject, concept: ContentConcept, profile: CreatorProfile): ContentPackage {
-  const keyword = concept.keywords[0];
-  const lead = `${profile.instagramHandle}\n\n${concept.hook}\n\nO problema costuma aparecer numa tarefa pequena, daquelas que você repete sem perceber. Quando soma a semana inteira, virou tempo perdido.`;
-  const cta = `\n\nComente ${keyword} e eu mando o material no seu direct.`;
-  const topic = project.topic.toLocaleLowerCase("pt-BR").replace(/[.!?]+$/u, "");
-  return cleanPackage({ onScreenHook: concept.hook, visualDirection: concept.visualDirection, shortCaption: `${lead}${cta}`, mediumCaption: `${lead}\n\nAntes de procurar outra ferramenta, anote a tarefa, o que entra e o resultado que precisa sair. Aí sim escolha a IA.${cta}`, fullCaption: `${lead}\n\nAntes de procurar outra ferramenta, faça um teste simples:\n\n1. Anote a tarefa que mais se repete.\n2. Separe o que muda e o que sempre fica igual.\n3. Defina como é uma resposta boa.\n\nIsso já dá contexto suficiente para montar um primeiro fluxo sem bagunçar seu processo inteiro.${cta}\n\nSalva para testar depois e segue ${profile.instagramHandle} para ver mais usos práticos de IA.`, selectedKeyword: keyword, keywordSuggestions: concept.keywords, publicReplies: ["Te mandei no direct. Confere lá!", "Prontinho, acabou de chegar na sua DM.", "Enviei agora. Dá uma olhada nas mensagens."], dmMessages: ["O material que você pediu está logo abaixo:", "Separei tudo por aqui. É só abrir:", "Pode acessar o material neste link:"], deliverable: {
-    authorHandle: profile.instagramHandle,
-    title: `${concept.title}: plano de aplicação`,
-    summary: `${concept.deliverableIdea} Use o roteiro para sair de uma ideia ampla e chegar a um primeiro teste que possa ser conferido.`,
-    introduction: `Este material transforma o tema “${topic}” em um exercício de decisão e execução. Ao final, você terá uma tarefa priorizada, instruções claras para a IA e um teste pequeno o suficiente para revisar antes de colocar em rotina.`,
-    outcome: "Sair com uma tarefa priorizada, um prompt adaptado ao seu caso e um teste documentado para decidir se a solução merece virar rotina.",
-    startHere: "Abra uma tarefa que você executou nesta semana e deixe ao lado uma entrada real e o resultado final aprovado. Você usará esse mesmo caso do início ao fim.",
-    finalArtifact: "Um piloto pronto: prompt adaptado, três testes, critérios de aprovação e uma decisão clara.",
-    completionCriteria: ["A tarefa e o resultado esperado cabem em uma frase cada", "O prompt usa dados reais sem informações sensíveis", "Três casos foram testados e comparados com os mesmos critérios", "Existe uma decisão registrada e uma pessoa responsável pelo próximo passo"],
-    executionFlow: [
-      { action: "prepare", title: "Separe um caso real", instruction: `Abra uma tarefa de ${topic} concluída nesta semana. Separe a mensagem ou arquivo recebido e o resultado final aprovado.`, copyableContent: "", customization: [], expectedResult: "Você terá uma entrada e uma saída reais abertas lado a lado." },
-      { action: "copy", title: "Copie este diagnóstico", instruction: "Clique em copiar. Antes de enviar, troque somente os textos entre colchetes pelas informações do seu caso.", copyableContent: "Quero encontrar a parte repetitiva desta tarefa: [NOME DA TAREFA].\n\nQuem pede: [PESSOA OU ÁREA]\nO que recebo: [ENTRADA REAL]\nO que entrego no final: [SAÍDA APROVADA]\nO que sempre preciso conferir: [DECISÕES]\nO que não pode acontecer: [LIMITES]\n\nAnalise o processo e devolva:\n1. a melhor parte para testar com IA;\n2. o que deve continuar com revisão humana;\n3. três critérios objetivos para aprovar o resultado;\n4. três casos que devo usar no teste.\n\nNão invente dados. Se faltar contexto, faça no máximo três perguntas antes de responder.", customization: ["Troque [NOME DA TAREFA] pelo nome usado no seu dia a dia", "Troque [ENTRADA REAL] por um exemplo sem dados sensíveis", "Descreva em [LIMITES] o erro que seria inaceitável"], expectedResult: "A IA devolverá um recorte de teste, três critérios e três casos para validar." },
-      { action: "use", title: "Cole na IA que você já usa", instruction: "Abra ChatGPT, Claude, Gemini ou outra IA de sua preferência. Cole o prompt preenchido e responda às perguntas de contexto, se aparecerem.", copyableContent: "", customization: [], expectedResult: "Você receberá uma recomendação específica para o seu processo, não uma lista genérica de ferramentas." },
-      { action: "copy", title: "Transforme a resposta em teste", instruction: "Copie este segundo prompt e cole logo abaixo da resposta da IA. Ele transformará a recomendação em uma instrução pronta para testar.", copyableContent: "Com base na análise acima, escreva o prompt completo do primeiro piloto.\n\nO prompt precisa incluir:\n- contexto da tarefa;\n- entrada que vou fornecer;\n- passos que a IA deve seguir;\n- formato exato da resposta;\n- três critérios de qualidade;\n- limites e situações em que deve pedir ajuda;\n- aviso para não inventar dados.\n\nDepois do prompt, crie uma tabela curta para eu avaliar os três casos de teste como APROVADO, AJUSTAR ou REPROVADO.", customization: ["Não apague a análise anterior da conversa", "Confira se os critérios devolvidos são observáveis", "Acrescente qualquer regra obrigatória do seu trabalho"], expectedResult: "A IA entregará um prompt de piloto e uma tabela simples de avaliação." },
-      { action: "apply", title: "Teste antes de usar", instruction: "Rode o prompt com os três casos indicados e preencha a tabela. Só aplique no trabalho se os três resultados passarem pelos mesmos critérios.", copyableContent: "", customization: [], expectedResult: "Você terminará com uma decisão clara: adotar, ajustar ou descartar o piloto." },
-    ],
-    resultPrompt: "Cole aqui o prompt final e a tabela de avaliação que a IA criou para o seu caso.",
-    resultPlaceholder: "PROMPT DO PILOTO\n...\n\nTABELA DE AVALIAÇÃO\nCaso 1:...\nCaso 2:...\nCaso 3:...",
-    finalApplication: "Use o prompt somente nos três casos separados. Compare as respostas pela tabela, corrija o que falhar e mantenha revisão humana até os três casos ficarem aprovados.",
-    estimatedMinutes: 25,
-    difficulty: "beginner",
-    prerequisites: ["Uma tarefa real que você ou sua equipe executou nesta semana", "Um exemplo de entrada e uma resposta considerada boa", "Acesso à ferramenta de IA que você já utiliza"],
-    sections: [
-      { heading: "Mapeie o trabalho real", body: "Escolha uma atividade que existe hoje, não uma automação imaginária. Descreva o início, as decisões e a entrega final sem tentar melhorar o processo ainda.", objective: "Dar às próximas etapas um caso concreto, evitando montar uma solução para um problema abstrato.", action: "Abra um caso concluído nesta semana e escreva, no campo abaixo, quem pediu, o que enviou e o que recebeu no final.", example: "Exemplo: ‘Um cliente pede orçamento pelo direct, envia serviço e cidade, e recebe uma resposta com perguntas sobre prazo e quantidade.’", responsePrompt: "Descreva sua tarefa em uma frase: quem pede, o que envia e qual resultado recebe?", responsePlaceholder: "Ex.: O cliente envia...; eu confiro...; no final ele recebe...", completionCriterion: "Conclua quando outra pessoa conseguir identificar claramente uma entrada e uma saída lendo apenas a sua frase.", items: ["Abra um caso concluído nos últimos sete dias", "Anote quem iniciou a tarefa", "Liste as informações recebidas", "Separe um resultado final aprovado"], practicalTip: "Se você não consegue mostrar uma entrada e uma saída reais, a tarefa ainda está ampla demais para o primeiro teste." },
-      { heading: "Dê uma nota para a oportunidade", body: "Use quatro critérios de 0 a 2. Some as notas e priorize tarefas com pelo menos 6 pontos.", objective: "Confirmar que o caso escolhido é frequente e verificável o bastante para justificar um piloto.", action: "Dê uma nota de 0, 1 ou 2 para frequência, repetição, risco controlável e ganho. Registre cada nota e a soma.", example: "Exemplo: frequência 2 + repetição 2 + risco controlável 1 + ganho 2 = 7 pontos. Decisão: seguir para o piloto.", responsePrompt: "Registre as quatro notas, a soma e sua decisão: seguir ou escolher outra tarefa.", responsePlaceholder: "Frequência: 0/1/2\nRepetição: 0/1/2\nRisco controlável: 0/1/2\nGanho: 0/1/2\nTotal: __\nDecisão: __", completionCriterion: "Conclua quando houver uma soma de 6 pontos ou mais; abaixo disso, volte à etapa anterior e escolha outro caso.", items: ["Conte quantas vezes a tarefa ocorreu nos últimos sete dias", "Marque quanto do processo segue o mesmo padrão", "Confirme que um erro pode ser percebido antes do uso", "Registre qual espera ou retrabalho o teste pretende reduzir"], practicalTip: "Não comece pela tarefa mais importante. Comece pela tarefa mais verificável." },
-      { heading: "Monte a primeira instrução", body: "Uma boa instrução separa contexto, entrada, critérios e formato de saída. Preencha o modelo desta página com dados reais.", objective: "Transformar o caso mapeado em uma instrução que produza uma resposta consistente e fácil de revisar.", action: "Copie o modelo ‘Prompt para o primeiro piloto’, substitua todos os colchetes e cole abaixo a versão já preenchida.", example: "Exemplo de critério: ‘pedir somente os dados que ainda não foram informados, usar até 80 palavras e nunca sugerir preço’.", responsePrompt: "Cole aqui o prompt preenchido que será usado nos três testes.", responsePlaceholder: "Você vai me ajudar com...\nContexto:...\nEntrada:...\nCritérios:...\nNão faça:...\nFormato:...", completionCriterion: "Conclua quando não restar nenhum colchete e quando formato, limites e pelo menos três critérios verificáveis estiverem explícitos.", items: ["Defina o papel da IA naquela tarefa", "Cole somente os dados indispensáveis", "Escreva de três a cinco critérios observáveis", "Determine um formato de saída fácil de conferir"], practicalTip: "Troque palavras vagas como ‘bom’ e ‘profissional’ por critérios que você consegue apontar no resultado." },
-      { heading: "Teste lado a lado", body: "Use o mesmo caso na forma manual e com a IA. Compare qualidade, tempo e quantidade de correções, sem entregar o resultado automaticamente.", objective: "Descobrir se o prompt mantém a qualidade em situações diferentes, em vez de celebrar um único acerto.", action: "Rode um caso comum, um incompleto e um caso difícil. Para cada um, registre o que passou, o que falhou e a correção necessária.", example: "Exemplo: caso incompleto — passou em tom e tamanho; falhou ao repetir uma pergunta; correção — mandar ignorar campos que já estejam preenchidos.", responsePrompt: "Resuma o resultado dos três casos e liste os ajustes que apareceram mais de uma vez.", responsePlaceholder: "Caso 1: passou/falhou porque...\nCaso 2: passou/falhou porque...\nCaso 3: passou/falhou porque...\nAjuste recorrente:...", completionCriterion: "Conclua quando os três casos tiverem sido avaliados pelos mesmos critérios e nenhum resultado tiver sido usado sem revisão.", items: ["Rode um caso comum", "Rode um caso com informações faltando", "Rode um caso que costuma gerar erro", "Anote toda correção necessária"], practicalTip: "Um acerto isolado não prova consistência. Procure o mesmo padrão de qualidade em três exemplos." },
-      { heading: "Transforme o teste em uma decisão", body: "Documente somente depois que o fluxo funcionar. Registre quem usa, quando usar, como revisar e quando interromper.", objective: "Encerrar o exercício com uma decisão operacional clara, em vez de deixar o teste sem dono.", action: "Escolha uma decisão — descartar, ajustar ou adotar — e registre responsável, forma de revisão e data da próxima conferência.", example: "Exemplo: ‘Ajustar. Hernando revisa todas as respostas por duas semanas. Interromper se houver preço inventado. Rever em 15 de setembro.’", responsePrompt: "Registre sua decisão final, o responsável, a regra de revisão, a condição de interrupção e a data da próxima avaliação.", responsePlaceholder: "Decisão:...\nResponsável:...\nComo revisar:...\nInterromper se:...\nReavaliar em:...", completionCriterion: "Conclua quando existir uma pessoa responsável e uma regra objetiva para usar, interromper e reavaliar o piloto.", items: ["Escolha entre descartar, ajustar ou adotar", "Nomeie a pessoa responsável pela revisão", "Defina uma condição que interrompe o uso", "Marque a próxima data de avaliação"], practicalTip: "Automação sem responsável vira erro repetido. Mantenha uma revisão humana clara." },
-    ],
-    examples: [{ title: "Exemplo preenchido: pedido de orçamento", scenario: "Uma empresa recebe mensagens com serviço, prazo e cidade, mas perde tempo pedindo as mesmas informações antes de preparar o orçamento.", application: "A IA recebe a mensagem, identifica dados presentes e ausentes e devolve uma resposta curta pedindo apenas o que falta. A equipe revisa antes de enviar.", result: "O teste é aprovado quando a resposta não inventa preço, não repete perguntas já respondidas e lista corretamente os dados ausentes em três mensagens diferentes." }],
-    templates: [
-      { title: "Diagnóstico da tarefa", description: "Preencha os colchetes antes de pedir qualquer solução.", content: "Quero avaliar a tarefa [NOME DA TAREFA].\n\nEla começa quando [GATILHO].\nRecebo estas informações: [ENTRADAS].\nHoje eu preciso decidir: [DECISÕES].\nO resultado final deve ser: [SAÍDA].\nUma resposta boa obrigatoriamente: [CRITÉRIOS].\nNão pode: [LIMITES E RISCOS].\n\nAnalise se essa tarefa é adequada para um primeiro teste com IA. Aponte o trecho mais repetitivo, o que ainda exige revisão humana e quais três exemplos devo usar no teste." },
-      { title: "Prompt para o primeiro piloto", description: "Modelo pronto para adaptar e testar com três casos reais.", content: "Você vai me ajudar com [TAREFA].\n\nContexto:\n[EXPLIQUE A SITUAÇÃO EM 3 A 5 LINHAS]\n\nEntrada:\n[COLE UM EXEMPLO REAL SEM DADOS SENSÍVEIS]\n\nSua resposta precisa:\n1. [CRITÉRIO 1]\n2. [CRITÉRIO 2]\n3. [CRITÉRIO 3]\n\nNão faça:\n- [LIMITE 1]\n- [LIMITE 2]\n\nFormato de saída:\n[DEFINA TÓPICOS, TABELA, TEXTO OU JSON]\n\nAntes de responder, liste qualquer informação indispensável que esteja faltando. Não invente dados." },
-    ],
-    pitfalls: [
-      { mistake: "Tentar automatizar um processo inteiro de uma vez", correction: "Recorte uma única decisão ou produção repetitiva que possa ser conferida em poucos minutos." },
-      { mistake: "Testar somente com um exemplo fácil", correction: "Use um caso comum, um incompleto e um caso que costuma gerar erro." },
-      { mistake: "Pedir uma resposta ‘profissional’ sem critério", correction: "Defina tamanho, tom, informações obrigatórias e situações em que a IA deve parar." },
-      { mistake: "Colocar o resultado em uso sem revisão", correction: "Mantenha aprovação humana até o fluxo repetir a qualidade esperada em casos diferentes." },
-    ],
-    nextSteps: ["Escolha uma tarefa executada nos últimos sete dias", "Preencha o diagnóstico copiável desta página", "Rode o piloto com três exemplos e anote as correções", "Só depois transforme a versão aprovada em automação"],
-    closing: "O objetivo deste exercício não é automatizar tudo. É provar, com exemplos reais, que uma parte específica do trabalho pode ficar mais previsível sem perder controle.",
-  } }, profile.instagramHandle);
 }
 
 export class ContentStudioProvider {
   private client = env.OPENAI_API_KEY ? new OpenAI({ apiKey: env.OPENAI_API_KEY, timeout: 60_000, maxRetries: 2 }) : null;
 
   async generateConcepts(project: ContentProject, profile: CreatorProfile) {
-    if (isDemoMode || !this.client) return { concepts: fallbackConcepts(project).map((concept) => cleanConcept(concept, project.topic)), usage: { inputTokens: 0, outputTokens: 0 } };
-    const response = await this.client.responses.parse({ model: env.OPENAI_AUDIENCE_MODEL, store: false, instructions: `${BASE_PROMPT}\nGere exatamente três conceitos: seguro, provocativo e forte.`, input: JSON.stringify({ project, profile }), text: { format: zodTextFormat(contentConceptsOutputSchema, "content_concepts") } });
+    if (isDemoMode || !this.client) return { concepts: buildDemoConcepts(project).map((concept) => cleanConcept(concept, project.topic)), usage: { inputTokens: 0, outputTokens: 0 } };
+    const response = await this.client.responses.parse({ model: env.OPENAI_AUDIENCE_MODEL, store: false, instructions: `${BASE_PROMPT}\nGere exatamente três conceitos: seguro, provocativo e forte.`, input: JSON.stringify(buildConceptGenerationInput(project, profile)), text: { format: zodTextFormat(contentConceptsOutputSchema, "content_concepts") } });
     if (!response.output_parsed) throw new Error("A IA não retornou conceitos válidos.");
     return { concepts: response.output_parsed.concepts.map((concept) => cleanConcept(concept, project.topic)), usage: { inputTokens: response.usage?.input_tokens ?? 0, outputTokens: response.usage?.output_tokens ?? 0 } };
   }
 
   async generatePackage(project: ContentProject, concept: ContentConcept, profile: CreatorProfile) {
-    if (isDemoMode || !this.client) return { package: fallbackPackage(project, concept, profile), usage: { inputTokens: 0, outputTokens: 0 } };
-    const response = await this.client.responses.parse({ model: env.OPENAI_AUDIENCE_MODEL, store: false, instructions: `${BASE_PROMPT}\nGere o pacote completo. As respostas públicas e DMs não devem repetir o hook nem citar o título do Reel. O entregável deve ter conteúdo de verdade, pronto para uso.`, input: JSON.stringify({ project, selectedConcept: concept, profile }), text: { format: zodTextFormat(richContentPackageSchema, "content_package") } });
+    if (isDemoMode || !this.client) return { package: cleanPackage(buildDemoPackage(project, concept, profile), profile.instagramHandle), usage: { inputTokens: 0, outputTokens: 0 } };
+    const response = await this.client.responses.parse({ model: env.OPENAI_AUDIENCE_MODEL, store: false, instructions: `${BASE_PROMPT}\nGere o pacote completo. Respostas públicas e DMs não devem repetir o hook nem citar o título do Reel.`, input: JSON.stringify(buildPackageGenerationInput(project, concept, profile)), text: { format: zodTextFormat(richContentPackageSchema, "content_package") } });
     if (!response.output_parsed) throw new Error("A IA não retornou o pacote de conteúdo.");
     return { package: cleanPackage(response.output_parsed, profile.instagramHandle), usage: { inputTokens: response.usage?.input_tokens ?? 0, outputTokens: response.usage?.output_tokens ?? 0 } };
   }

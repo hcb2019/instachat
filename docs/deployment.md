@@ -53,7 +53,11 @@ Copie `.env.example` e cadastre os valores no painel da Vercel. Em produção:
 DEMO_MODE=false
 NEXT_PUBLIC_DEMO_MODE=false
 APP_ORIGIN=https://instachat.seudominio.com
+OPENAI_API_KEY=sk-...
+OPENAI_AUDIENCE_MODEL=gpt-5.6-terra
 ```
+
+`OPENAI_API_KEY` libera a redação completa por IA no Estúdio. Sem ela, o aplicativo usa uma geração local isolada por briefing e identifica esse modo na tela.
 
 Gere:
 

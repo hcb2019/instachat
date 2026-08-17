@@ -84,7 +84,11 @@ OWNER_EMAIL=seu-email@example.com
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=valor_exibido_pela_cli
 SUPABASE_SECRET_KEY=valor_exibido_pela_cli
+OPENAI_API_KEY=sk-...
+OPENAI_AUDIENCE_MODEL=gpt-5.6-terra
 ```
+
+A chave da OpenAI libera a redação completa por IA no Estúdio. Sem ela, o aplicativo usa geração local isolada por briefing e identifica esse modo na tela.
 
 Crie os demais segredos com valores diferentes:
 
