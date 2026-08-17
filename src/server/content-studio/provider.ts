@@ -1,7 +1,7 @@
 import "server-only";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
-import { contentConceptsOutputSchema, richContentPackageSchema } from "@/lib/content-studio";
+import { contentConceptsOutputSchema, parseStoredContentConcepts, richContentPackageSchema } from "@/lib/content-studio";
 import { env, isDemoMode } from "@/lib/env";
 import { HUMANIZER_PROMPT, formatInstagramCaption, humanizeText } from "@/lib/humanizer";
 import type { ContentConcept, ContentPackage, ContentProject, CreatorProfile } from "@/types/content-studio";
@@ -32,7 +32,8 @@ Adapte a profundidade ao tipo de material: prompt deve incluir contexto, variáv
 ${HUMANIZER_PROMPT}`;
 
 function cleanConcept(concept: ContentConcept): ContentConcept {
-  return { ...concept, title: humanizeText(concept.title), hook: humanizeText(concept.hook), angle: humanizeText(concept.angle), audiencePain: humanizeText(concept.audiencePain), promise: humanizeText(concept.promise), visualDirection: humanizeText(concept.visualDirection), deliverableIdea: humanizeText(concept.deliverableIdea), cta: humanizeText(concept.cta), keywords: concept.keywords.map((item) => item.normalize("NFKC").toLocaleUpperCase("pt-BR").replace(/[^\p{L}\p{N}]/gu, "").slice(0, 30)) as [string,string,string] };
+  const cleaned = { ...concept, title: humanizeText(concept.title), hook: humanizeText(concept.hook), angle: humanizeText(concept.angle), audiencePain: humanizeText(concept.audiencePain), promise: humanizeText(concept.promise), visualDirection: humanizeText(concept.visualDirection), deliverableIdea: humanizeText(concept.deliverableIdea), cta: humanizeText(concept.cta), keywords: concept.keywords.map((item) => item.normalize("NFKC").toLocaleUpperCase("pt-BR").replace(/[^\p{L}\p{N}]/gu, "").slice(0, 30)) as [string,string,string] };
+  return parseStoredContentConcepts([cleaned])[0] ?? concept;
 }
 
 function cleanPackage(value: ContentPackage, handle: string): ContentPackage {

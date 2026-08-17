@@ -613,6 +613,7 @@ h1, h2, h3, p { margin-top: 0; }
 .studio-title { display: flex; align-items: flex-start; gap: 15px; }
 .studio-title .eyebrow { margin-bottom: 5px; color: #f38a76; }
 .studio-title p:last-child { margin: 8px 0 0; color: #aaa398; font-size: 11px; }
+.studio-concepts-empty { padding: 30px; }
 .studio-mark { width: 46px; height: 46px; flex: none; display: grid; place-items: center; color: #24221d; background: var(--coral); border-radius: 14px 14px 4px 14px; }
 .idea-grid { margin-top: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .idea-card { min-width: 0; padding: 20px; color: var(--ink); background: var(--surface); border-radius: 12px; }

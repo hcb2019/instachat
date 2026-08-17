@@ -69,6 +69,28 @@ export async function generateContentPackage(formData: FormData) {
   revalidatePath(`/studio/${id}`); revalidatePath("/studio"); redirect(`/studio/${id}?generated=1`);
 }
 
+export async function regenerateContentConcepts(formData: FormData) {
+  const owner = await requireOwner();
+  const id = value(formData, "id");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+  const project = await getContentProject(id);
+  if (!project || project.contentPackage) return;
+  try {
+    const profile = await getCreatorProfile();
+    const generation = await new ContentStudioProvider().generateConcepts(project, profile);
+    if (isDemoMode) {
+      project.concepts = generation.concepts;
+      project.status = "idea";
+      project.updatedAt = new Date().toISOString();
+    } else {
+      const supabase = await createSupabaseServerClient();
+      await supabase.from("content_projects").update({ concepts: generation.concepts, status: "idea" }).eq("id", id).eq("owner_id", owner.id);
+    }
+  } catch { redirect(`/studio/${id}?error=concepts`); }
+  revalidatePath(`/studio/${id}`);
+  redirect(`/studio/${id}?regenerated=1`);
+}
+
 export async function saveContentPackage(_state: StudioActionState, formData: FormData): Promise<StudioActionState> {
   const owner = await requireOwner(); const id = value(formData,"id"); const project = await getContentProject(id);
   if (!project?.contentPackage) return { error: "Projeto não encontrado." };

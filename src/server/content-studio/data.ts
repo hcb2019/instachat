@@ -1,6 +1,6 @@
 import "server-only";
 import { requireOwner } from "@/lib/auth";
-import { contentConceptsOutputSchema, contentPackageSchema } from "@/lib/content-studio";
+import { contentPackageSchema, parseStoredContentConcepts } from "@/lib/content-studio";
 import { isDemoMode } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { demoStore } from "@/server/demo-store";
@@ -21,11 +21,11 @@ function mapProfile(row: Record<string, unknown> | null): CreatorProfile {
 }
 
 function mapProject(row: Record<string, unknown>, slug: string | null = null): ContentProject {
-  const concepts = contentConceptsOutputSchema.safeParse({ concepts: row.concepts });
+  const concepts = parseStoredContentConcepts(row.concepts);
   const contentPackage = contentPackageSchema.safeParse(row.content_package);
   return {
     id: String(row.id), ownerId: String(row.owner_id), sourceInsightId: row.source_insight_id ? String(row.source_insight_id) : null,
-    title: String(row.title), topic: String(row.topic), pillar: row.pillar as ContentProject["pillar"], primaryGoal: row.primary_goal as ContentProject["primaryGoal"], secondaryGoal: row.secondary_goal as ContentProject["secondaryGoal"], hookIntensity: row.hook_intensity as ContentProject["hookIntensity"], deliverableType: row.deliverable_type as ContentProject["deliverableType"], notes: String(row.notes ?? ""), status: row.status as ContentProject["status"], concepts: concepts.success ? concepts.data.concepts : [], selectedConceptIndex: row.selected_concept_index === null ? null : Number(row.selected_concept_index), contentPackage: contentPackage.success ? contentPackage.data : null, mediaId: row.media_id ? String(row.media_id) : null, automationId: row.automation_id ? String(row.automation_id) : null, deliverableSlug: slug, createdAt: String(row.created_at), updatedAt: String(row.updated_at),
+    title: String(row.title), topic: String(row.topic), pillar: row.pillar as ContentProject["pillar"], primaryGoal: row.primary_goal as ContentProject["primaryGoal"], secondaryGoal: row.secondary_goal as ContentProject["secondaryGoal"], hookIntensity: row.hook_intensity as ContentProject["hookIntensity"], deliverableType: row.deliverable_type as ContentProject["deliverableType"], notes: String(row.notes ?? ""), status: row.status as ContentProject["status"], concepts, selectedConceptIndex: row.selected_concept_index === null ? null : Number(row.selected_concept_index), contentPackage: contentPackage.success ? contentPackage.data : null, mediaId: row.media_id ? String(row.media_id) : null, automationId: row.automation_id ? String(row.automation_id) : null, deliverableSlug: slug, createdAt: String(row.created_at), updatedAt: String(row.updated_at),
   };
 }
 

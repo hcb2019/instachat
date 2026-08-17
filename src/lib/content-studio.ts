@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { contentGoals, contentPillars, deliverableTypes, hookIntensities } from "@/types/content-studio";
+import { contentGoals, contentPillars, deliverableTypes, hookIntensities, type ContentConcept } from "@/types/content-studio";
 
 export const creatorProfileSchema = z.object({
   instagramHandle: z.string().trim().regex(/^@[A-Za-z0-9._]{1,30}$/, "Use um @ válido."),
@@ -36,6 +36,44 @@ export const contentConceptSchema = z.object({
   keywords: z.tuple([z.string().trim().min(2).max(30), z.string().trim().min(2).max(30), z.string().trim().min(2).max(30)]),
 });
 export const contentConceptsOutputSchema = z.object({ concepts: z.array(contentConceptSchema).length(3) });
+
+const storedConceptSchema = z.object({
+  title: z.string().trim().min(1), style: z.string().optional(), hook: z.string().trim().min(1), angle: z.string().trim().min(1), audiencePain: z.string().trim().min(1), promise: z.string().trim().min(1), visualDirection: z.string().trim().min(1), deliverableIdea: z.string().trim().min(1), cta: z.string().trim().min(1), keywords: z.array(z.string()).min(1),
+});
+
+function fitStoredText(value: string, min: number, max: number, fallback: string) {
+  const clean = value.trim() || fallback;
+  const fitted = clean.length <= max ? clean : `${clean.slice(0, max - 1).trimEnd()}…`;
+  return fitted.length >= min ? fitted : fallback;
+}
+
+/** A single legacy field outside today's limits cannot hide every concept. */
+export function parseStoredContentConcepts(input: unknown): ContentConcept[] {
+  if (!Array.isArray(input)) return [];
+  const styles: ContentConcept["style"][] = ["safe", "provocative", "strong"];
+  const fallbackKeywords = ["GUIA", "MAPA", "PRONTO"];
+  return input.flatMap((item, index) => {
+    const parsed = storedConceptSchema.safeParse(item);
+    if (!parsed.success) return [];
+    const source = parsed.data;
+    const keywords = source.keywords.map((keyword) => keyword.normalize("NFKC").trim()).filter((keyword) => keyword.length >= 2).slice(0, 3);
+    while (keywords.length < 3) keywords.push(fallbackKeywords[keywords.length]);
+    const candidate: ContentConcept = {
+      title: fitStoredText(source.title, 2, 100, `Ideia ${index + 1}`),
+      style: hookIntensities.includes(source.style as ContentConcept["style"]) ? source.style as ContentConcept["style"] : styles[index % styles.length],
+      hook: fitStoredText(source.hook, 12, 180, "Uma ideia prática para melhorar seu próximo conteúdo"),
+      angle: fitStoredText(source.angle, 10, 500, "Mostre o problema com um exemplo real e indique uma ação simples."),
+      audiencePain: fitStoredText(source.audiencePain, 5, 300, "Dificuldade para transformar interesse em ação."),
+      promise: fitStoredText(source.promise, 5, 300, "Entender o próximo passo com clareza."),
+      visualDirection: fitStoredText(source.visualDirection, 5, 400, "Use uma cena simples com o texto centralizado na tela."),
+      deliverableIdea: fitStoredText(source.deliverableIdea, 5, 300, "Um material prático para aplicar a ideia."),
+      cta: fitStoredText(source.cta, 5, 240, "Comente GUIA para receber o material."),
+      keywords: keywords as [string, string, string],
+    };
+    const validated = contentConceptSchema.safeParse(candidate);
+    return validated.success ? [validated.data] : [];
+  });
+}
 
 const deliverableSectionSchema = z.object({
   heading: z.string().trim().min(2).max(100), body: z.string().trim().max(1200), items: z.array(z.string().trim().min(2).max(500)).max(12), practicalTip: z.string().trim().min(3).max(500).optional(),

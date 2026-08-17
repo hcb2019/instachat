@@ -78,7 +78,13 @@ test("creates a content package and copies the exact Instagram formatting", asyn
   await page.getByLabel("Assunto do Reel").fill("Como escolher uma tarefa repetitiva para automatizar com inteligência artificial");
   await page.getByRole("button", { name: "Gerar 3 ideias" }).click();
   await expect(page.locator(".studio-concept-card")).toHaveCount(3, { timeout: 15_000 });
-  await expect(page.locator(".studio-concept-card").first().getByRole("button", { name: "Copiar" }).first()).toBeVisible();
+  const firstConcept = page.locator(".studio-concept-card").first();
+  await expect(firstConcept).toBeVisible();
+  await expect(firstConcept.getByRole("button", { name: "Copiar" }).first()).toBeVisible();
+  const chooseConcept = firstConcept.getByRole("button", { name: /Escolher e gerar pacote/ });
+  await chooseConcept.scrollIntoViewIfNeeded();
+  await expect(chooseConcept).toBeInViewport();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(await page.evaluate(() => window.innerWidth));
   await page.getByRole("button", { name: /Escolher e gerar pacote/ }).first().click();
   await expect(page.getByRole("heading", { name: "Três tamanhos, a mesma ideia" })).toBeVisible({ timeout: 15_000 });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contentConceptsOutputSchema, contentPackageSchema, contentProjectInputSchema, richContentPackageSchema } from "@/lib/content-studio";
+import { contentConceptsOutputSchema, contentPackageSchema, contentProjectInputSchema, parseStoredContentConcepts, richContentPackageSchema } from "@/lib/content-studio";
 
 describe("content studio schemas", () => {
   it("aceita um projeto completo e mantém o segundo objetivo opcional", () => {
@@ -93,5 +93,26 @@ describe("content studio schemas", () => {
       },
     });
     expect(richResult.success).toBe(true);
+  });
+
+  it("recupera ideias antigas quando um texto ultrapassa o limite atual", () => {
+    const legacy = {
+      title: "Resposta de preço no Direct",
+      style: "provocative",
+      hook: "Responder apenas o preço pode encerrar a conversa antes de a pessoa entender o valor do serviço.",
+      angle: "A".repeat(560),
+      audiencePain: "A conversa termina antes da explicação do serviço.",
+      promise: "Ensinar uma resposta que explica valor e faz uma pergunta simples.",
+      visualDirection: "Texto fixo na tela sobre uma cena cotidiana.",
+      deliverableIdea: "Prompt para montar respostas de orçamento.",
+      cta: "Comente PREÇO para receber o material.",
+      keywords: ["PREÇO", "VALOR", "DIRECT"],
+    };
+
+    expect(contentConceptsOutputSchema.safeParse({ concepts: [legacy, legacy, legacy] }).success).toBe(false);
+    const recovered = parseStoredContentConcepts([legacy, legacy, legacy]);
+    expect(recovered).toHaveLength(3);
+    expect(recovered[0].angle.length).toBeLessThanOrEqual(500);
+    expect(recovered[0].hook).toContain("Responder apenas o preço");
   });
 });
