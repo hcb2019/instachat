@@ -3,6 +3,7 @@ import { requireOwner } from "@/lib/auth";
 import { contentPackageSchema, parseStoredContentConcepts } from "@/lib/content-studio";
 import { isDemoMode } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { humanizeContentHook } from "@/lib/humanizer";
 import { demoStore } from "@/server/demo-store";
 import type { ContentProject, CreatorProfile } from "@/types/content-studio";
 
@@ -23,9 +24,15 @@ function mapProfile(row: Record<string, unknown> | null): CreatorProfile {
 function mapProject(row: Record<string, unknown>, slug: string | null = null): ContentProject {
   const concepts = parseStoredContentConcepts(row.concepts);
   const contentPackage = contentPackageSchema.safeParse(row.content_package);
+  const repairedPackage = contentPackage.success ? (() => {
+    const originalHook = contentPackage.data.onScreenHook;
+    const repairedHook = humanizeContentHook(originalHook, String(row.topic));
+    const repairCaption = (caption: string) => originalHook === repairedHook ? caption : caption.replace(originalHook, repairedHook);
+    return { ...contentPackage.data, onScreenHook: repairedHook, shortCaption: repairCaption(contentPackage.data.shortCaption), mediumCaption: repairCaption(contentPackage.data.mediumCaption), fullCaption: repairCaption(contentPackage.data.fullCaption) };
+  })() : null;
   return {
     id: String(row.id), ownerId: String(row.owner_id), sourceInsightId: row.source_insight_id ? String(row.source_insight_id) : null,
-    title: String(row.title), topic: String(row.topic), pillar: row.pillar as ContentProject["pillar"], primaryGoal: row.primary_goal as ContentProject["primaryGoal"], secondaryGoal: row.secondary_goal as ContentProject["secondaryGoal"], hookIntensity: row.hook_intensity as ContentProject["hookIntensity"], deliverableType: row.deliverable_type as ContentProject["deliverableType"], notes: String(row.notes ?? ""), status: row.status as ContentProject["status"], concepts, selectedConceptIndex: row.selected_concept_index === null ? null : Number(row.selected_concept_index), contentPackage: contentPackage.success ? contentPackage.data : null, mediaId: row.media_id ? String(row.media_id) : null, automationId: row.automation_id ? String(row.automation_id) : null, deliverableSlug: slug, createdAt: String(row.created_at), updatedAt: String(row.updated_at),
+    title: String(row.title), topic: String(row.topic), pillar: row.pillar as ContentProject["pillar"], primaryGoal: row.primary_goal as ContentProject["primaryGoal"], secondaryGoal: row.secondary_goal as ContentProject["secondaryGoal"], hookIntensity: row.hook_intensity as ContentProject["hookIntensity"], deliverableType: row.deliverable_type as ContentProject["deliverableType"], notes: String(row.notes ?? ""), status: row.status as ContentProject["status"], concepts, selectedConceptIndex: row.selected_concept_index === null ? null : Number(row.selected_concept_index), contentPackage: repairedPackage, mediaId: row.media_id ? String(row.media_id) : null, automationId: row.automation_id ? String(row.automation_id) : null, deliverableSlug: slug, createdAt: String(row.created_at), updatedAt: String(row.updated_at),
   };
 }
 

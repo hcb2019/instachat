@@ -4,7 +4,7 @@
  * A primeira camada orienta o modelo. A segunda remove, no servidor, marcas
  * recorrentes de texto artificial antes de o conteúdo chegar ao usuário.
  */
-export const HUMANIZER_VERSION = "humanizer-v1";
+export const HUMANIZER_VERSION = "humanizer-v2";
 
 export const HUMANIZER_PROMPT = `
 REVISÃO EDITORIAL OBRIGATÓRIA (${HUMANIZER_VERSION}):
@@ -74,6 +74,35 @@ export function humanizeText(input: string) {
     .trim();
 
   return value.replace(/^([a-záàâãéêíóôõúç])/, (letter) => letter.toLocaleUpperCase("pt-BR"));
+}
+
+function firstBriefingSentence(input: string) {
+  return humanizeText(input).split(/(?<=[.!?])\s+/u)[0]
+    .replace(/^(?:mostrar|demonstrar|explicar|ensinar|falar)(?:\s+(?:sobre|como))?\s+(?:que\s+)?/iu, "")
+    .trim();
+}
+
+function naturalizeHookPhrases(input: string) {
+  return input
+    .replace(/\bresponder apenas\b/giu, "responder só")
+    .replace(/\bpergunta preço\b/giu, "pergunta o preço")
+    .replace(/\bantes de a pessoa entender o serviço\b/giu, "antes que a pessoa entenda o valor do seu trabalho")
+    .replace(/\br\$\s*x\b/giu, "R$ X");
+}
+
+/** Transforma uma instrução de pauta em uma frase que possa ser lida em voz alta. */
+export function briefingToNaturalHook(topic: string) {
+  const core = naturalizeHookPhrases(firstBriefingSentence(topic));
+  if (!core) return "Mostre uma situação real e deixe a explicação completa para a legenda.";
+  return humanizeText(core);
+}
+
+/** Corrige hooks antigos que receberam o comando do briefing como texto literal. */
+export function humanizeContentHook(input: string, topic?: string) {
+  const cleaned = humanizeText(input);
+  const containsBriefingCommand = /\b(?:faz|fazer|vai)\s+(?:mostrar|demonstrar|explicar|ensinar|falar)\b/iu.test(cleaned)
+    || /^(?:mostrar|demonstrar|explicar|ensinar|falar)\b/iu.test(cleaned);
+  return containsBriefingCommand && topic ? briefingToNaturalHook(topic) : humanizeText(naturalizeHookPhrases(cleaned));
 }
 
 /**

@@ -75,11 +75,13 @@ test("creates a content package and copies the exact Instagram formatting", asyn
   await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: "http://localhost:3000" });
   await page.goto("/studio/new");
   await page.getByLabel("Nome interno").fill("Primeira automação com IA");
-  await page.getByLabel("Assunto do Reel").fill("Como escolher uma tarefa repetitiva para automatizar com inteligência artificial");
+  await page.getByLabel("Assunto do Reel").fill('Mostrar que responder apenas "R$ X" quando alguém pergunta preço pode encerrar a conversa antes de a pessoa entender o serviço. Ensinar a explicar valor.');
   await page.getByRole("button", { name: "Gerar 3 ideias" }).click();
   await expect(page.locator(".studio-concept-card")).toHaveCount(3, { timeout: 15_000 });
   const firstConcept = page.locator(".studio-concept-card").first();
   await expect(firstConcept).toBeVisible();
+  await expect(firstConcept.getByRole("heading")).toHaveText('Responder só "R$ X" quando alguém pergunta o preço pode encerrar a conversa antes que a pessoa entenda o valor do seu trabalho.');
+  await expect(firstConcept).not.toContainText("faz mostrar");
   await expect(firstConcept.getByRole("button", { name: "Copiar" }).first()).toBeVisible();
   const chooseConcept = firstConcept.getByRole("button", { name: /Escolher e gerar pacote/ });
   await chooseConcept.scrollIntoViewIfNeeded();
