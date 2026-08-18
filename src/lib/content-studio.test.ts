@@ -1,7 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { contentConceptsOutputSchema, contentPackageSchema, contentProjectInputSchema, parseStoredContentConcepts, richContentPackageSchema } from "@/lib/content-studio";
+import { zodTextFormat } from "openai/helpers/zod";
+import { contentConceptsOutputSchema, contentPackageSchema, contentProjectInputSchema, openAIContentConceptsOutputSchema, openAIContentPackageSchema, parseStoredContentConcepts, richContentPackageSchema } from "@/lib/content-studio";
+
+function findTupleItems(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(findTupleItems);
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  if (Array.isArray(record.items)) return true;
+  return Object.values(record).some(findTupleItems);
+}
 
 describe("content studio schemas", () => {
+  it("gera schemas compatíveis com Structured Outputs sem tuplas JSON Schema", () => {
+    const conceptsFormat = zodTextFormat(openAIContentConceptsOutputSchema, "content_concepts");
+    const packageFormat = zodTextFormat(openAIContentPackageSchema, "content_package");
+
+    expect(findTupleItems(conceptsFormat.schema)).toBe(false);
+    expect(findTupleItems(packageFormat.schema)).toBe(false);
+  });
+
   it("aceita um projeto completo e mantém o segundo objetivo opcional", () => {
     const result = contentProjectInputSchema.safeParse({
       title: "IA sem complicação",

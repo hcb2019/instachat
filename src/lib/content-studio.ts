@@ -37,6 +37,13 @@ export const contentConceptSchema = z.object({
 });
 export const contentConceptsOutputSchema = z.object({ concepts: z.array(contentConceptSchema).length(3) });
 
+// OpenAI Structured Outputs accepts homogeneous arrays, but not JSON Schema
+// tuples (`items: [...]`). Keep tuples in the domain schema and use arrays
+// with an exact length only for the schema sent to the Responses API.
+const openAIThreeKeywordsSchema = z.array(z.string().trim().min(2).max(30)).length(3);
+const openAIContentConceptSchema = contentConceptSchema.extend({ keywords: openAIThreeKeywordsSchema });
+export const openAIContentConceptsOutputSchema = z.object({ concepts: z.array(openAIContentConceptSchema).length(3) });
+
 const storedConceptSchema = z.object({
   title: z.string().trim().min(1), style: z.string().optional(), hook: z.string().trim().min(1), angle: z.string().trim().min(1), audiencePain: z.string().trim().min(1), promise: z.string().trim().min(1), visualDirection: z.string().trim().min(1), deliverableIdea: z.string().trim().min(1), cta: z.string().trim().min(1), keywords: z.array(z.string()).min(1),
 });
@@ -103,6 +110,11 @@ export const contentPackageSchema = z.object({
   deliverable: generatedDeliverableSchema,
 });
 export const richContentPackageSchema = contentPackageSchema.extend({ deliverable: richGeneratedDeliverableSchema });
+export const openAIContentPackageSchema = richContentPackageSchema.extend({
+  keywordSuggestions: openAIThreeKeywordsSchema,
+  publicReplies: z.array(z.string().trim().min(8).max(110)).length(3),
+  dmMessages: z.array(z.string().trim().min(12).max(150)).length(3),
+});
 
 export const pillarLabel = (value: string) => ({ ai_business: "IA para negócios", automation_productivity: "Automação e produtividade", content_sales: "Conteúdo e vendas" }[value] ?? value);
 export const goalLabel = (value: string) => ({ leads: "Gerar comentários e leads", followers: "Ganhar seguidores", saves: "Gerar salvamentos", shares: "Gerar compartilhamentos", education: "Educar a audiência", offer: "Apresentar uma oferta" }[value] ?? value);
