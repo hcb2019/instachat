@@ -7,6 +7,7 @@ import { requireOwner } from "@/lib/auth";
 import { contentPackageSchema, contentProjectInputSchema, creatorProfileSchema } from "@/lib/content-studio";
 import { buildKeywordVariants, normalizeKeyword } from "@/lib/domain";
 import { formatInstagramCaption, humanizeText } from "@/lib/humanizer";
+import { getOpenAIErrorDetails, getStudioGenerationError } from "@/lib/openai-error";
 import { env, isDemoMode } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ContentStudioProvider, CONTENT_PROMPT_VERSION } from "@/server/content-studio/provider";
@@ -38,7 +39,10 @@ export async function createContentProject(_state: StudioActionState, formData: 
       await supabase.from("content_generation_runs").insert({ owner_id: owner.id, project_id: base.id, stage: "concepts", model: env.OPENAI_API_KEY ? env.OPENAI_AUDIENCE_MODEL : "local-fallback", prompt_version: CONTENT_PROMPT_VERSION, status: "succeeded", input_tokens: generation.usage.inputTokens, output_tokens: generation.usage.outputTokens, duration_ms: Date.now() - started });
       if (base.sourceInsightId) await supabase.from("audience_insights").update({ content_project_id: base.id, status: "converted" }).eq("id", base.sourceInsightId).eq("owner_id", owner.id);
     }
-  } catch { return { error: "Não foi possível gerar as ideias agora. Tente novamente." }; }
+  } catch (error) {
+    console.error("content_studio_generation_failed", getOpenAIErrorDetails(error));
+    return { error: getStudioGenerationError(error) };
+  }
   revalidatePath("/studio");
   redirect(`/studio/${base.id}`);
 }
@@ -65,7 +69,10 @@ export async function generateContentPackage(formData: FormData) {
       await supabase.from("deliverables").upsert({ owner_id: owner.id, project_id: id, type: project.deliverableType, title: generation.package.deliverable.title, summary: generation.package.deliverable.summary, content: generation.package.deliverable, public_slug: slug, status: "published", published_at: new Date().toISOString() }, { onConflict: "project_id" });
       await supabase.from("content_generation_runs").insert({ owner_id: owner.id, project_id: id, stage: "package", model: env.OPENAI_API_KEY ? env.OPENAI_AUDIENCE_MODEL : "local-fallback", prompt_version: CONTENT_PROMPT_VERSION, status: "succeeded", input_tokens: generation.usage.inputTokens, output_tokens: generation.usage.outputTokens, duration_ms: Date.now() - started });
     }
-  } catch { redirect(`/studio/${id}?error=generation`); }
+  } catch (error) {
+    console.error("content_studio_package_generation_failed", getOpenAIErrorDetails(error));
+    redirect(`/studio/${id}?error=generation`);
+  }
   revalidatePath(`/studio/${id}`); revalidatePath("/studio"); redirect(`/studio/${id}?generated=1`);
 }
 
@@ -86,7 +93,10 @@ export async function regenerateContentConcepts(formData: FormData) {
       const supabase = await createSupabaseServerClient();
       await supabase.from("content_projects").update({ concepts: generation.concepts, status: "idea" }).eq("id", id).eq("owner_id", owner.id);
     }
-  } catch { redirect(`/studio/${id}?error=concepts`); }
+  } catch (error) {
+    console.error("content_studio_concept_regeneration_failed", getOpenAIErrorDetails(error));
+    redirect(`/studio/${id}?error=concepts`);
+  }
   revalidatePath(`/studio/${id}`);
   redirect(`/studio/${id}?regenerated=1`);
 }

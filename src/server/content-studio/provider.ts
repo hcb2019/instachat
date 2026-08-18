@@ -5,6 +5,7 @@ import { contentConceptsOutputSchema, parseStoredContentConcepts, richContentPac
 import { buildConceptGenerationInput, buildDemoConcepts, buildDemoPackage, buildPackageGenerationInput } from "@/lib/content-studio-generation";
 import { env, isDemoMode } from "@/lib/env";
 import { HUMANIZER_PROMPT, formatInstagramCaption, humanizeContentHook, humanizeText } from "@/lib/humanizer";
+import { hasValidOpenAIKeyShape } from "@/lib/openai-error";
 import type { ContentConcept, ContentPackage, ContentProject, CreatorProfile } from "@/types/content-studio";
 
 export const CONTENT_PROMPT_VERSION = "content-studio-v5-project-isolation";
@@ -86,6 +87,7 @@ export class ContentStudioProvider {
 
   async generateConcepts(project: ContentProject, profile: CreatorProfile) {
     if (isDemoMode || !this.client) return { concepts: buildDemoConcepts(project).map((concept) => cleanConcept(concept, project.topic)), usage: { inputTokens: 0, outputTokens: 0 } };
+    if (!hasValidOpenAIKeyShape(env.OPENAI_API_KEY)) throw Object.assign(new Error("Invalid OpenAI API key configuration"), { status: 401, code: "invalid_api_key" });
     const response = await this.client.responses.parse({ model: env.OPENAI_AUDIENCE_MODEL, store: false, instructions: `${BASE_PROMPT}\nGere exatamente três conceitos: seguro, provocativo e forte.`, input: JSON.stringify(buildConceptGenerationInput(project, profile)), text: { format: zodTextFormat(contentConceptsOutputSchema, "content_concepts") } });
     if (!response.output_parsed) throw new Error("A IA não retornou conceitos válidos.");
     return { concepts: response.output_parsed.concepts.map((concept) => cleanConcept(concept, project.topic)), usage: { inputTokens: response.usage?.input_tokens ?? 0, outputTokens: response.usage?.output_tokens ?? 0 } };
@@ -93,6 +95,7 @@ export class ContentStudioProvider {
 
   async generatePackage(project: ContentProject, concept: ContentConcept, profile: CreatorProfile) {
     if (isDemoMode || !this.client) return { package: cleanPackage(buildDemoPackage(project, concept, profile), profile.instagramHandle), usage: { inputTokens: 0, outputTokens: 0 } };
+    if (!hasValidOpenAIKeyShape(env.OPENAI_API_KEY)) throw Object.assign(new Error("Invalid OpenAI API key configuration"), { status: 401, code: "invalid_api_key" });
     const response = await this.client.responses.parse({ model: env.OPENAI_AUDIENCE_MODEL, store: false, instructions: `${BASE_PROMPT}\nGere o pacote completo. Respostas públicas e DMs não devem repetir o hook nem citar o título do Reel.`, input: JSON.stringify(buildPackageGenerationInput(project, concept, profile)), text: { format: zodTextFormat(richContentPackageSchema, "content_package") } });
     if (!response.output_parsed) throw new Error("A IA não retornou o pacote de conteúdo.");
     return { package: cleanPackage(response.output_parsed, profile.instagramHandle), usage: { inputTokens: response.usage?.input_tokens ?? 0, outputTokens: response.usage?.output_tokens ?? 0 } };
