@@ -7,7 +7,8 @@ import { requireOwner } from "@/lib/auth";
 import { contentPackageSchema, contentProjectInputSchema, creatorProfileSchema } from "@/lib/content-studio";
 import { buildKeywordVariants, normalizeKeyword } from "@/lib/domain";
 import { formatInstagramCaption, humanizeText } from "@/lib/humanizer";
-import { getOpenAIErrorDetails, getStudioGenerationError } from "@/lib/openai-error";
+import { getOpenAIErrorDetails, getStudioGenerationError, getStudioGenerationErrorCode } from "@/lib/openai-error";
+import { ensureDatabaseWrite } from "@/lib/persistence";
 import { env, isDemoMode } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ContentStudioProvider, CONTENT_PROMPT_VERSION } from "@/server/content-studio/provider";
@@ -65,13 +66,24 @@ export async function generateContentPackage(formData: FormData) {
       Object.assign(project, { selectedConceptIndex: selectedIndex, contentPackage: generation.package, status: "ready", deliverableSlug: slug, updatedAt: new Date().toISOString() });
     } else {
       const supabase = await createSupabaseServerClient();
-      await supabase.from("content_projects").update({ selected_concept_index: selectedIndex, content_package: generation.package, status: "ready" }).eq("id", id).eq("owner_id", owner.id);
-      await supabase.from("deliverables").upsert({ owner_id: owner.id, project_id: id, type: project.deliverableType, title: generation.package.deliverable.title, summary: generation.package.deliverable.summary, content: generation.package.deliverable, public_slug: slug, status: "published", published_at: new Date().toISOString() }, { onConflict: "project_id" });
-      await supabase.from("content_generation_runs").insert({ owner_id: owner.id, project_id: id, stage: "package", model: env.OPENAI_API_KEY ? env.OPENAI_AUDIENCE_MODEL : "local-fallback", prompt_version: CONTENT_PROMPT_VERSION, status: "succeeded", input_tokens: generation.usage.inputTokens, output_tokens: generation.usage.outputTokens, duration_ms: Date.now() - started });
+      const { error: savePackageError } = await supabase.rpc("save_content_package", {
+        p_project_id: id,
+        p_selected_concept_index: selectedIndex,
+        p_content_package: generation.package,
+        p_deliverable_type: project.deliverableType,
+        p_deliverable_title: generation.package.deliverable.title,
+        p_deliverable_summary: generation.package.deliverable.summary,
+        p_deliverable_content: generation.package.deliverable,
+        p_public_slug: slug,
+        p_published_at: new Date().toISOString(),
+      });
+      ensureDatabaseWrite(savePackageError, "salvar o pacote");
+      const { error: generationRunError } = await supabase.from("content_generation_runs").insert({ owner_id: owner.id, project_id: id, stage: "package", model: env.OPENAI_API_KEY ? env.OPENAI_AUDIENCE_MODEL : "local-fallback", prompt_version: CONTENT_PROMPT_VERSION, status: "succeeded", input_tokens: generation.usage.inputTokens, output_tokens: generation.usage.outputTokens, duration_ms: Date.now() - started });
+      if (generationRunError) console.error("content_studio_package_run_record_failed", getOpenAIErrorDetails(generationRunError));
     }
   } catch (error) {
     console.error("content_studio_package_generation_failed", getOpenAIErrorDetails(error));
-    redirect(`/studio/${id}?error=generation`);
+    redirect(`/studio/${id}?error=package_${getStudioGenerationErrorCode(error)}`);
   }
   revalidatePath(`/studio/${id}`); revalidatePath("/studio"); redirect(`/studio/${id}?generated=1`);
 }

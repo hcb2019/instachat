@@ -9,14 +9,33 @@ import { env } from "@/lib/env";
 import { getContentProject } from "@/server/content-studio/data";
 import { listMedia } from "@/server/data";
 
+const studioErrorMessages: Record<string, string> = {
+  package_invalid_api_key: "A chave da OpenAI configurada no servidor é inválida. Atualize a OPENAI_API_KEY e faça um novo deploy.",
+  package_insufficient_quota: "A conta da OpenAI está sem saldo ou sem faturamento ativo. Confira a cobrança do projeto da API e tente novamente.",
+  package_model_not_found: "O modelo configurado não está disponível para este projeto da OpenAI. Confira OPENAI_AUDIENCE_MODEL na Vercel.",
+  package_rate_limited: "A OpenAI atingiu um limite temporário de uso. Aguarde um instante e tente novamente.",
+  package_connection_failed: "A OpenAI demorou para responder. Seu texto foi mantido; tente gerar novamente em instantes.",
+  package_invalid_request: "A OpenAI recusou a configuração desta geração. Confira o modelo configurado ou tente novamente após atualizar o aplicativo.",
+  package_generation_failed: "Não foi possível gerar o pacote agora. Seus campos foram mantidos para você tentar novamente.",
+  concepts: "Não foi possível gerar as ideias novamente. Tente em instantes.",
+  deliverable: "O material não está disponível para criar a automação.",
+  connection: "Conecte o Instagram antes de criar a automação.",
+  automation: "Não foi possível criar a automação. Tente novamente.",
+};
+
+function studioErrorMessage(error: string | undefined) {
+  return error ? studioErrorMessages[error] ?? "Não foi possível concluir essa etapa. Tente novamente." : null;
+}
+
 export default async function StudioProjectPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ generated?: string; error?: string }> }) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const [project, media] = await Promise.all([getContentProject(id), listMedia()]);
+  const errorMessage = studioErrorMessage(query.error);
   if (!project) notFound();
 
   return <div className="page-shell studio-detail">
     <header className="page-header compact"><div><p className="eyebrow">Projeto de conteúdo</p><h1>{project.title}</h1><p>{project.topic}</p></div><div className="studio-detail-meta"><Badge tone={project.contentPackage ? "success" : "accent"}>{project.contentPackage ? "Pacote pronto" : "Escolha uma ideia"}</Badge><span>{pillarLabel(project.pillar)}</span><span>{goalLabel(project.primaryGoal)}</span></div></header>
-    {query.error && <p className="form-alert">Não foi possível concluir essa etapa. Tente novamente.</p>}
+    {errorMessage && <p className="form-alert" role="alert">{errorMessage}</p>}
     {!project.contentPackage ? project.concepts.length > 0 ? <>
       <section className="studio-choice-intro"><Sparkles size={21}/><div><strong>Escolha o caminho que mais parece com você</strong><p>As ideias atacam o mesmo assunto de jeitos diferentes. Nada é definitivo: depois você poderá editar cada linha.</p></div></section>
       <div className="studio-concept-grid">{project.concepts.map((concept, index) => <article className={`card studio-concept-card concept-${concept.style}`} key={`${index}-${concept.title}`}>
