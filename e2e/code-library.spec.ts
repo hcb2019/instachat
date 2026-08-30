@@ -11,10 +11,10 @@ test("searches and filters the public AI code directory", async ({ page }) => {
   await expect(page.getByRole("listitem")).toHaveCount(48);
 
   const search = page.getByRole("searchbox", { name: "Buscar códigos" });
+  await search.fill("hdreal");
   const copy = page.getByRole("button", { name: "Copiar /HDREAL" });
   await expect(copy).toBeVisible();
 
-  await search.fill("hdreal");
   await expect(page.getByText("/HDREAL", { exact: true })).toBeVisible();
   await expect(page.getByText("/PROSHOT", { exact: true })).toHaveCount(0);
 
