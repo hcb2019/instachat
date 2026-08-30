@@ -7,6 +7,10 @@ export const metadata: Metadata = {
   description: "Biblioteca gratuita de códigos curtos para melhorar fotos, criar estilos, mudar cenários e transformar ideias em visuais.",
 };
 
+// The proxy generates a per-request CSP nonce. This route contains interactive
+// client controls, so it cannot be statically prerendered without that nonce.
+export const dynamic = "force-dynamic";
+
 export default function CommandsPage() {
   return (
     <div className="code-library-page">

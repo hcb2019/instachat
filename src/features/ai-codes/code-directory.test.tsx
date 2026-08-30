@@ -1,11 +1,25 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { CodeDirectory } from "./code-directory";
 
 const writeText = vi.fn().mockResolvedValue(undefined);
 
+afterEach(() => {
+  cleanup();
+  writeText.mockClear();
+});
+
 describe("CodeDirectory", () => {
+  it("reveals the next batch when the visitor chooses to show more", async () => {
+    const user = userEvent.setup();
+    render(<CodeDirectory writeToClipboard={writeText} />);
+
+    expect(screen.getAllByRole("listitem")).toHaveLength(24);
+    await user.click(screen.getByRole("button", { name: /Mostrar mais códigos/i }));
+    expect(screen.getAllByRole("listitem")).toHaveLength(48);
+  });
+
   it("searches, filters, copies only the code, and shows an empty state", async () => {
     const user = userEvent.setup();
     render(<CodeDirectory writeToClipboard={writeText} />);

@@ -21,1393 +21,1393 @@ export const CODE_CATEGORIES = [
 ] as const;
 
 export const CODE_CATALOG: AiCode[] = [
-  { "code": "/FLOWCHART", "description": "Organiza um processo em fluxograma.", "category": "Transformações" },
-  { "code": "/STATISTICAL", "description": "Transforma dados em um visual informativo.", "category": "Transformações" },
-  { "code": "/TIMELINE-INFOGRAFIC", "description": "Organiza fatos em uma linha do tempo visual.", "category": "Transformações" },
-  { "code": "/TOGETHER", "description": "Reúne pessoas em uma mesma imagem.", "category": "Transformações" },
+  { "code": "/FLOWCHART", "description": "Converte o conteúdo em um fluxograma visual claro.", "category": "Transformações" },
+  { "code": "/STATISTICAL", "description": "Apresenta os dados como uma composição estatística visual.", "category": "Transformações" },
+  { "code": "/TIMELINE-INFOGRAFIC", "description": "Monta um infográfico em formato de linha do tempo.", "category": "Transformações" },
+  { "code": "/TOGETHER", "description": "Coloca as pessoas juntas na mesma composição fotográfica.", "category": "Transformações" },
   {
     "code": "/4K",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Eleva a imagem para acabamento visual em resolução 4K.",
     "category": "Melhorar foto"
   },
   {
     "code": "/8K",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Amplia a definição da imagem para qualidade visual 8K.",
     "category": "Melhorar foto"
   },
   {
     "code": "/ACTIONFIGURE",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Transforma a pessoa em uma figura de ação colecionável.",
     "category": "Arte e personagens"
   },
   {
     "code": "/AESTHETIC",
-    "description": "Aplica estética, época ou efeito visual.",
+    "description": "Aplica à imagem uma estética visual harmoniosa e marcante.",
     "category": "Estilos e efeitos"
   },
   {
     "code": "/AIAVATAR",
-    "description": "Prepara uma imagem para perfil ou redes sociais.",
+    "description": "Gera um avatar de inteligência artificial a partir da pessoa.",
     "category": "Perfil e social"
   },
   {
     "code": "/ALTLIFE",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Retrata a pessoa vivendo uma versão alternativa de sua vida.",
     "category": "Transformações"
   },
   {
     "code": "/ANCIENTEGYPT",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Transporta a cena para a estética do Egito Antigo.",
     "category": "Transformações"
   },
   {
     "code": "/ANCIENTROME",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Reimagina a imagem no contexto visual da Roma Antiga.",
     "category": "Transformações"
   },
   {
     "code": "/ANIME",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Redesenha a imagem com traços característicos de anime.",
     "category": "Arte e personagens"
   },
   {
     "code": "/ASTRONAUT",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Mostra a pessoa caracterizada como astronauta.",
     "category": "Transformações"
   },
   {
     "code": "/AURORA",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Adiciona uma aurora luminosa ao céu da composição.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/AUTUMN",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Transforma o ambiente em uma cena típica de outono.",
     "category": "Transformações"
   },
   {
     "code": "/AVATAR",
-    "description": "Prepara uma imagem para perfil ou redes sociais.",
+    "description": "Cria uma representação visual da pessoa para uso como avatar.",
     "category": "Perfil e social"
   },
   {
     "code": "/BACKVIEW",
-    "description": "Muda enquadramento, lente ou perspectiva.",
+    "description": "Recompõe o retrato mostrando a pessoa vista de costas.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/BEARD",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Adiciona ou modifica a barba no rosto retratado.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/BEAUTY",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Realça visualmente a beleza natural da pessoa.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/BESTLOOK",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Apresenta a pessoa em sua melhor versão visual.",
     "category": "Transformações"
   },
   {
     "code": "/BGBLUR",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Desfoca apenas o fundo para destacar o assunto principal.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/BGCINEMATIC",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Substitui o fundo por um cenário de linguagem cinematográfica.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/BGCITY",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Posiciona o assunto diante de um cenário urbano.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/BGDEPTH",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Cria profundidade visual entre o assunto e o fundo.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/BGLUXURY",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Troca o fundo por um ambiente de aparência luxuosa.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/BGNATURE",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Insere um fundo composto por elementos da natureza.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/BGPRO",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Aplica um fundo com acabamento fotográfico profissional.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/BGREMOVE",
-    "description": "Remove o fundo da imagem.",
+    "description": "Recorta o assunto e remove completamente o fundo original.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/BGSTUDIO",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Coloca o assunto diante de um fundo típico de estúdio.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/BILLBOARDME",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Exibe a pessoa como destaque visual em um grande outdoor.",
     "category": "Transformações"
   },
   {
     "code": "/BIOLUMINESCENT",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Adiciona elementos com brilho bioluminescente à cena.",
     "category": "Transformações"
   },
   {
     "code": "/BIRDEYEVIEW",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Mostra a composição pela perspectiva aérea de um pássaro.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/BIRTHDAYBALLOONS",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Decora a imagem de aniversário com balões festivos.",
     "category": "Melhorar foto"
   },
   {
     "code": "/BIRTHDAYCAKE",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Inclui um bolo como elemento central da celebração de aniversário.",
     "category": "Melhorar foto"
   },
   {
     "code": "/BIRTHDAYCARD",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Transforma a foto em um cartão visual de aniversário.",
     "category": "Melhorar foto"
   },
   {
     "code": "/BIRTHDAYCOLLAGE",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Reúne fotos em uma colagem comemorativa de aniversário.",
     "category": "Melhorar foto"
   },
   {
     "code": "/BIRTHDAYGLOW",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Acrescenta um brilho festivo à cena de aniversário.",
     "category": "Melhorar foto"
   },
   {
     "code": "/BIRTHDAYKING",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Retrata o aniversariante como rei da comemoração.",
     "category": "Melhorar foto"
   },
   {
     "code": "/BIRTHDAYMEMORY",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Cria uma lembrança visual afetiva do aniversário.",
     "category": "Melhorar foto"
   },
   {
     "code": "/BIRTHDAYPARTY",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Converte a cena em uma animada festa de aniversário.",
     "category": "Melhorar foto"
   },
   {
     "code": "/BIRTHDAYPOSTER",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Monta um pôster comemorativo para o aniversário.",
     "category": "Melhorar foto"
   },
   {
     "code": "/BIRTHDAYQUEEN",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Retrata a aniversariante como rainha da comemoração.",
     "category": "Melhorar foto"
   },
   {
     "code": "/BIRTHDAYREEL",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Prepara um visual vertical para reel de aniversário.",
     "category": "Melhorar foto"
   },
   {
     "code": "/BIRTHDAYSTORY",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Formata a imagem como story comemorativo de aniversário.",
     "category": "Melhorar foto"
   },
   {
     "code": "/BIRTHDAYWISH",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Cria uma mensagem visual de felicitação pelo aniversário.",
     "category": "Melhorar foto"
   },
   {
     "code": "/BLOCKWORLD",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Reconstrói a cena como um mundo formado por blocos.",
     "category": "Transformações"
   },
   {
     "code": "/BLURFIX",
-    "description": "Reduz o desfoque da foto.",
+    "description": "Corrige o desfoque indesejado presente na imagem.",
     "category": "Transformações"
   },
   {
     "code": "/BOKEH",
-    "description": "Desfoca o fundo, como em lente DSLR.",
+    "description": "Cria círculos de bokeh no fundo desfocado da foto.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/CAMERAREADY",
-    "description": "Muda enquadramento, lente ou perspectiva.",
+    "description": "Dá ao retrato aparência pronta para ser fotografada.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/CANDID",
-    "description": "Muda enquadramento, lente ou perspectiva.",
+    "description": "Recria o momento com aspecto espontâneo e não posado.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/CANDIDLOOK",
-    "description": "Muda enquadramento, lente ou perspectiva.",
+    "description": "Deixa a pose e a expressão com naturalidade de flagrante.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/CANDLEWISH",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Mostra o instante de fazer um pedido diante das velas.",
     "category": "Transformações"
   },
   {
     "code": "/CASUAL",
-    "description": "Altera roupa, look ou linguagem de estilo.",
+    "description": "Veste a pessoa com um look informal e cotidiano.",
     "category": "Roupa e estilo"
   },
   {
     "code": "/CASUALSTYLE",
-    "description": "Altera roupa, look ou linguagem de estilo.",
+    "description": "Aplica uma linguagem de moda casual à composição.",
     "category": "Roupa e estilo"
   },
   {
     "code": "/CHARCOAL",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Redesenha a imagem como ilustração feita a carvão.",
     "category": "Arte e personagens"
   },
   {
     "code": "/CHIBI",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Converte a pessoa em personagem chibi de proporções fofas.",
     "category": "Transformações"
   },
   {
     "code": "/CHILDHOODME",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Reimagina a pessoa com a aparência de sua infância.",
     "category": "Transformações"
   },
   {
     "code": "/CINEMATIC",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Confere à cena composição e atmosfera de cinema.",
     "category": "Transformações"
   },
   {
     "code": "/CITYBG",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Troca o plano de fundo por uma paisagem de cidade.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/CLAY",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Modela o assunto visualmente como uma escultura de argila.",
     "category": "Arte e personagens"
   },
   {
     "code": "/CLAYMATION",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Transforma a cena em animação quadro a quadro de massinha.",
     "category": "Arte e personagens"
   },
   {
     "code": "/CLEANBACKGROUND",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Simplifica e limpa os elementos visuais do fundo.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/CLONEME",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Duplica a pessoa em versões clonadas na mesma cena.",
     "category": "Transformações"
   },
   {
     "code": "/CLOSEUP",
-    "description": "Muda enquadramento, lente ou perspectiva.",
+    "description": "Aproxima o enquadramento para um close do assunto.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/COLORFIX",
-    "description": "Corrige as cores da imagem.",
+    "description": "Corrige desequilíbrios e desvios de cor na imagem.",
     "category": "Luz e cor"
   },
   {
     "code": "/COLORGRADE",
-    "description": "Ajusta iluminação, atmosfera ou cores.",
+    "description": "Aplica uma gradação de cores com acabamento autoral.",
     "category": "Luz e cor"
   },
   {
     "code": "/COMICBOOK",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Transforma a cena em uma página ilustrada de quadrinhos.",
     "category": "Arte e personagens"
   },
   {
     "code": "/CROWDREMOVE",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Remove a multidão presente ao redor do assunto principal.",
     "category": "Transformações"
   },
   {
     "code": "/CYBERPUNK",
-    "description": "Aplica estética, época ou efeito visual.",
+    "description": "Reestiliza a imagem com visual futurista cyberpunk.",
     "category": "Estilos e efeitos"
   },
   {
     "code": "/DARKTOBRIGHT",
-    "description": "Ajusta iluminação, atmosfera ou cores.",
+    "description": "Clareia uma imagem escura preservando seus detalhes visuais.",
     "category": "Luz e cor"
   },
   {
     "code": "/DATELOOK",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Monta um visual apropriado para um encontro romântico.",
     "category": "Transformações"
   },
   {
     "code": "/DEBLUR",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Recupera a nitidez perdida por borrões na fotografia.",
     "category": "Melhorar foto"
   },
   {
     "code": "/DENOISE",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Reduz o ruído e a granulação digital da imagem.",
     "category": "Melhorar foto"
   },
   {
     "code": "/DEPTHLOOK",
-    "description": "Muda enquadramento, lente ou perspectiva.",
+    "description": "Intensifica a sensação de profundidade no retrato.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/DESERT",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Transporta o assunto para uma paisagem desértica.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/DETAILUP",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Evidencia pequenos detalhes e texturas da fotografia.",
     "category": "Melhorar foto"
   },
   {
     "code": "/DIGITALTWIN",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Cria um gêmeo digital visualmente semelhante à pessoa.",
     "category": "Transformações"
   },
   {
     "code": "/DISNEY",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Redesenha a pessoa como personagem de animação Disney.",
     "category": "Arte e personagens"
   },
   {
     "code": "/DISTRACTIONREMOVE",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Apaga elementos que desviam a atenção do foco principal.",
     "category": "Transformações"
   },
   {
     "code": "/DOF",
-    "description": "Muda enquadramento, lente ou perspectiva.",
+    "description": "Aplica profundidade de campo fotográfica à composição.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/DOUBLEEXPOSURE",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Combina duas imagens em um efeito de dupla exposição.",
     "category": "Transformações"
   },
   {
     "code": "/DP",
-    "description": "Prepara uma imagem para perfil ou redes sociais.",
+    "description": "Recorta um retrato adequado para foto de exibição do perfil.",
     "category": "Perfil e social"
   },
   {
     "code": "/DPREADY",
-    "description": "Prepara uma imagem para perfil ou redes sociais.",
+    "description": "Finaliza a imagem para uso imediato como foto de perfil.",
     "category": "Perfil e social"
   },
   {
     "code": "/DRAGON",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Insere um dragão como elemento fantástico da cena.",
     "category": "Transformações"
   },
   {
     "code": "/DREAMLIFE",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Representa visualmente a vida dos sonhos da pessoa.",
     "category": "Transformações"
   },
   {
     "code": "/DREAMYNATURE",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Cria um cenário natural com atmosfera de sonho.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/DRESSUP",
-    "description": "Altera roupa, look ou linguagem de estilo.",
+    "description": "Troca a roupa da pessoa por uma produção mais elaborada.",
     "category": "Roupa e estilo"
   },
   {
     "code": "/DRONEVIEW",
-    "description": "Mostra a cena em visão aérea.",
+    "description": "Reenquadra a cena como uma tomada capturada por drone.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/DSLR",
-    "description": "Muda enquadramento, lente ou perspectiva.",
+    "description": "Simula o acabamento óptico de uma câmera DSLR.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/ELECTRIC",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Adiciona energia e efeitos elétricos à composição.",
     "category": "Transformações"
   },
   {
     "code": "/ELEGANT",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Refina a cena com aparência visual elegante.",
     "category": "Transformações"
   },
   {
     "code": "/ELF",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Transforma a pessoa em um personagem élfico.",
     "category": "Transformações"
   },
   {
     "code": "/ETHNIC",
-    "description": "Altera roupa, look ou linguagem de estilo.",
+    "description": "Aplica vestimentas inspiradas em uma identidade étnica.",
     "category": "Roupa e estilo"
   },
   {
     "code": "/EYEPOP",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Realça os olhos para que ganhem destaque no rosto.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/EYESHARP",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Aumenta a definição e a nitidez visual dos olhos.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/FACEFIX",
-    "description": "Melhora detalhes e aparência do rosto.",
+    "description": "Corrige imperfeições visuais perceptíveis no rosto.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/FACEGLOW",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Adiciona luminosidade saudável à aparência facial.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/FANTASY",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Transporta a imagem para um universo visual de fantasia.",
     "category": "Transformações"
   },
   {
     "code": "/FASHION",
-    "description": "Altera roupa, look ou linguagem de estilo.",
+    "description": "Produz a pessoa com estética de editorial de moda.",
     "category": "Roupa e estilo"
   },
   {
     "code": "/FILMGRAIN",
-    "description": "Ajusta iluminação, atmosfera ou cores.",
+    "description": "Acrescenta granulação característica de filme fotográfico.",
     "category": "Luz e cor"
   },
   {
     "code": "/FIRE",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Envolve a cena com chamas e efeitos visuais de fogo.",
     "category": "Transformações"
   },
   {
     "code": "/FISHEYE",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Aplica a distorção curva de uma lente olho de peixe.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/FOG",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Adiciona uma camada de neblina à composição.",
     "category": "Transformações"
   },
   {
     "code": "/FOGYFOREST",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Coloca o assunto em uma floresta coberta de nevoeiro.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/FOREST",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Substitui o cenário por uma paisagem de floresta.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/FORMAL",
-    "description": "Altera roupa, look ou linguagem de estilo.",
+    "description": "Veste a pessoa com traje formal apropriado à ocasião.",
     "category": "Roupa e estilo"
   },
   {
     "code": "/FORMALSTYLE",
-    "description": "Altera roupa, look ou linguagem de estilo.",
+    "description": "Adota uma linguagem visual de moda clássica e formal.",
     "category": "Roupa e estilo"
   },
   {
     "code": "/FUNKO",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Converte a pessoa em boneco colecionável de estilo Funko.",
     "category": "Arte e personagens"
   },
   {
     "code": "/FUTUREME",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Imagina visualmente a aparência futura da pessoa.",
     "category": "Transformações"
   },
   {
     "code": "/GALAXY",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Integra galáxias e elementos cósmicos à imagem.",
     "category": "Transformações"
   },
   {
     "code": "/GHIBLI",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Redesenha a cena com atmosfera de animação do Studio Ghibli.",
     "category": "Arte e personagens"
   },
   {
     "code": "/GIANTME",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Transforma a pessoa em gigante dentro do ambiente.",
     "category": "Transformações"
   },
   {
     "code": "/GLASSES",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Adiciona óculos ao rosto retratado.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/GLITCH",
-    "description": "Aplica estética, época ou efeito visual.",
+    "description": "Insere falhas digitais e distorções de efeito glitch.",
     "category": "Estilos e efeitos"
   },
   {
     "code": "/GLOWUP",
-    "description": "Eleva a aparência geral da imagem.",
+    "description": "Revela uma versão renovada e visualmente mais cuidada da pessoa.",
     "category": "Transformações"
   },
   {
     "code": "/GOLDENHOUR",
-    "description": "Ajusta iluminação, atmosfera ou cores.",
+    "description": "Banhe a cena com a luz quente da hora dourada.",
     "category": "Luz e cor"
   },
   {
     "code": "/GOLDLUXURY",
-    "description": "Aplica estética, época ou efeito visual.",
+    "description": "Aplica uma estética luxuosa dominada por tons dourados.",
     "category": "Estilos e efeitos"
   },
   {
     "code": "/HAIRCHANGE",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Altera visualmente o cabelo da pessoa.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/HAIRCOLOR",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Troca a cor dos cabelos retratados.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/HAIRFIX",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Corrige fios desalinhados e falhas visuais no cabelo.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/HAIRSTYLE",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Experimenta um novo penteado na pessoa.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/HANDSOME",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Realça traços que conferem aparência mais bonita ao homem.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/HAPPYBIRTHDAY",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Cria uma composição alegre com tema de feliz aniversário.",
     "category": "Melhorar foto"
   },
   {
     "code": "/HDREAL",
-    "description": "Melhora a qualidade e o realismo.",
+    "description": "Aumenta a definição mantendo uma aparência fotográfica real.",
     "category": "Melhorar foto"
   },
   {
     "code": "/HOLOGRAM",
-    "description": "Aplica estética, época ou efeito visual.",
+    "description": "Projeta o assunto como um holograma luminoso.",
     "category": "Estilos e efeitos"
   },
   {
     "code": "/HOLOGRAPHIC",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Reveste a imagem com reflexos cromáticos holográficos.",
     "category": "Transformações"
   },
   {
     "code": "/HYPERREAL",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Converte a cena para um acabamento hiper-realista.",
     "category": "Melhorar foto"
   },
   {
     "code": "/IMAX",
-    "description": "Muda enquadramento, lente ou perspectiva.",
+    "description": "Amplia a cena com escala e enquadramento de experiência IMAX.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/INKDRAWING",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Transforma a fotografia em desenho feito com tinta.",
     "category": "Arte e personagens"
   },
   {
     "code": "/INSTAPRO",
-    "description": "Prepara uma imagem para perfil ou redes sociais.",
+    "description": "Dá à postagem um acabamento profissional para Instagram.",
     "category": "Perfil e social"
   },
   {
     "code": "/INSTAREADY",
-    "description": "Prepara uma imagem para perfil ou redes sociais.",
+    "description": "Ajusta a imagem para publicação imediata no Instagram.",
     "category": "Perfil e social"
   },
   {
     "code": "/IRIDESCENT",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Aplica reflexos iridescentes que mudam conforme a luz.",
     "category": "Transformações"
   },
   {
     "code": "/JAWLINE",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Define visualmente o contorno da mandíbula.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/JUNGLE",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Posiciona o assunto em um cenário de selva densa.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/KEEPFACE",
-    "description": "Preserva o rosto da pessoa.",
+    "description": "Mantém inalteradas as características visuais do rosto.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/KEEPIDENTITY",
-    "description": "Preserva a identidade da pessoa.",
+    "description": "Preserva a identidade reconhecível da pessoa na edição.",
     "category": "Transformações"
   },
   {
     "code": "/KEEPITREAL",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Mantém o resultado com aparência natural e crível.",
     "category": "Melhorar foto"
   },
   {
     "code": "/LEGO",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Reconstrói a imagem com peças e personagens no estilo LEGO.",
     "category": "Arte e personagens"
   },
   {
     "code": "/LENSFLARE",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Adiciona reflexos luminosos típicos de lente fotográfica.",
     "category": "Transformações"
   },
   {
     "code": "/LIGHTFIX",
-    "description": "Corrige a iluminação.",
+    "description": "Corrige problemas de exposição e iluminação da foto.",
     "category": "Luz e cor"
   },
   {
     "code": "/LIGHTNING",
-    "description": "Ajusta iluminação, atmosfera ou cores.",
+    "description": "Insere relâmpagos iluminando dramaticamente a cena.",
     "category": "Luz e cor"
   },
   {
     "code": "/LONGEXPOSURE",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Simula rastros luminosos de uma fotografia de longa exposição.",
     "category": "Transformações"
   },
   {
     "code": "/LOWANGLE",
-    "description": "Muda enquadramento, lente ou perspectiva.",
+    "description": "Mostra o assunto a partir de um ângulo baixo.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/LOWPOLY",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Reduz as formas a uma estética geométrica low poly.",
     "category": "Arte e personagens"
   },
   {
     "code": "/LUXURY",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Eleva a composição com sinais visuais de luxo.",
     "category": "Transformações"
   },
   {
     "code": "/LUXURYBG",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Cria um plano de fundo com ambiente sofisticado e luxuoso.",
     "category": "Transformações"
   },
   {
     "code": "/LUXURYFIT",
-    "description": "Altera roupa, look ou linguagem de estilo.",
+    "description": "Veste a pessoa com uma produção de moda luxuosa.",
     "category": "Roupa e estilo"
   },
   {
     "code": "/MACRO",
-    "description": "Muda enquadramento, lente ou perspectiva.",
+    "description": "Aproxima detalhes minúsculos em um enquadramento macro.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/MAGAZINECOVER",
-    "description": "Prepara uma imagem para perfil ou redes sociais.",
+    "description": "Transforma o retrato na capa de uma revista.",
     "category": "Perfil e social"
   },
   {
     "code": "/MAINCHARACTER",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Coloca a pessoa em evidência como protagonista da cena.",
     "category": "Transformações"
   },
   {
     "code": "/MAKEITBETTER",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Aprimora o resultado visual geral sem mudar seu tema.",
     "category": "Transformações"
   },
   {
     "code": "/MAKEOVER",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Renova por completo a aparência visual da pessoa.",
     "category": "Transformações"
   },
   {
     "code": "/MAKEUP",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Aplica maquiagem ao rosto retratado.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/MANGA",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Redesenha a imagem com traços gráficos de mangá.",
     "category": "Arte e personagens"
   },
   {
     "code": "/MARS",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Transporta a cena para a superfície do planeta Marte.",
     "category": "Transformações"
   },
   {
     "code": "/MEDIEVAL",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Reimagina pessoas e ambiente em uma época medieval.",
     "category": "Transformações"
   },
   {
     "code": "/MESSYCLEAN",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Organiza visualmente uma cena que está bagunçada.",
     "category": "Transformações"
   },
   {
     "code": "/MINIATURE",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Converte o assunto em uma miniatura detalhada.",
     "category": "Arte e personagens"
   },
   {
     "code": "/MINIMAL",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Simplifica a composição para uma estética minimalista.",
     "category": "Transformações"
   },
   {
     "code": "/MINIME",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Cria uma versão pequena da própria pessoa na cena.",
     "category": "Transformações"
   },
   {
     "code": "/MIRROR",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Produz uma composição baseada em reflexo de espelho.",
     "category": "Transformações"
   },
   {
     "code": "/MIRRORSELFIE",
-    "description": "Prepara uma imagem para perfil ou redes sociais.",
+    "description": "Recria o retrato como uma selfie diante do espelho.",
     "category": "Perfil e social"
   },
   {
     "code": "/MIST",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Espalha uma névoa fina e suave pelo ambiente.",
     "category": "Transformações"
   },
   {
     "code": "/MISTY",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Envolve o cenário em uma atmosfera úmida e enevoada.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/MISTYMOUNTAIN",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Cria uma paisagem de montanhas cobertas por névoa.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/MODELLOOK",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Dá à pessoa postura e aparência de modelo fotográfico.",
     "category": "Transformações"
   },
   {
     "code": "/MOODY",
-    "description": "Ajusta iluminação, atmosfera ou cores.",
+    "description": "Aplica luz e cores para uma atmosfera intensa e melancólica.",
     "category": "Luz e cor"
   },
   {
     "code": "/MOONLIGHT",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Ilumina o ambiente com luz noturna de luar.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/MOTIONBLUR",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Simula borrão de movimento nos elementos em ação.",
     "category": "Transformações"
   },
   {
     "code": "/MOUNTAIN",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Coloca o assunto diante de uma paisagem montanhosa.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/MOVIEVERSION",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Reimagina a imagem como uma cena de versão cinematográfica.",
     "category": "Transformações"
   },
   {
     "code": "/MYERA",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Representa a pessoa na época visual que mais combina com ela.",
     "category": "Transformações"
   },
   {
     "code": "/MYTHOLOGY",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Insere a pessoa em uma representação de mitologia.",
     "category": "Transformações"
   },
   {
     "code": "/NATURAL",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Deixa a aparência geral mais natural e sem artificialidade.",
     "category": "Transformações"
   },
   {
     "code": "/NATURALPHOTO",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Converte o resultado em uma fotografia espontânea e realista.",
     "category": "Transformações"
   },
   {
     "code": "/NATURECINEMA",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Transforma a paisagem natural em cenário cinematográfico.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/NATUREPORTRAIT",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Compõe um retrato integrado a um ambiente natural.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/NEON",
-    "description": "Ajusta iluminação, atmosfera ou cores.",
+    "description": "Ilumina a cena com luzes coloridas de neon.",
     "category": "Luz e cor"
   },
   {
     "code": "/NEWBG",
-    "description": "Troca o fundo por um novo cenário.",
+    "description": "Substitui o fundo original por um cenário novo.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/NIGHTBG",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Troca o ambiente por um plano de fundo noturno.",
     "category": "Transformações"
   },
   {
     "code": "/NIGHTFIX",
-    "description": "Ajusta iluminação, atmosfera ou cores.",
+    "description": "Recupera luz, cor e detalhes de uma fotografia noturna.",
     "category": "Luz e cor"
   },
   {
     "code": "/NINJA",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Caracteriza a pessoa visualmente como ninja.",
     "category": "Transformações"
   },
   {
     "code": "/NOIR",
-    "description": "Aplica estética, época ou efeito visual.",
+    "description": "Aplica contraste e sombras de estética cinematográfica noir.",
     "category": "Estilos e efeitos"
   },
   {
     "code": "/OBJECTREMOVE",
-    "description": "Remove objetos indesejados.",
+    "description": "Apaga um objeto indesejado da composição.",
     "category": "Transformações"
   },
   {
     "code": "/OILPAINTING",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Converte a fotografia em pintura feita a óleo.",
     "category": "Arte e personagens"
   },
   {
     "code": "/OLDMONEY",
-    "description": "Aplica estética, época ou efeito visual.",
+    "description": "Adota a estética clássica e discreta do estilo old money.",
     "category": "Estilos e efeitos"
   },
   {
     "code": "/OUTFIT",
-    "description": "Troca ou cria uma nova roupa.",
+    "description": "Substitui a roupa atual por um novo conjunto.",
     "category": "Roupa e estilo"
   },
   {
     "code": "/OUTFITMATCH",
-    "description": "Altera roupa, look ou linguagem de estilo.",
+    "description": "Coordena as peças para formar um look visualmente combinado.",
     "category": "Roupa e estilo"
   },
   {
     "code": "/OVERTHESHOULDER",
-    "description": "Muda enquadramento, lente ou perspectiva.",
+    "description": "Enquadra a cena por cima do ombro de uma pessoa.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/PAPARAZZI",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Simula um flagrante fotográfico feito por paparazzi.",
     "category": "Transformações"
   },
   {
     "code": "/PARALLELME",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Cria uma versão da pessoa em uma realidade paralela.",
     "category": "Transformações"
   },
   {
     "code": "/PARTYLOOK",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Produz a pessoa com um visual pronto para festa.",
     "category": "Transformações"
   },
   {
     "code": "/PARTYVIBES",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Adiciona à cena a energia visual de uma celebração.",
     "category": "Transformações"
   },
   {
     "code": "/PARTYWEAR",
-    "description": "Altera roupa, look ou linguagem de estilo.",
+    "description": "Veste a pessoa com roupa adequada para uma festa.",
     "category": "Roupa e estilo"
   },
   {
     "code": "/PASSPORTPHOTO",
-    "description": "Prepara uma imagem para perfil ou redes sociais.",
+    "description": "Formata o rosto como fotografia formal de passaporte.",
     "category": "Perfil e social"
   },
   {
     "code": "/PENCILSKETCH",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Redesenha a imagem como esboço feito a lápis.",
     "category": "Arte e personagens"
   },
   {
     "code": "/PEOPLECLEAN",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Remove pessoas indesejadas que poluem a composição.",
     "category": "Transformações"
   },
   {
     "code": "/PERFECTSHOT",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Refina enquadramento e aparência para uma foto ideal.",
     "category": "Transformações"
   },
   {
     "code": "/PHOTOFIX",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Corrige defeitos gerais visíveis na fotografia.",
     "category": "Melhorar foto"
   },
   {
     "code": "/PHOTOREALISTIC",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Faz a imagem parecer uma fotografia real.",
     "category": "Melhorar foto"
   },
   {
     "code": "/PHOTORESCUE",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Restaura visualmente uma foto danificada ou degradada.",
     "category": "Melhorar foto"
   },
   {
     "code": "/PHOTOUPGRADE",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Atualiza a fotografia com acabamento visual superior.",
     "category": "Melhorar foto"
   },
   {
     "code": "/PIXAR",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Transforma a pessoa em personagem de animação estilo Pixar.",
     "category": "Arte e personagens"
   },
   {
     "code": "/PIXELART",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Reconstrói a imagem com pixels de arte digital retrô.",
     "category": "Arte e personagens"
   },
   {
     "code": "/POLAROID",
-    "description": "Aplica estética, época ou efeito visual.",
+    "description": "Emula cores e moldura de uma fotografia Polaroid.",
     "category": "Estilos e efeitos"
   },
   {
     "code": "/PORTALME",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Coloca a pessoa atravessando um portal visual fantástico.",
     "category": "Transformações"
   },
   {
     "code": "/PORTRAITPRO",
-    "description": "Muda enquadramento, lente ou perspectiva.",
+    "description": "Refina o enquadramento para um retrato profissional.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/POSTER",
-    "description": "Prepara uma imagem para perfil ou redes sociais.",
+    "description": "Organiza a imagem como um pôster gráfico.",
     "category": "Perfil e social"
   },
   {
     "code": "/POSTREADY",
-    "description": "Prepara uma imagem para perfil ou redes sociais.",
+    "description": "Finaliza proporção e acabamento para publicação em feed.",
     "category": "Perfil e social"
   },
   {
     "code": "/POVSHOT",
-    "description": "Muda enquadramento, lente ou perspectiva.",
+    "description": "Reenquadra a cena pela perspectiva em primeira pessoa.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/PREMIUM",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Dá à composição um acabamento visual de padrão premium.",
     "category": "Transformações"
   },
   {
     "code": "/PRODUCTSHOT",
-    "description": "Muda enquadramento, lente ou perspectiva.",
+    "description": "Cria uma fotografia comercial focada no produto.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/PROFILE",
-    "description": "Prepara uma imagem para perfil ou redes sociais.",
+    "description": "Prepara um retrato identificável para perfil digital.",
     "category": "Perfil e social"
   },
   {
     "code": "/PROSHOT",
-    "description": "Dá acabamento de foto profissional.",
+    "description": "Simula uma foto capturada em sessão profissional.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/QUALITYMAX",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Maximiza definição, limpeza e acabamento da imagem.",
     "category": "Melhorar foto"
   },
   {
     "code": "/QUIETLUXURY",
-    "description": "Aplica estética, época ou efeito visual.",
+    "description": "Aplica a sofisticação discreta da estética quiet luxury.",
     "category": "Estilos e efeitos"
   },
   {
     "code": "/RAIN",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Adiciona chuva visível e atmosfera de tempo chuvoso.",
     "category": "Transformações"
   },
   {
     "code": "/RAINYFOREST",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Cria um cenário de floresta sob a chuva.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/REALISMMAX",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Leva texturas e detalhes ao máximo de realismo visual.",
     "category": "Melhorar foto"
   },
   {
     "code": "/REDCARPET",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Coloca a pessoa em uma aparição de tapete vermelho.",
     "category": "Transformações"
   },
   {
     "code": "/REELCOVER",
-    "description": "Prepara uma imagem para perfil ou redes sociais.",
+    "description": "Monta uma capa vertical chamativa para reel.",
     "category": "Perfil e social"
   },
   {
     "code": "/REFLECTION",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Acrescenta um reflexo coerente ao assunto da imagem.",
     "category": "Transformações"
   },
   {
     "code": "/RETRO90S",
-    "description": "Aplica estética, época ou efeito visual.",
+    "description": "Reestiliza a cena com referências visuais dos anos 1990.",
     "category": "Estilos e efeitos"
   },
   {
     "code": "/RICHLOOK",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Confere à pessoa uma aparência visual rica e sofisticada.",
     "category": "Transformações"
   },
   {
     "code": "/RIMLIGHT",
-    "description": "Ajusta iluminação, atmosfera ou cores.",
+    "description": "Contorna o assunto com uma luz de recorte.",
     "category": "Luz e cor"
   },
   {
     "code": "/SAMURAI",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Caracteriza a pessoa como um guerreiro samurai.",
     "category": "Transformações"
   },
   {
     "code": "/SELFIEFIX",
-    "description": "Prepara uma imagem para perfil ou redes sociais.",
+    "description": "Corrige problemas visuais comuns de uma selfie.",
     "category": "Perfil e social"
   },
   {
     "code": "/SELFIEPRO",
-    "description": "Prepara uma imagem para perfil ou redes sociais.",
+    "description": "Transforma a selfie em um retrato de acabamento profissional.",
     "category": "Perfil e social"
   },
   {
     "code": "/SHARPEN",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Aumenta a nitidez dos contornos e detalhes da foto.",
     "category": "Melhorar foto"
   },
   {
     "code": "/SHARPREAL",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Reforça a definição sem perder o aspecto realista.",
     "category": "Melhorar foto"
   },
   {
     "code": "/SIDEVIEW",
-    "description": "Muda enquadramento, lente ou perspectiva.",
+    "description": "Reenquadra a pessoa ou objeto em vista lateral.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/SILHOUETTE",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Transforma o assunto em uma silhueta destacada contra o fundo.",
     "category": "Transformações"
   },
   {
     "code": "/SKINCLEAN",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Limpa visualmente marcas e impurezas aparentes da pele.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/SKINCLEAR",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Deixa a pele mais uniforme e livre de obstruções visuais.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/SKINREAL",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Preserva poros e textura para uma pele de aspecto real.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/SKINTONE",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Equilibra o tom de pele na imagem.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/SMILEFIX",
-    "description": "Ajusta rosto, pele, cabelo ou detalhes pessoais.",
+    "description": "Corrige visualmente o sorriso da pessoa.",
     "category": "Rosto e beleza"
   },
   {
     "code": "/SMOKE",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Adiciona fumaça volumétrica ao redor do assunto.",
     "category": "Transformações"
   },
   {
     "code": "/SNOW",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Inclui neve caindo sobre a composição.",
     "category": "Transformações"
   },
   {
     "code": "/SNOWSCENE",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Transforma o ambiente em uma cena coberta de neve.",
     "category": "Transformações"
   },
   {
     "code": "/SNOWYFOREST",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Posiciona o assunto em uma floresta nevada.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/SOFTLIGHT",
-    "description": "Ajusta iluminação, atmosfera ou cores.",
+    "description": "Ilumina o retrato com luz suave e difusa.",
     "category": "Luz e cor"
   },
   {
     "code": "/SPACE",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Transporta o fundo para o espaço sideral.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/SPRING",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Converte a paisagem para uma atmosfera florida de primavera.",
     "category": "Transformações"
   },
   {
     "code": "/STATUE",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Transforma a pessoa ou objeto em uma estátua.",
     "category": "Transformações"
   },
   {
     "code": "/STORM",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Cria ao fundo um clima visual de tempestade.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/STORYREADY",
-    "description": "Prepara uma imagem para perfil ou redes sociais.",
+    "description": "Ajusta a composição vertical para publicação em stories.",
     "category": "Perfil e social"
   },
   {
     "code": "/STREETSNAP",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Simula um registro espontâneo feito na rua.",
     "category": "Transformações"
   },
   {
     "code": "/STREETSTYLE",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Produz a pessoa com visual inspirado na moda urbana.",
     "category": "Transformações"
   },
   {
     "code": "/STUDIOBG",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Substitui o cenário por um fundo fotográfico de estúdio.",
     "category": "Transformações"
   },
   {
     "code": "/STYLEUP",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Atualiza a aparência com uma produção mais estilosa.",
     "category": "Transformações"
   },
   {
     "code": "/SUNRISE",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Cria um cenário iluminado pelo nascer do sol.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/SUNSET",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Transforma o ambiente em uma paisagem ao pôr do sol.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/SUNSETBEACH",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Coloca o assunto em uma praia durante o entardecer.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/SUNSETGLOW",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Adiciona o brilho quente característico do fim de tarde.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/SURPRISEPARTY",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Monta uma cena visual de festa surpresa.",
     "category": "Transformações"
   },
   {
     "code": "/SURREAL",
-    "description": "Melhora a qualidade, nitidez ou realismo.",
+    "description": "Reimagina a foto com elementos impossíveis e surreais.",
     "category": "Melhorar foto"
   },
   {
     "code": "/SYNTHWAVE",
-    "description": "Aplica estética, época ou efeito visual.",
+    "description": "Aplica cores neon e horizonte retrô da estética synthwave.",
     "category": "Estilos e efeitos"
   },
   {
     "code": "/THENNOW",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Compara visualmente a pessoa ou cena entre antes e agora.",
     "category": "Transformações"
   },
   {
     "code": "/TIMESPLIT",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Divide a composição para mostrar dois períodos diferentes.",
     "category": "Transformações"
   },
   {
     "code": "/TOPVIEW",
-    "description": "Mostra a cena vista de cima.",
+    "description": "Reenquadra a cena diretamente de cima.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/TOY",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Transforma o assunto em uma versão de brinquedo.",
     "category": "Arte e personagens"
   },
   {
     "code": "/TOYBOX",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Apresenta a pessoa como brinquedo dentro de uma caixa.",
     "category": "Arte e personagens"
   },
   {
     "code": "/TRADITIONAL",
-    "description": "Altera roupa, look ou linguagem de estilo.",
+    "description": "Veste a pessoa com traje de aparência tradicional.",
     "category": "Roupa e estilo"
   },
   {
     "code": "/TRAVELBG",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Troca o fundo por um destino visual de viagem.",
     "category": "Transformações"
   },
   {
     "code": "/UNDERWATER",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Submerge o assunto em um cenário debaixo d’água.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/VAPORWAVE",
-    "description": "Aplica estética, época ou efeito visual.",
+    "description": "Aplica gradientes, estátuas e nostalgia da estética vaporwave.",
     "category": "Estilos e efeitos"
   },
   {
     "code": "/VIKING",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Caracteriza a pessoa como um guerreiro viking.",
     "category": "Transformações"
   },
   {
     "code": "/VINTAGEFILM",
-    "description": "Aplica estética, época ou efeito visual.",
+    "description": "Simula cores e textura de um filme fotográfico antigo.",
     "category": "Estilos e efeitos"
   },
   {
     "code": "/VOLCANO",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Coloca ao fundo uma paisagem dominada por vulcão.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/VOXEL",
-    "description": "Transforma a imagem em estilo artístico ou personagem.",
+    "description": "Reconstrói a cena com formas tridimensionais em voxels.",
     "category": "Arte e personagens"
   },
   {
     "code": "/WATERCOLOR",
-    "description": "Ajusta iluminação, atmosfera ou cores.",
+    "description": "Converte a imagem em pintura de aquarela translúcida.",
     "category": "Luz e cor"
   },
   {
     "code": "/WEDDING",
-    "description": "Altera roupa, look ou linguagem de estilo.",
+    "description": "Produz a pessoa com traje e contexto visual de casamento.",
     "category": "Roupa e estilo"
   },
   {
     "code": "/WEDDINGLOOK",
-    "description": "Altera roupa, look ou linguagem de estilo.",
+    "description": "Cria um look completo para uma celebração de casamento.",
     "category": "Roupa e estilo"
   },
   {
     "code": "/WESTERN",
-    "description": "Altera roupa, look ou linguagem de estilo.",
+    "description": "Veste a pessoa com referências do estilo faroeste.",
     "category": "Roupa e estilo"
   },
   {
     "code": "/WIDEANGLE",
-    "description": "Muda enquadramento, lente ou perspectiva.",
+    "description": "Amplia o campo de visão com perspectiva de grande angular.",
     "category": "Câmera e ângulos"
   },
   {
     "code": "/WILDERNESS",
-    "description": "Cria ou muda fundo, ambiente e cenário.",
+    "description": "Insere o assunto em uma paisagem natural selvagem.",
     "category": "Fundos e cenários"
   },
   {
     "code": "/WINDOWLIGHT",
-    "description": "Ajusta iluminação, atmosfera ou cores.",
+    "description": "Ilumina a pessoa com luz natural vinda de uma janela.",
     "category": "Luz e cor"
   },
   {
     "code": "/WIZARD",
-    "description": "Cria uma variação visual ou transformação criativa.",
+    "description": "Transforma a pessoa em um personagem mago.",
     "category": "Transformações"
   },
   {
     "code": "/Y2K",
-    "description": "Aplica estética, época ou efeito visual.",
+    "description": "Reestiliza a imagem com a estética pop do início dos anos 2000.",
     "category": "Estilos e efeitos"
   }
 ] as AiCode[];

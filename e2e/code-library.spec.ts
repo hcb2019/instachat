@@ -6,7 +6,14 @@ test("searches and filters the public AI code directory", async ({ page }) => {
   await expect(page.getByRole("heading", { name: /Seu próximo resultado começa/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: /281 códigos/i })).toBeVisible();
 
+  await expect(page.getByRole("listitem")).toHaveCount(24);
+  await page.getByRole("button", { name: /Mostrar mais códigos/i }).click();
+  await expect(page.getByRole("listitem")).toHaveCount(48);
+
   const search = page.getByRole("searchbox", { name: "Buscar códigos" });
+  const copy = page.getByRole("button", { name: "Copiar /HDREAL" });
+  await expect(copy).toBeVisible();
+
   await search.fill("hdreal");
   await expect(page.getByText("/HDREAL", { exact: true })).toBeVisible();
   await expect(page.getByText("/PROSHOT", { exact: true })).toHaveCount(0);
