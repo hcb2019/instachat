@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useActionState, useState, useTransition } from "react";
-import { Check, ExternalLink, Film, Lightbulb, LoaderCircle, MessageCircle, Plus, Search, Send, Sparkles, Trash2, UserCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useState, useTransition } from "react";
+import { Check, ExternalLink, Film, Lightbulb, LoaderCircle, MessageCircle, Plus, RefreshCw, Search, Send, Sparkles, Trash2, UserCheck } from "lucide-react";
 import {
   saveAutomation,
   suggestAutomationMessages,
@@ -17,9 +18,20 @@ function FieldError({ messages }: { messages?: string[] }) {
   return messages?.[0] ? <span className="field-error">{messages[0]}</span> : null;
 }
 
-export function AutomationForm({ automation, media }: { automation?: Automation; media: InstagramMedia[] }) {
+const AUTO_SYNC_STALE_MS = 5 * 60 * 1000;
+
+function shouldAutoSyncMedia(lastMediaSyncAt: string | null | undefined) {
+  if (!lastMediaSyncAt) return true;
+  return Date.now() - new Date(lastMediaSyncAt).getTime() >= AUTO_SYNC_STALE_MS;
+}
+
+export function AutomationForm({ automation, media, lastMediaSyncAt, canSyncReels = true }: { automation?: Automation; media: InstagramMedia[]; lastMediaSyncAt?: string | null; canSyncReels?: boolean }) {
+  const router = useRouter();
   const [state, action, pending] = useActionState<AutomationActionState, FormData>(saveAutomation, {});
   const [suggestionPending, startSuggestionTransition] = useTransition();
+  const [syncPending, setSyncPending] = useState(false);
+  const [syncMessage, setSyncMessage] = useState("");
+  const [syncError, setSyncError] = useState("");
   const [name, setName] = useState(automation?.name ?? "");
   const [keyword, setKeyword] = useState(automation?.keyword ?? "");
   const [keywordVariants, setKeywordVariants] = useState(
@@ -62,6 +74,41 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
   const dmPreview = dmMessages.find((message) => message.trim()) ?? "";
   const firstFlowStep = flowSteps[0];
   const previewFinalStep = flowSteps.find((step) => step.buttons.some((button) => button.url));
+
+  async function syncReels(source: "manual" | "auto") {
+    if (!canSyncReels) {
+      setSyncError("Conecte o Instagram antes de atualizar os Reels.");
+      return;
+    }
+    setSyncPending(true);
+    setSyncError("");
+    if (source === "manual") setSyncMessage("");
+    try {
+      const response = await fetch("/api/meta/media/sync", { method: "POST", headers: { Accept: "application/json" } });
+      const result = await response.json() as { synced?: number; skipped?: boolean; message?: string; error?: string };
+      if (!response.ok) throw new Error(result.error || "Não foi possível atualizar os Reels.");
+      setSyncMessage(result.message ?? (result.skipped ? "Os Reels já estavam atualizados." : "Reels atualizados."));
+      router.refresh();
+    } catch (error) {
+      setSyncError(error instanceof Error ? error.message : "Não foi possível atualizar os Reels.");
+    } finally {
+      setSyncPending(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!canSyncReels) return;
+    if (!shouldAutoSyncMedia(lastMediaSyncAt)) return;
+    const storageKey = "vortex:auto-sync-reels:last-attempt";
+    const lastAttempt = Number(sessionStorage.getItem(storageKey) ?? 0);
+    if (Date.now() - lastAttempt < AUTO_SYNC_STALE_MS) return;
+    sessionStorage.setItem(storageKey, String(Date.now()));
+    const syncTimer = window.setTimeout(() => {
+      void syncReels("auto");
+    }, 0);
+    return () => window.clearTimeout(syncTimer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canSyncReels, lastMediaSyncAt]);
 
   function selectMedia(id: string) {
     setSelectedMediaId(id);
@@ -163,8 +210,14 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
           <legend>Reel vinculado</legend>
           <div className="reel-picker-toolbar">
             <div className="reel-search"><Search size={15} aria-hidden="true" /><input value={reelQuery} onChange={(event) => setReelQuery(event.target.value)} placeholder="Buscar pela legenda…" aria-label="Buscar Reel pela legenda" /></div>
+            <button type="button" className="reel-sync-button" onClick={() => syncReels("manual")} disabled={syncPending || !canSyncReels}>
+              {syncPending ? <LoaderCircle className="spin" size={14} /> : <RefreshCw size={14} />}
+              {syncPending ? "Atualizando…" : "Atualizar reels"}
+            </button>
             <span>{visibleMedia.length} de {media.length} Reels</span>
           </div>
+          {syncError && <p className="suggestion-error" role="alert">{syncError}</p>}
+          {syncMessage && !syncError && <p className="form-success reel-sync-status" role="status">{syncMessage}</p>}
           <div className="reel-grid" role="radiogroup" aria-label="Escolha o Reel da automação">
             {visibleMedia.map((item) => {
               const selected = selectedMediaId === item.id;
