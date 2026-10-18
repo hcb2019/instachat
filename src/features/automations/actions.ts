@@ -49,6 +49,13 @@ export async function saveAutomation(_state: AutomationActionState, formData: Fo
   const publicReplyVariants = formData.getAll("publicReplyVariants").map(String);
   const dmMessageVariants = formData.getAll("dmMessageVariants").map(String);
   const keywordVariants = formData.getAll("keywordVariants").map(String);
+  const rawConversationFlow = String(formData.get("conversationFlow") ?? "");
+  let conversationFlow: unknown = { steps: [] };
+  try {
+    conversationFlow = rawConversationFlow ? JSON.parse(rawConversationFlow) as unknown : { steps: [] };
+  } catch {
+    return { error: "Revise o fluxo de conversa.", fields: { conversationFlow: ["O fluxo não pôde ser lido."] } };
+  }
   const parsed = automationSchema.safeParse({
     id: formData.get("id") || undefined,
     name: formData.get("name") ?? "",
@@ -60,6 +67,8 @@ export async function saveAutomation(_state: AutomationActionState, formData: Fo
     dmMessage: dmMessageVariants.find((value) => value.trim()) ?? "",
     dmMessageVariants,
     destinationUrl: formData.get("destinationUrl") ?? "",
+    conversationFlow,
+    appendUtmToButtons: formData.get("appendUtmToButtons") === "on",
     requireFollow: formData.get("requireFollow") === "on",
     followGateMessage: formData.get("followGateMessage") ?? "",
     notFollowingMessage: formData.get("notFollowingMessage") ?? "",
@@ -119,6 +128,8 @@ export async function saveAutomation(_state: AutomationActionState, formData: Fo
     dm_message: input.dmMessage,
     dm_message_variants: input.dmMessageVariants,
     destination_url: input.destinationUrl,
+    dm_conversation_flow: input.conversationFlow,
+    append_utm_to_buttons: input.appendUtmToButtons,
     require_follow: input.requireFollow,
     follow_gate_message: input.followGateMessage,
     not_following_message: input.notFollowingMessage,

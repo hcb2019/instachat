@@ -2,10 +2,10 @@ import Link from "next/link";
 import { ArrowLeft, Database, LockKeyhole, ShieldCheck, Trash2 } from "lucide-react";
 import { env } from "@/lib/env";
 
-export const metadata = { title: "Privacidade — InstaChat" };
+export const metadata = { title: "Privacidade — Vortex" };
 
 export default function PrivacyPage() {
-  return <main className="legal-page"><div className="legal-document"><Link href="/" className="back-link"><ArrowLeft size={14} /> Voltar ao InstaChat</Link><p className="eyebrow">Documento público</p><h1>Política de privacidade</h1><p className="legal-updated">Última atualização: 21 de julho de 2026</p><div className="legal-intro"><ShieldCheck size={24} /><p>O InstaChat usa dados da conta profissional do Instagram exclusivamente para operar automações aprovadas pelo usuário e produzir inteligência de audiência.</p></div>
+  return <main className="legal-page"><div className="legal-document"><Link href="/" className="back-link"><ArrowLeft size={14} /> Voltar ao Vortex</Link><p className="eyebrow">Documento público</p><h1>Política de privacidade</h1><p className="legal-updated">Última atualização: 21 de julho de 2026</p><div className="legal-intro"><ShieldCheck size={24} /><p>O Vortex usa dados da conta profissional do Instagram exclusivamente para operar automações aprovadas pelo usuário e produzir inteligência de audiência.</p></div>
     <section><h2>Dados tratados</h2><p>Podemos tratar identificador e nome da conta profissional, Reels, comentários recebidos, identificadores Instagram-scoped, estados de entrega, métricas de conteúdo e cliques nos links gerados. Não armazenamos o endereço IP dos visitantes.</p></section>
     <section><h2>Finalidades</h2><p>Os dados são usados para sincronizar Reels, identificar palavras-chave, responder comentários, enviar a private reply permitida pela Meta, medir resultados e gerar sugestões de conteúdo. Nenhuma sugestão de IA publica conteúdo ou ativa automações sem aprovação humana.</p></section>
     <div className="legal-cards"><article><LockKeyhole size={18} /><h3>Proteção</h3><p>Tokens são cifrados no servidor e segredos nunca são enviados ao navegador.</p></article><article><Database size={18} /><h3>Retenção</h3><p>Comentários e dados individuais são removidos ou anonimizados após 180 dias.</p></article><article><Trash2 size={18} /><h3>Exclusão</h3><p>A desautorização ou solicitação válida da Meta remove os dados derivados da conexão.</p></article></div>

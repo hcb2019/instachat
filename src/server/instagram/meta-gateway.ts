@@ -155,6 +155,24 @@ type MetaMediaItem = {
   timestamp: string;
 };
 
+type MetaQuickReply = {
+  content_type: "text";
+  title: string;
+  payload: string;
+};
+
+type MetaButton =
+  | { type: "web_url"; title: string; url: string }
+  | { type: "postback"; title: string; payload: string };
+
+function buildQuickReplies(quickReplies?: Array<{ title: string; payload: string }>): MetaQuickReply[] | undefined {
+  const replies = quickReplies
+    ?.map((reply) => ({ content_type: "text" as const, title: reply.title.trim().slice(0, 20), payload: reply.payload }))
+    .filter((reply) => reply.title && reply.payload)
+    .slice(0, 13);
+  return replies?.length ? replies : undefined;
+}
+
 function mapReels(data: MetaMediaItem[]) {
   return data
     .filter((item) => item.media_product_type === "REELS")
@@ -203,7 +221,7 @@ export class MetaInstagramGateway implements InstagramGateway {
         access_token: accessToken,
       }));
     } catch (refreshError) {
-      // Connections created by older InstaChat versions may still contain the
+      // Connections created by older Vortex versions may still contain the
       // short-lived OAuth token. Give those installations one safe upgrade
       // attempt before requiring the owner to reconnect.
       if (refreshError instanceof MetaApiError && !refreshError.transient) {
@@ -374,13 +392,17 @@ export class MetaInstagramGateway implements InstagramGateway {
     return metaFetch<{ id: string }>(`/${encodeURIComponent(commentId)}/replies`, { method: "POST", accessToken, body: JSON.stringify({ message }) });
   }
 
-  async sendPrivateReply(userId: string, commentId: string, message: string, accessToken: string) {
+  async sendPrivateReply(userId: string, commentId: string, message: string, accessToken: string, options?: { quickReplies?: Array<{ title: string; payload: string }> }) {
+    const quickReplies = buildQuickReplies(options?.quickReplies);
     const data = await metaFetch<{ recipient_id: string; message_id: string }>(
       `/${encodeURIComponent(userId)}/messages`,
       {
         method: "POST",
         accessToken,
-        body: JSON.stringify({ recipient: { comment_id: commentId }, message: { text: message } }),
+        body: JSON.stringify({
+          recipient: { comment_id: commentId },
+          message: quickReplies ? { text: message, quick_replies: quickReplies } : { text: message },
+        }),
       },
     );
     return { recipientId: data.recipient_id, messageId: data.message_id };
@@ -394,13 +416,56 @@ export class MetaInstagramGateway implements InstagramGateway {
     return data.is_user_follow_business === true;
   }
 
-  async sendTextMessage(instagramUserId: string, recipientId: string, message: string, accessToken: string) {
+  async sendTextMessage(instagramUserId: string, recipientId: string, message: string, accessToken: string, options?: { quickReplies?: Array<{ title: string; payload: string }> }) {
+    const quickReplies = buildQuickReplies(options?.quickReplies);
     const data = await metaFetch<{ recipient_id: string; message_id: string }>(
       `/${encodeURIComponent(instagramUserId)}/messages`,
       {
         method: "POST",
         accessToken,
-        body: JSON.stringify({ recipient: { id: recipientId }, message: { text: message } }),
+        body: JSON.stringify({
+          recipient: { id: recipientId },
+          message: quickReplies ? { text: message, quick_replies: quickReplies } : { text: message },
+        }),
+      },
+    );
+    return { recipientId: data.recipient_id, messageId: data.message_id };
+  }
+
+  async sendButtonTemplateMessage(
+    instagramUserId: string,
+    recipientId: string,
+    message: string,
+    buttons: Array<
+      | { type: "web_url"; title: string; url: string }
+      | { type: "postback"; title: string; payload: string }
+    >,
+    accessToken: string,
+  ) {
+    const normalizedButtons: MetaButton[] = buttons
+      .map((button) => button.type === "web_url"
+        ? { type: "web_url" as const, title: button.title.trim().slice(0, 20), url: button.url }
+        : { type: "postback" as const, title: button.title.trim().slice(0, 20), payload: button.payload })
+      .filter((button) => button.title)
+      .slice(0, 3);
+    const data = await metaFetch<{ recipient_id: string; message_id: string }>(
+      `/${encodeURIComponent(instagramUserId)}/messages`,
+      {
+        method: "POST",
+        accessToken,
+        body: JSON.stringify({
+          recipient: { id: recipientId },
+          message: {
+            attachment: {
+              type: "template",
+              payload: {
+                template_type: "button",
+                text: message,
+                buttons: normalizedButtons,
+              },
+            },
+          },
+        }),
       },
     );
     return { recipientId: data.recipient_id, messageId: data.message_id };

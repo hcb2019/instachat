@@ -40,6 +40,52 @@ describe("automation validation", () => {
     expect(valid.success).toBe(true);
   });
 
+  it("aceita fluxo de conversa como destino da automação", () => {
+    const valid = automationSchema.safeParse({
+      name: "A",
+      mediaId: "id",
+      keyword: "x",
+      publicReply: "a",
+      publicReplyVariants: ["a", "b", "c"],
+      dmMessage: "ok",
+      dmMessageVariants: ["ok"],
+      destinationUrl: "",
+      conversationFlow: {
+        steps: [
+          { id: "inicio", text: "Qual material você quer?", buttons: [{ id: "guia", label: "Guia", nextStepId: "final", url: null }] },
+          { id: "final", text: "Aqui está:", buttons: [{ id: "abrir", label: "Abrir guia", nextStepId: null, url: "https://example.com/guia" }] },
+        ],
+      },
+      intent: "active",
+    });
+    expect(valid.success).toBe(true);
+  });
+
+  it("rejeita fluxo com botão de URL misturado com próximo passo", () => {
+    const invalid = automationSchema.safeParse({
+      name: "A",
+      mediaId: "id",
+      keyword: "x",
+      publicReply: "a",
+      publicReplyVariants: ["a", "b", "c"],
+      dmMessage: "ok",
+      dmMessageVariants: ["ok"],
+      destinationUrl: "",
+      conversationFlow: {
+        steps: [{
+          id: "inicio",
+          text: "Escolha",
+          buttons: [
+            { id: "um", label: "Um", nextStepId: "dois", url: null },
+            { id: "link", label: "Link", nextStepId: null, url: "https://example.com" },
+          ],
+        }, { id: "dois", text: "Final", buttons: [{ id: "abrir", label: "Abrir", nextStepId: null, url: "https://example.com/final" }] }],
+      },
+      intent: "active",
+    });
+    expect(invalid.success).toBe(false);
+  });
+
   it("calcula taxas sem divisão por zero", () => {
     expect(formatPercent(0, 0)).toBe("0%");
     expect(formatPercent(1, 4)).toBe("25%");

@@ -7,7 +7,7 @@ import type { AudienceIntelligenceInput, AudienceIntelligenceProvider } from "@/
 import type { AudienceProviderResult } from "@/types/audience";
 import { HUMANIZER_PROMPT, humanizeText, textPassesHumanizer } from "@/lib/humanizer";
 
-const SYSTEM_PROMPT = `Você é o analista de audiência do InstaChat. Analise comentários em português do Brasil sem inventar fatos.
+const SYSTEM_PROMPT = `Você é o analista de audiência do Vortex. Analise comentários em português do Brasil sem inventar fatos.
 Use somente os aliases recebidos como evidências. Agrupe linguagem equivalente, diferencie intenção de compra, dúvida, objeção, pedido de conteúdo, suporte, elogio e irrelevante.
 Toda recomendação deve ser específica e executável. Gere sugestão de conteúdo apenas quando houver uma oportunidade clara. Nunca sugira enviar ou publicar algo automaticamente.
 Retorne no máximo 12 insights, ordenados por prioridade. Um insight deve citar de 1 a 5 aliases existentes.

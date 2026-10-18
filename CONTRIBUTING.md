@@ -1,6 +1,6 @@
 # Como contribuir
 
-Obrigado por querer melhorar o InstaChat. Você pode sugerir ideias, relatar erros, melhorar a documentação ou enviar código.
+Obrigado por querer melhorar o Vortex. Você pode sugerir ideias, relatar erros, melhorar a documentação ou enviar código.
 
 ## Antes de começar
 

@@ -48,23 +48,33 @@ const messagingEventSchema = z.object({
     mid: metaIdSchema.optional(),
     id: metaIdSchema.optional(),
     text: z.union([z.string(), z.number().transform(String)]).default(""),
+    quick_reply: z.object({
+      payload: z.union([z.string(), z.number().transform(String)]).optional(),
+    }).passthrough().optional(),
     is_echo: z.boolean().optional(),
     is_self: z.boolean().optional(),
-  }).passthrough(),
-}).passthrough();
+  }).passthrough().optional(),
+  postback: z.object({
+    mid: metaIdSchema.optional(),
+    payload: z.union([z.string(), z.number().transform(String)]).optional(),
+    title: z.union([z.string(), z.number().transform(String)]).optional(),
+  }).passthrough().optional(),
+}).passthrough().refine((event) => event.message || event.postback);
 
 function messageIdFor(
   entryId: string,
   event: z.infer<typeof messagingEventSchema>,
 ) {
-  const suppliedId = event.message.mid ?? event.message.id;
+  const suppliedId = event.message?.mid ?? event.message?.id ?? event.postback?.mid;
   if (suppliedId) return suppliedId;
   const fingerprint = [
     entryId,
     event.sender.id,
     event.recipient.id,
     event.timestamp ?? "",
-    event.message.text,
+    event.message?.text ?? "",
+    event.message?.quick_reply?.payload ?? "",
+    event.postback?.payload ?? "",
   ].join("\u001f");
   return `derived:${createHash("sha256").update(fingerprint).digest("hex")}`;
 }
@@ -138,10 +148,12 @@ export function parseMessageEvents(rawBody: string): InstagramMessageEvent[] {
         messageId: messageIdFor(entry.id, event),
         senderScopedId: event.sender.id,
         recipientId: event.recipient.id,
-        text: event.message.text,
+        text: event.message?.text ?? event.postback?.title ?? event.postback?.payload ?? "",
+        quickReplyPayload: event.message?.quick_reply?.payload ?? null,
+        postbackPayload: event.postback?.payload ?? null,
         isEcho: event.is_self === true
-          || event.message.is_echo === true
-          || event.message.is_self === true
+          || event.message?.is_echo === true
+          || event.message?.is_self === true
           || event.sender.id === entry.id
           || event.recipient.id !== entry.id,
       }];

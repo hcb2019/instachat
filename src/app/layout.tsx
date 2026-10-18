@@ -6,9 +6,9 @@ const instrumentSans = Instrument_Sans({ variable: "--font-sans", subsets: ["lat
 const instrumentSerif = Instrument_Serif({ variable: "--font-serif", weight: "400", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "InstaChat", template: "%s · InstaChat" },
+  title: { default: "Vortex", template: "%s · Vortex" },
   description: "Transforme comentários em conversas e oportunidades.",
-  applicationName: "InstaChat",
+  applicationName: "Vortex",
   icons: { icon: "/icon.png", apple: "/apple-icon.png" },
 };
 

@@ -43,6 +43,6 @@ export function ContentProjectForm({ profile, seed }: { profile: CreatorProfile;
         </div></fieldset>
       </section>
     </div>
-    <footer className="studio-create-footer"><div><Sparkles size={18} /><span>O InstaChat vai criar três caminhos diferentes. Você escolhe um antes de gerar o pacote completo.</span></div><button className="button button-primary" disabled={pending}>{pending ? "Pensando nas ideias…" : "Gerar 3 ideias"}<ArrowRight size={16} /></button></footer>
+    <footer className="studio-create-footer"><div><Sparkles size={18} /><span>O Vortex vai criar três caminhos diferentes. Você escolhe um antes de gerar o pacote completo.</span></div><button className="button button-primary" disabled={pending}>{pending ? "Pensando nas ideias…" : "Gerar 3 ideias"}<ArrowRight size={16} /></button></footer>
   </form>;
 }

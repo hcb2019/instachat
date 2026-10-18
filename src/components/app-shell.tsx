@@ -19,7 +19,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <aside className="sidebar">
       <BrandLogo />
       <nav aria-label="Navegação principal">{nav.map(({ href, label, icon: Icon }) => <Link key={href} href={href}><Icon size={18} /><span>{label}</span></Link>)}</nav>
-      <div className="sidebar-foot"><div className="account-avatar"><AtSign size={16} /></div><div><strong>{isDemoMode ? "instachat.demo" : "Instagram"}</strong><span>{isDemoMode ? "Modo demonstração" : "Conta profissional"}</span></div></div>
+      <div className="sidebar-foot"><div className="account-avatar"><AtSign size={16} /></div><div><strong>{isDemoMode ? "vortex.demo" : "Instagram"}</strong><span>{isDemoMode ? "Modo demonstração" : "Conta profissional"}</span></div></div>
     </aside>
     <main className="main-content">{isDemoMode && <div className="demo-banner"><span>Modo demonstração</span><p>Dados simulados — nenhuma mensagem será enviada.</p></div>}{children}</main>
   </div>;

@@ -21,7 +21,7 @@ export default function CommandsPage() {
       <CodeDirectory />
       <footer className="code-library-footer">
         <BrandLogo href="/comandos-chatgpt" />
-        <p>InstaChat não é afiliado à OpenAI.</p>
+        <p>Vortex não é afiliado à OpenAI.</p>
       </footer>
     </div>
   );

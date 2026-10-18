@@ -38,8 +38,8 @@ export function WebhookTokenSetup() {
   return <section className="webhook-token-setup" aria-labelledby="webhook-token-title">
     <header>
       <div className="webhook-token-icon"><KeyRound size={21} /></div>
-      <div><p className="eyebrow">Senha de verificação do webhook</p><h3 id="webhook-token-title">Crie seu META_WEBHOOK_VERIFY_TOKEN aqui</h3><p>Ele não é fornecido pela Meta. O InstaChat gera uma senha aleatória no seu navegador; depois você cola o mesmo valor na Vercel e na Meta.</p></div>
-      <span>Não é salvo pelo InstaChat</span>
+      <div><p className="eyebrow">Senha de verificação do webhook</p><h3 id="webhook-token-title">Crie seu META_WEBHOOK_VERIFY_TOKEN aqui</h3><p>Ele não é fornecido pela Meta. O Vortex gera uma senha aleatória no seu navegador; depois você cola o mesmo valor na Vercel e na Meta.</p></div>
+      <span>Não é salvo pelo Vortex</span>
     </header>
 
     <div className="webhook-token-flow">
