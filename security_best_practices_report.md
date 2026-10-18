@@ -1,4 +1,4 @@
-# Relatório de segurança — InstaChat MVP
+# Relatório de segurança — Vortex MVP
 
 Última revisão: 28/07/2026.
 

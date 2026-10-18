@@ -2,6 +2,7 @@ import "server-only";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isDemoMode } from "@/lib/env";
 import { demoStore } from "@/server/demo-store";
+import { readConversationFlow } from "@/lib/domain";
 import type { Automation, AutomationRun, DashboardMetrics, InstagramConnection, InstagramMedia } from "@/types/domain";
 
 function mapAutomation(row: Record<string, unknown>): Automation {
@@ -18,7 +19,10 @@ function mapAutomation(row: Record<string, unknown>): Automation {
     dmMessageVariants: Array.isArray(row.dm_message_variants)
       ? row.dm_message_variants.map(String)
       : [String(row.dm_message)],
-    destinationUrl: String(row.destination_url), requireFollow: Boolean(row.require_follow),
+    destinationUrl: String(row.destination_url),
+    conversationFlow: readConversationFlow(row.dm_conversation_flow),
+    appendUtmToButtons: row.append_utm_to_buttons !== false,
+    requireFollow: Boolean(row.require_follow),
     followGateMessage: String(row.follow_gate_message ?? ""), notFollowingMessage: String(row.not_following_message ?? ""),
     status: row.status as Automation["status"], version: Number(row.version),
     createdAt: String(row.created_at), updatedAt: String(row.updated_at), deletedAt: row.deleted_at ? String(row.deleted_at) : null,
@@ -68,7 +72,18 @@ export async function listRuns(): Promise<AutomationRun[]> {
     commenterUsername: row.commenter_username, commentText: row.comment_text, status: row.status,
     publicReplyStatus: row.public_reply_status, dmStatus: row.dm_status, publicReplyAttempts: row.public_reply_attempts,
     dmAttempts: row.dm_attempts, requireFollow: Boolean(row.require_follow_snapshot),
-    followStatus: row.follow_status, contentDeliveredAt: row.content_delivered_at,
+    followStatus: row.follow_status,
+    conversationAnswers: Array.isArray(row.conversation_answers) ? row.conversation_answers.map((answer: unknown) => {
+      const record = answer && typeof answer === "object" ? answer as Record<string, unknown> : {};
+      return {
+        stepId: String(record.stepId ?? ""),
+        stepText: String(record.stepText ?? ""),
+        buttonId: String(record.buttonId ?? ""),
+        label: String(record.label ?? ""),
+        answeredAt: String(record.answeredAt ?? row.created_at),
+      };
+    }) : [],
+    contentDeliveredAt: row.content_delivered_at,
     errorCode: row.error_code, errorMessage: row.error_message,
     firstClickedAt: row.first_clicked_at, createdAt: row.created_at,
   })) as AutomationRun[];

@@ -58,6 +58,8 @@ const automationSeed: Automation[] = [
     dmMessage: "Aqui está o material que prometi — espero que seja útil:",
     dmMessageVariants: ["Aqui está o material que prometi — espero que seja útil:"],
     destinationUrl: "https://example.com/produto-1991",
+    conversationFlow: { steps: [] },
+    appendUtmToButtons: true,
     requireFollow: false,
     followGateMessage: "Se você já me segue, digite PRONTO. Se não, me segue e depois volta aqui e digita PRONTO.",
     notFollowingMessage: "Poxa… você quer o conteúdo e ainda não me segue? 😅 Me segue primeiro e depois digita PRONTO aqui de novo.",
@@ -85,6 +87,8 @@ const automationSeed: Automation[] = [
     dmMessage: "Seu checklist está aqui:",
     dmMessageVariants: ["Seu checklist está aqui:"],
     destinationUrl: "https://example.com/guia",
+    conversationFlow: { steps: [] },
+    appendUtmToButtons: true,
     requireFollow: false,
     followGateMessage: "Se você já me segue, digite PRONTO. Se não, me segue e depois volta aqui e digita PRONTO.",
     notFollowingMessage: "Poxa… você quer o conteúdo e ainda não me segue? 😅 Me segue primeiro e depois digita PRONTO aqui de novo.",
@@ -112,6 +116,7 @@ const runSeed: AutomationRun[] = Array.from({ length: 8 }, (_, index) => ({
   dmAttempts: index === 5 ? 3 : 1,
   requireFollow: false,
   followStatus: "not_required",
+  conversationAnswers: [],
   contentDeliveredAt: index === 5 || index === 7 ? null : new Date(now - 3600000 * (index + 1)).toISOString(),
   errorCode: index === 5 ? "META_RATE_LIMIT" : index === 7 ? "TOKEN_EXPIRED" : null,
   errorMessage: index === 5 ? "Limite temporário da integração." : index === 7 ? "Conexão precisa ser renovada." : null,
@@ -139,7 +144,7 @@ export function demoStore(): DemoState {
       id: connectionId,
       ownerId,
       instagramUserId: "178414000000001",
-      username: "instachat.demo",
+      username: "vortex.demo",
       status: "connected",
       tokenExpiresAt: new Date(now + 86400000 * 42).toISOString(),
       tokenRefreshedAt: new Date(now - 86400000 * 7).toISOString(),
@@ -178,6 +183,8 @@ export function saveDemoAutomation(input: {
   dmMessage: string;
   dmMessageVariants: string[];
   destinationUrl: string;
+  conversationFlow: Automation["conversationFlow"];
+  appendUtmToButtons: boolean;
   requireFollow: boolean;
   followGateMessage: string;
   notFollowingMessage: string;

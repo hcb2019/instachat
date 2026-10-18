@@ -4,9 +4,9 @@ O guia interativo em `/connection-guide` é a fonte principal para configurar o 
 
 ## Quem faz esta configuração
 
-O administrador que instalou o InstaChat configura a Meta e a Vercel uma vez. Um usuário comum não cria outro aplicativo na Meta. Depois que a instalação estiver pronta, ele apenas entra no InstaChat e clica em "Conectar Instagram".
+O administrador que instalou o Vortex configura a Meta e a Vercel uma vez. Um usuário comum não cria outro aplicativo na Meta. Depois que a instalação estiver pronta, ele apenas entra no Vortex e clica em "Conectar Instagram".
 
-## Caminho usado pelo InstaChat
+## Caminho usado pelo Vortex
 
 - Caso de uso: `Gerenciar mensagens e conteúdo no Instagram`
 - Login: `Instagram API with Instagram Login`
@@ -23,7 +23,7 @@ Não use "Auxiliar de integração de API" nem "Configuração com Facebook Logi
 - `instagram_business_manage_messages`
 - `instagram_business_manage_insights`
 
-O InstaChat solicita `instagram_business_manage_messages` por compatibilidade com aplicativos Meta que exigem essa permissão no endpoint usado para a private reply.
+O Vortex solicita `instagram_business_manage_messages` por compatibilidade com aplicativos Meta que exigem essa permissão no endpoint usado para a private reply.
 
 ## Credenciais e webhook
 
@@ -37,7 +37,7 @@ O InstaChat solicita `instagram_business_manage_messages` por compatibilidade co
 - Campos desnecessários: `live_comments`, `message_edit`, `message_reactions`, `messaging_handover`, `messaging_optins`, `messaging_postbacks`, `messaging_referral`, `messaging_seen` e `standby`
 - Certificado de cliente: desligado
 
-O administrador cria `META_WEBHOOK_VERIFY_TOKEN`, salva o mesmo valor na Vercel e no campo "Verificar token" da Meta. Depois do OAuth, o InstaChat chama `/{ig_user_id}/subscribed_apps?subscribed_fields=comments,messages` automaticamente.
+O administrador cria `META_WEBHOOK_VERIFY_TOKEN`, salva o mesmo valor na Vercel e no campo "Verificar token" da Meta. Depois do OAuth, o Vortex chama `/{ig_user_id}/subscribed_apps?subscribed_fields=comments,messages` automaticamente.
 
 ## URLs do login
 
@@ -51,7 +51,7 @@ O administrador cria `META_WEBHOOK_VERIFY_TOKEN`, salva o mesmo valor na Vercel 
 1. Adicione a conta como Testador do Instagram e aceite o convite.
 2. Salve as variáveis na Vercel e faça um novo deploy.
 3. Configure o webhook e as URLs do login.
-4. Conecte a conta pelo InstaChat.
+4. Conecte a conta pelo Vortex.
 5. Crie uma automação de teste.
 6. Comente em um Reel usando uma segunda conta.
 7. Confira a resposta pública, a private reply e o Histórico.

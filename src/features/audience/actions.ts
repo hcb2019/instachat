@@ -69,6 +69,8 @@ export async function createAutomationFromInsight(formData: FormData) {
       dmMessage: suggestion.dmMessage,
       dmMessageVariants: [suggestion.dmMessage],
       destinationUrl: "",
+      conversationFlow: { steps: [] },
+      appendUtmToButtons: true,
       requireFollow: false,
       followGateMessage: DEFAULT_FOLLOW_GATE_MESSAGE,
       notFollowingMessage: DEFAULT_NOT_FOLLOWING_MESSAGE,

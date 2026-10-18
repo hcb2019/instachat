@@ -11,7 +11,7 @@ import {
 import { Button, Card } from "@/components/ui";
 import type { AutomationMessageSuggestion } from "@/lib/automation-suggestions";
 import { buildKeywordVariants, DEFAULT_FOLLOW_GATE_MESSAGE, DEFAULT_NOT_FOLLOWING_MESSAGE } from "@/lib/domain";
-import type { Automation, InstagramMedia } from "@/types/domain";
+import type { Automation, AutomationFlowButton, AutomationFlowStep, InstagramMedia } from "@/types/domain";
 
 function FieldError({ messages }: { messages?: string[] }) {
   return messages?.[0] ? <span className="field-error">{messages[0]}</span> : null;
@@ -44,6 +44,8 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
     return existing;
   });
   const [destination, setDestination] = useState(automation?.destinationUrl ?? "");
+  const [flowSteps, setFlowSteps] = useState<AutomationFlowStep[]>(() => automation?.conversationFlow.steps.length ? automation.conversationFlow.steps : []);
+  const [appendUtmToButtons, setAppendUtmToButtons] = useState(automation?.appendUtmToButtons ?? true);
   const [requireFollow, setRequireFollow] = useState(automation?.requireFollow ?? false);
   const [followGateMessage, setFollowGateMessage] = useState(automation?.followGateMessage || DEFAULT_FOLLOW_GATE_MESSAGE);
   const [notFollowingMessage, setNotFollowingMessage] = useState(automation?.notFollowingMessage || DEFAULT_NOT_FOLLOWING_MESSAGE);
@@ -58,6 +60,8 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
     : media;
   const selectedMedia = media.find((item) => item.id === selectedMediaId);
   const dmPreview = dmMessages.find((message) => message.trim()) ?? "";
+  const firstFlowStep = flowSteps[0];
+  const previewFinalStep = flowSteps.find((step) => step.buttons.some((button) => button.url));
 
   function selectMedia(id: string) {
     setSelectedMediaId(id);
@@ -123,6 +127,30 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
 
   function removeDmMessage(index: number) {
     setDmMessages((current) => current.length > 1 ? current.filter((_, itemIndex) => itemIndex !== index) : current);
+  }
+
+  function addFlowStep() {
+    setFlowSteps((current) => [...current, { id: `step-${current.length + 1}`, text: "", buttons: [{ id: "choice-1", label: "", nextStepId: null, url: null }] }]);
+  }
+
+  function updateFlowStep(index: number, patch: Partial<AutomationFlowStep>) {
+    setFlowSteps((current) => current.map((step, stepIndex) => stepIndex === index ? { ...step, ...patch } : step));
+  }
+
+  function removeFlowStep(index: number) {
+    setFlowSteps((current) => current.filter((_, stepIndex) => stepIndex !== index));
+  }
+
+  function addFlowButton(stepIndex: number) {
+    setFlowSteps((current) => current.map((step, index) => index === stepIndex ? { ...step, buttons: [...step.buttons, { id: `choice-${step.buttons.length + 1}`, label: "", nextStepId: null, url: null }] } : step));
+  }
+
+  function updateFlowButton(stepIndex: number, buttonIndex: number, patch: Partial<AutomationFlowButton>) {
+    setFlowSteps((current) => current.map((step, index) => index === stepIndex ? { ...step, buttons: step.buttons.map((button, nestedIndex) => nestedIndex === buttonIndex ? { ...button, ...patch } : button) } : step));
+  }
+
+  function removeFlowButton(stepIndex: number, buttonIndex: number) {
+    setFlowSteps((current) => current.map((step, index) => index === stepIndex ? { ...step, buttons: step.buttons.filter((_, nestedIndex) => nestedIndex !== buttonIndex) } : step));
   }
 
   return <form action={action} className="automation-layout">
@@ -204,7 +232,7 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
         </div>
         <div className={`reply-variations${state.fields?.publicReplyVariants ? " field-invalid" : ""}`}>
           <div className="reply-variations-head">
-            <div><strong>Respostas públicas variadas</strong><small>O InstaChat alterna automaticamente entre elas para deixar os comentários mais naturais.</small></div>
+            <div><strong>Respostas públicas variadas</strong><small>O Vortex alterna automaticamente entre elas para deixar os comentários mais naturais.</small></div>
             <span>{publicReplies.filter((reply) => reply.trim()).length}/{publicReplies.length} preenchidas</span>
           </div>
           <div className="reply-variations-list">
@@ -236,7 +264,39 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
           {dmMessages.length < 5 && <button type="button" className="add-reply-variation" onClick={() => setDmMessages((current) => [...current, ""])}><Plus size={15} /> Adicionar outra mensagem privada</button>}
           <FieldError messages={state.fields?.dmMessageVariants} />
         </div>
-        <label><span>URL de destino</span><input name="destinationUrl" type="url" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="https://seusite.com/produto" maxLength={2048} aria-invalid={Boolean(state.fields?.destinationUrl)} /><FieldError messages={state.fields?.destinationUrl} /></label>
+        <label><span>URL de destino</span><input name="destinationUrl" type="url" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="https://seusite.com/produto" maxLength={2048} aria-invalid={Boolean(state.fields?.destinationUrl)} /><small>Usada no fluxo simples de mensagem + link. Se configurar botões abaixo, esta URL pode ficar vazia.</small><FieldError messages={state.fields?.destinationUrl} /></label>
+        <div className={`reply-variations link-button-config${state.fields?.conversationFlow ? " field-invalid" : ""}`}>
+          <div className="reply-variations-head">
+            <div><strong>Fluxo de conversa no direct</strong><small>Opcional: crie perguntas com respostas rápidas. Cada resposta leva a outro passo ou a uma mensagem final com botões de URL.</small></div>
+            <span>{flowSteps.length}/10 passos</span>
+          </div>
+          <input type="hidden" name="conversationFlow" value={JSON.stringify({ steps: flowSteps })} />
+          <div className="link-button-list">
+            {flowSteps.map((step, stepIndex) => <article className="flow-step-editor" key={step.id}>
+              <div className="flow-step-head"><strong>Passo {stepIndex + 1}</strong>{flowSteps.length > 0 && <button type="button" onClick={() => removeFlowStep(stepIndex)}>Remover</button>}</div>
+              <label><span>ID do passo</span><input value={step.id} onChange={(event) => updateFlowStep(stepIndex, { id: event.target.value })} maxLength={48} placeholder={`step-${stepIndex + 1}`} /></label>
+              <label><span>Pergunta ou mensagem</span><textarea value={step.text} onChange={(event) => updateFlowStep(stepIndex, { text: event.target.value })} maxLength={900} rows={3} placeholder="Qual caminho você quer seguir agora?" /></label>
+              <div className="flow-button-list">
+                {step.buttons.map((button, buttonIndex) => {
+                  const action = button.url ? "url" : "next";
+                  return <div className="flow-button-row" key={button.id}>
+                    <label><span>Resposta</span><input value={button.label} onChange={(event) => updateFlowButton(stepIndex, buttonIndex, { label: event.target.value })} maxLength={20} placeholder={buttonIndex === 0 ? "Quero o guia" : "Ver biblioteca"} /></label>
+                    <label><span>Ação</span><select value={action} onChange={(event) => updateFlowButton(stepIndex, buttonIndex, event.target.value === "url" ? { url: "", nextStepId: null } : { nextStepId: flowSteps[stepIndex + 1]?.id ?? "", url: null })}><option value="next">Ir para outro passo</option><option value="url">Botão final de URL</option></select></label>
+                    {action === "next" ? <label><span>Próximo passo</span><select value={button.nextStepId ?? ""} onChange={(event) => updateFlowButton(stepIndex, buttonIndex, { nextStepId: event.target.value || null, url: null })}><option value="">Selecione</option>{flowSteps.filter((target) => target.id !== step.id).map((target) => <option value={target.id} key={target.id}>{target.id}</option>)}</select></label> : <label><span>URL final</span><input type="url" value={button.url ?? ""} onChange={(event) => updateFlowButton(stepIndex, buttonIndex, { url: event.target.value, nextStepId: null })} placeholder="https://seusite.com/material" /></label>}
+                    <button type="button" className="icon-button" onClick={() => removeFlowButton(stepIndex, buttonIndex)} aria-label={`Remover resposta ${buttonIndex + 1}`}><Trash2 size={15} /></button>
+                  </div>;
+                })}
+              </div>
+              {step.buttons.length < 13 && <button type="button" className="add-reply-variation" onClick={() => addFlowButton(stepIndex)}><Plus size={15} /> Adicionar resposta</button>}
+            </article>)}
+          </div>
+          {flowSteps.length < 10 && <button type="button" className="add-reply-variation" onClick={addFlowStep}><Plus size={15} /> Adicionar passo</button>}
+          <label className="utm-toggle">
+            <input type="checkbox" name="appendUtmToButtons" checked={appendUtmToButtons} onChange={(event) => setAppendUtmToButtons(event.target.checked)} />
+            <span>Adicionar UTM automaticamente (<code>utm_source=vortex</code> e <code>utm_term=&lt;automationId&gt;</code>)</span>
+          </label>
+          <FieldError messages={state.fields?.conversationFlow} />
+        </div>
         <div className={`follow-gate${requireFollow ? " enabled" : ""}`}>
           <label className="follow-gate-switch">
             <span className="follow-gate-icon"><UserCheck size={19} /></span>
@@ -276,6 +336,6 @@ export function AutomationForm({ automation, media }: { automation?: Automation;
       </Card>
       <div className="form-actions"><Button name="intent" value="draft" variant="secondary" disabled={pending}>Salvar rascunho</Button><Button name="intent" value="active" disabled={pending}>{pending ? "Salvando…" : automation?.status === "active" ? "Salvar e manter ativa" : "Salvar e ativar"}</Button></div>
     </section>
-    <aside className="preview-column"><div className="preview-label"><Sparkles size={15} /> Prévia do direct</div><div className="phone"><div className="phone-top"><span className="preview-avatar">I</span><div><strong>instachat.demo</strong><small>Instagram</small></div></div>{requireFollow && <><div className="message-bubble"><p>{followGateMessage}</p></div><div className="message-bubble message-bubble-user"><p>PRONTO</p></div></>}<div className="message-bubble"><p>{dmPreview || "Sua mensagem aparecerá aqui."}</p>{destination && <span className="preview-link"><ExternalLink size={13} /> Abrir material</span>}</div><div className="phone-hint"><MessageCircle size={14} /> {requireFollow ? "Link liberado após confirmar o seguidor" : "Resposta privada ao comentário"}</div><div className="phone-input"><span>Mensagem…</span><Send size={15} /></div></div></aside>
+    <aside className="preview-column"><div className="preview-label"><Sparkles size={15} /> Prévia do direct</div><div className="phone"><div className="phone-top"><span className="preview-avatar">V</span><div><strong>vortex.demo</strong><small>Instagram</small></div></div>{requireFollow && <><div className="message-bubble"><p>{followGateMessage}</p></div><div className="message-bubble message-bubble-user"><p>PRONTO</p></div></>}{firstFlowStep ? <><div className="message-bubble"><p>{firstFlowStep.text || "Primeira pergunta do fluxo."}</p>{firstFlowStep.buttons.slice(0, 3).map((button) => <span className="preview-quick-reply" key={button.id}>{button.label || "Resposta"}</span>)}</div>{previewFinalStep && <div className="message-bubble"><p>{previewFinalStep.text || "Mensagem final."}</p><div className="preview-button-list">{previewFinalStep.buttons.filter((button) => button.url).map((button) => <span className="preview-link" key={button.id}><ExternalLink size={13} /> {button.label || "Abrir link"}</span>)}</div></div>}</> : <div className="message-bubble"><p>{dmPreview || "Sua mensagem aparecerá aqui."}</p>{destination && <span className="preview-link"><ExternalLink size={13} /> Abrir material</span>}</div>}<div className="phone-hint"><MessageCircle size={14} /> {requireFollow ? "Fluxo liberado após confirmar o seguidor" : firstFlowStep ? "Conversa guiada por respostas rápidas" : "Resposta privada ao comentário"}</div><div className="phone-input"><span>Mensagem…</span><Send size={15} /></div></div></aside>
   </form>;
 }

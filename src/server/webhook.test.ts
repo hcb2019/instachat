@@ -131,6 +131,8 @@ describe("Meta webhooks", () => {
       senderScopedId: "ig-scoped-person",
       recipientId: "ig-owner",
       text: "PRONTO",
+      quickReplyPayload: null,
+      postbackPayload: null,
       isEcho: false,
     }]);
   });
@@ -162,6 +164,8 @@ describe("Meta webhooks", () => {
       senderScopedId: "ig-scoped-person",
       recipientId: "ig-owner",
       text: "pronto",
+      quickReplyPayload: null,
+      postbackPayload: null,
       isEcho: false,
     }]);
   });
@@ -189,6 +193,8 @@ describe("Meta webhooks", () => {
       senderScopedId: "ig-scoped-person",
       recipientId: "ig-owner",
       text: "PRONTO",
+      quickReplyPayload: null,
+      postbackPayload: null,
       isEcho: false,
     });
     expect(first[0]?.messageId).toMatch(/^derived:[a-f0-9]{64}$/);
@@ -226,6 +232,49 @@ describe("Meta webhooks", () => {
     });
 
     expect(parseMessageEvents(echoPayload)[0]?.isEcho).toBe(true);
+  });
+
+  it("maps quick reply and postback payloads for DM automations", () => {
+    const quickReplyPayload = JSON.stringify({
+      object: "instagram",
+      entry: [{
+        id: "ig-owner",
+        messaging: [{
+          sender: { id: "ig-scoped-person" },
+          recipient: { id: "ig-owner" },
+          timestamp: 1785197000000,
+          message: { mid: "message-opt-in", text: "Quero o guia", quick_reply: { payload: "vortex:flow:run-1:inicio:guia" } },
+        }, {
+          sender: { id: "ig-scoped-person" },
+          recipient: { id: "ig-owner" },
+          timestamp: 1785197000100,
+          postback: { mid: "postback-1", title: "BIBLIOTECA", payload: "vortex:button:biblioteca" },
+        }],
+      }],
+    });
+
+    expect(parseMessageEvents(quickReplyPayload)).toEqual([
+      {
+        instagramUserId: "ig-owner",
+        messageId: "message-opt-in",
+        senderScopedId: "ig-scoped-person",
+        recipientId: "ig-owner",
+        text: "Quero o guia",
+        quickReplyPayload: "vortex:flow:run-1:inicio:guia",
+        postbackPayload: null,
+        isEcho: false,
+      },
+      {
+        instagramUserId: "ig-owner",
+        messageId: "postback-1",
+        senderScopedId: "ig-scoped-person",
+        recipientId: "ig-owner",
+        text: "BIBLIOTECA",
+        quickReplyPayload: null,
+        postbackPayload: "vortex:button:biblioteca",
+        isEcho: false,
+      },
+    ]);
   });
 
   it("identifies comments made by the connected account", () => {

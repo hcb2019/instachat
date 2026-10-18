@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/brand/instachat-logo-concept-v1.png" alt="InstaChat" width="360">
+  <img src="public/brand/instachat-logo-concept-v1.png" alt="Vortex" width="360">
 </p>
 
 <p align="center">
@@ -15,13 +15,13 @@
 
 > Projeto independente, não afiliado, patrocinado ou endossado pela Meta ou pelo Instagram. Use somente a API oficial e respeite os termos da plataforma.
 
-![Painel do InstaChat em modo demonstração](docs/images/dashboard-demo.png)
+![Painel do Vortex em modo demonstração](docs/images/dashboard-demo.png)
 
-## O que o InstaChat faz
+## O que o Vortex faz
 
 - identifica palavras-chave e variações em comentários de Reels;
 - alterna respostas públicas para evitar aparência robótica;
-- envia a resposta privada permitida pela API, com link rastreável;
+- envia a resposta privada permitida pela API, com link rastreável ou conversa multi-step com botões de URL;
 - pode liberar o conteúdo após confirmação de seguidor;
 - mostra histórico, falhas e métricas;
 - analisa comentários no Radar e sugere temas, oportunidades e ideias;

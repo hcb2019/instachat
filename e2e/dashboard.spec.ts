@@ -184,7 +184,7 @@ test("generates keyword and message variations for the selected Reel", async ({ 
 test("follows the Instagram connection guide and persists progress", async ({ page }) => {
   await page.goto("/connection-guide");
   await expect(page.getByRole("heading", { name: /Um caminho só/ })).toBeVisible();
-  await expect(page.getByText("Você instalou ou administra o InstaChat?", { exact: true })).toBeVisible();
+  await expect(page.getByText("Você instalou ou administra o Vortex?", { exact: true })).toBeVisible();
   await expect(page.getByText(/Você não precisa criar um app na Meta/)).toBeVisible();
   await expect(page.getByRole("link", { name: "Abrir criação de aplicativo" })).toHaveAttribute("href", "https://developers.facebook.com/apps/creation/");
   await expect(page.getByText("Gerenciar mensagens e conteúdo no Instagram", { exact: true }).first()).toBeVisible();

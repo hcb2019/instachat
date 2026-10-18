@@ -1,6 +1,6 @@
 # Publicação com Vercel e Supabase
 
-Este é o caminho com menor manutenção para colocar o InstaChat online.
+Este é o caminho com menor manutenção para colocar o Vortex online.
 
 ## Arquitetura
 

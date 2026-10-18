@@ -54,6 +54,8 @@ export interface Automation {
   dmMessage: string;
   dmMessageVariants: string[];
   destinationUrl: string;
+  conversationFlow: AutomationConversationFlow;
+  appendUtmToButtons: boolean;
   requireFollow: boolean;
   followGateMessage: string;
   notFollowingMessage: string;
@@ -80,6 +82,7 @@ export interface AutomationRun {
   dmAttempts: number;
   requireFollow: boolean;
   followStatus: FollowGateStatus;
+  conversationAnswers: AutomationConversationAnswer[];
   contentDeliveredAt: string | null;
   errorCode: string | null;
   errorMessage: string | null;
@@ -98,6 +101,31 @@ export interface DashboardMetrics {
   lastRunAt: string | null;
 }
 
+export interface AutomationFlowButton {
+  id: string;
+  label: string;
+  nextStepId: string | null;
+  url: string | null;
+}
+
+export interface AutomationFlowStep {
+  id: string;
+  text: string;
+  buttons: AutomationFlowButton[];
+}
+
+export interface AutomationConversationFlow {
+  steps: AutomationFlowStep[];
+}
+
+export interface AutomationConversationAnswer {
+  stepId: string;
+  stepText: string;
+  buttonId: string;
+  label: string;
+  answeredAt: string;
+}
+
 export interface AutomationInput {
   id?: string;
   name: string;
@@ -109,6 +137,8 @@ export interface AutomationInput {
   dmMessage: string;
   dmMessageVariants: string[];
   destinationUrl: string;
+  conversationFlow: AutomationConversationFlow;
+  appendUtmToButtons: boolean;
   requireFollow: boolean;
   followGateMessage: string;
   notFollowingMessage: string;

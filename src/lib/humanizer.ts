@@ -1,5 +1,5 @@
 /**
- * Política editorial compartilhada por todo texto gerado pelo InstaChat.
+ * Política editorial compartilhada por todo texto gerado pelo Vortex.
  *
  * A primeira camada orienta o modelo. A segunda remove, no servidor, marcas
  * recorrentes de texto artificial antes de o conteúdo chegar ao usuário.

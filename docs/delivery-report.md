@@ -1,4 +1,4 @@
-# Relatório de entrega — InstaChat MVP
+# Relatório de entrega — Vortex MVP
 
 Data: 18/07/2026.
 

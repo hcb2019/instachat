@@ -10,7 +10,7 @@ Este guia oferece três caminhos. Comece pelo modo demonstração; conecte crede
 | Uso pessoal com menor manutenção | Vercel ou VPS | Supabase hospedado | Recomendado |
 | Infraestrutura totalmente própria | VPS | Supabase self-hosted | Operadores experientes |
 
-O InstaChat é owner-only: cada instalação atende um proprietário e uma conta profissional do Instagram.
+O Vortex é owner-only: cada instalação atende um proprietário e uma conta profissional do Instagram.
 
 ## Requisitos
 

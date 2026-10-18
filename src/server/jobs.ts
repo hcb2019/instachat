@@ -1,11 +1,29 @@
 import "server-only";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { env, isDemoMode } from "@/lib/env";
-import { buildKeywordVariants, keywordMatches, normalizeKeyword, selectReplyVariant } from "@/lib/domain";
+import {
+  buildKeywordVariants,
+  keywordMatches,
+  normalizeKeyword,
+  selectReplyVariant,
+} from "@/lib/domain";
 import { createTrackingToken, decryptSecret } from "@/server/crypto";
 import { instagramGateway } from "@/server/instagram";
 import { MetaApiError } from "@/server/instagram/meta-gateway";
-import type { InstagramMessageEvent } from "@/server/instagram/types";
+import {
+  buildDirectUrlStep,
+  buildQuickReplies,
+  buildQuickReplyFallbackMessage,
+  buildTrackedUrlButtons,
+  findStepButton,
+  firstConversationStep,
+  getConversationFlowSnapshot,
+  getStep,
+  isUrlStep,
+  parseConversationPayload,
+} from "@/server/dm-flow";
+import type { InstagramGateway, InstagramMessageEvent } from "@/server/instagram/types";
+import type { AutomationFlowStep } from "@/lib/domain";
 
 function metaDiagnosticCode(error: MetaApiError) {
   return error.subcode ? `${error.code ?? `HTTP_${error.status}`}/${error.subcode}` : error.code ?? `HTTP_${error.status}`;
@@ -17,6 +35,49 @@ function metaDiagnosticMessage(prefix: string, error: MetaApiError) {
     error.requestId ? `requisição ${error.requestId}` : null,
   ].filter(Boolean).join(", ");
   return `${prefix}${details ? ` (${details})` : ""}: ${error.message}`;
+}
+
+async function sendPrivateReplyWithQuickReplies(
+  gateway: InstagramGateway,
+  userId: string,
+  commentId: string,
+  message: string,
+  accessToken: string,
+  quickReplies: Array<{ title: string; payload: string }>,
+) {
+  if (!quickReplies.length) return gateway.sendPrivateReply(userId, commentId, message, accessToken);
+  try {
+    return await gateway.sendPrivateReply(userId, commentId, message, accessToken, { quickReplies });
+  } catch (error) {
+    if (error instanceof MetaApiError && !error.transient && !error.ambiguous) {
+      return gateway.sendPrivateReply(
+        userId,
+        commentId,
+        buildQuickReplyFallbackMessage(message, quickReplies.map((reply) => ({ id: reply.payload, label: reply.title, nextStepId: null, url: null }))),
+        accessToken,
+      );
+    }
+    throw error;
+  }
+}
+
+async function sendConversationUrlStep(
+  gateway: InstagramGateway,
+  instagramUserId: string,
+  recipientId: string,
+  run: Record<string, unknown>,
+  step: AutomationFlowStep,
+  accessToken: string,
+) {
+  const buttons = buildTrackedUrlButtons(step.buttons, String(run.automation_id), run.append_utm_to_buttons_snapshot !== false);
+  if (!buttons.length) return null;
+  return gateway.sendButtonTemplateMessage(
+    instagramUserId,
+    recipientId,
+    step.text,
+    buttons,
+    accessToken,
+  );
 }
 
 export async function ingestEvents(events: unknown[]) {
@@ -80,23 +141,32 @@ export async function retryPrivateReply(ownerId: string, runId: string) {
 
   try {
     const trackingUrl = `${env.APP_ORIGIN}/r/${token}`;
+    const flow = getConversationFlowSnapshot(run.dm_conversation_flow_snapshot);
+    const firstStep = firstConversationStep(flow);
+    const usesConversation = !run.require_follow_snapshot && Boolean(firstStep);
     const message = run.require_follow_snapshot
       ? run.follow_gate_message_snapshot
+      : firstStep
+        ? firstStep.text
       : `${run.dm_message_snapshot}\n\n${trackingUrl}`;
-    const reply = await gateway.sendPrivateReply(
+    const reply = await sendPrivateReplyWithQuickReplies(
+      gateway,
       connection.instagram_user_id,
       run.comment_id,
       message,
       accessToken,
+      firstStep && !isUrlStep(firstStep) ? buildQuickReplies(run.id, firstStep) : [],
     );
     const status = run.require_follow_snapshot
       ? "processing"
+      : usesConversation
+        ? "processing"
       : run.public_reply_status === "succeeded"
         ? "succeeded"
         : run.public_reply_status === "ambiguous"
           ? "ambiguous"
           : "partial";
-    const completedAt = run.require_follow_snapshot ? null : new Date().toISOString();
+    const completedAt = run.require_follow_snapshot || usesConversation ? null : new Date().toISOString();
     const { error } = await supabase
       .from("automation_runs")
       .update({
@@ -107,7 +177,9 @@ export async function retryPrivateReply(ownerId: string, runId: string) {
         dm_attempts: attempts,
         status,
         follow_status: run.require_follow_snapshot ? "awaiting_reply" : "not_required",
-        content_delivered_at: run.require_follow_snapshot ? null : completedAt,
+        conversation_status: usesConversation ? "awaiting_reply" : "not_required",
+        conversation_current_step_id: usesConversation ? firstStep?.id ?? null : null,
+        content_delivered_at: run.require_follow_snapshot || usesConversation ? null : completedAt,
         error_code: null,
         error_message: null,
         completed_at: completedAt,
@@ -141,6 +213,7 @@ export async function retryPrivateReply(ownerId: string, runId: string) {
         dm_attempts: attempts,
         status: ambiguous ? "ambiguous" : run.public_reply_status === "succeeded" ? "partial" : "failed",
         follow_status: run.require_follow_snapshot ? "failed" : "not_required",
+        conversation_status: getConversationFlowSnapshot(run.dm_conversation_flow_snapshot).steps.length ? "failed" : "not_required",
         error_code: errorCode,
         error_message: errorMessage.slice(0, 400),
         completed_at: new Date().toISOString(),
@@ -192,6 +265,9 @@ async function processEvent(eventId: string) {
       ? automation.dm_message_variants
       : [automation.dm_message],
   ) || automation.dm_message;
+  const conversationFlow = getConversationFlowSnapshot(automation.dm_conversation_flow);
+  const firstStep = firstConversationStep(conversationFlow);
+  const usesConversation = !automation.require_follow && Boolean(firstStep);
   const { data: run, error: runError } = await supabase.from("automation_runs").insert({
     owner_id: automation.owner_id, automation_id: automation.id, comment_event_id: event.id,
     automation_name_snapshot: automation.name, automation_version: automation.version,
@@ -203,6 +279,11 @@ async function processEvent(eventId: string) {
     follow_gate_message_snapshot: automation.follow_gate_message,
     not_following_message_snapshot: automation.not_following_message,
     follow_status: automation.require_follow ? "awaiting_reply" : "not_required",
+    dm_conversation_flow_snapshot: conversationFlow,
+    append_utm_to_buttons_snapshot: automation.append_utm_to_buttons !== false,
+    conversation_status: usesConversation ? "awaiting_reply" : "not_required",
+    conversation_current_step_id: usesConversation ? firstStep?.id ?? null : null,
+    conversation_answers: [],
     tracking_token_hash: hash, status: "processing",
   }).select("id").single();
   if (runError?.code === "23505") {
@@ -236,8 +317,17 @@ async function processEvent(eventId: string) {
     const trackingUrl = `${env.APP_ORIGIN}/r/${token}`;
     const privateMessage = automation.require_follow
       ? automation.follow_gate_message
+      : firstStep
+        ? firstStep.text
       : `${dmMessage}\n\n${trackingUrl}`;
-    const reply = await gateway.sendPrivateReply(connection.instagram_user_id, event.comment_id, privateMessage, accessToken);
+    const reply = await sendPrivateReplyWithQuickReplies(
+      gateway,
+      connection.instagram_user_id,
+      event.comment_id,
+      privateMessage,
+      accessToken,
+      firstStep && !isUrlStep(firstStep) ? buildQuickReplies(run.id, firstStep) : [],
+    );
     messageId = reply.messageId;
     recipientId = reply.recipientId;
   } catch (error) {
@@ -247,7 +337,7 @@ async function processEvent(eventId: string) {
       ? metaDiagnosticMessage("Mensagem privada", error)
       : "Não foi possível confirmar a mensagem privada.";
   }
-  const status = automation.require_follow && dmStatus === "succeeded"
+  const status = (automation.require_follow || usesConversation) && dmStatus === "succeeded"
     ? "processing"
     : publicStatus === "succeeded" && dmStatus === "succeeded"
       ? "succeeded"
@@ -263,9 +353,10 @@ async function processEvent(eventId: string) {
     follow_status: automation.require_follow
       ? dmStatus === "succeeded" ? "awaiting_reply" : "failed"
       : "not_required",
-    content_delivered_at: !automation.require_follow && dmStatus === "succeeded" ? completedAt : null,
+    conversation_status: usesConversation ? dmStatus === "succeeded" ? "awaiting_reply" : "failed" : "not_required",
+    content_delivered_at: !automation.require_follow && !usesConversation && dmStatus === "succeeded" ? completedAt : null,
     error_code: errorCode, error_message: errorMessage,
-    completed_at: automation.require_follow && dmStatus === "succeeded" ? null : completedAt,
+    completed_at: (automation.require_follow || usesConversation) && dmStatus === "succeeded" ? null : completedAt,
   }).eq("id", run.id);
   await supabase.from("comment_events").update({ processed_at: completedAt }).eq("id", eventId);
 }
@@ -277,7 +368,7 @@ export async function processIncomingMessages(events: InstagramMessageEvent[]) {
   let processed = 0;
 
   for (const event of events) {
-    if (!event.text.trim()) continue;
+    if (!event.text.trim() && !event.quickReplyPayload && !event.postbackPayload) continue;
     const { data: connection } = await supabase
       .from("instagram_connections")
       .select("*")
@@ -301,6 +392,133 @@ export async function processIncomingMessages(events: InstagramMessageEvent[]) {
     if (insertError || !inserted) throw new Error("Não foi possível registrar a mensagem recebida.");
     received += 1;
 
+    const accessToken = decryptSecret({
+      ciphertext: connection.token_ciphertext,
+      iv: connection.token_iv,
+      tag: connection.token_tag,
+    });
+    const gateway = instagramGateway();
+    const checkedAt = new Date().toISOString();
+    const conversationPayload = parseConversationPayload(event.quickReplyPayload ?? event.postbackPayload);
+    if (conversationPayload) {
+      const { data: conversationRun } = await supabase
+        .from("automation_runs")
+        .select("*")
+        .eq("id", conversationPayload.runId)
+        .eq("owner_id", connection.owner_id)
+        .eq("dm_recipient_id", event.senderScopedId)
+        .eq("conversation_status", "awaiting_reply")
+        .maybeSingle();
+      if (!conversationRun) {
+        await supabase.from("instagram_message_events").update({
+          outcome: "no_pending_gate",
+          processed_at: checkedAt,
+        }).eq("id", inserted.id);
+        processed += 1;
+        continue;
+      }
+      try {
+        const flow = getConversationFlowSnapshot(conversationRun.dm_conversation_flow_snapshot);
+        const currentStep = getStep(flow, conversationPayload.stepId);
+        const selectedButton = currentStep ? findStepButton(currentStep, conversationPayload.buttonId) : null;
+        if (!currentStep || !selectedButton) {
+          await supabase.from("instagram_message_events").update({
+            outcome: "no_pending_gate",
+            processed_at: checkedAt,
+          }).eq("id", inserted.id);
+          processed += 1;
+          continue;
+        }
+        const previousAnswers = Array.isArray(conversationRun.conversation_answers)
+          ? conversationRun.conversation_answers
+          : [];
+        const conversationAnswers = [...previousAnswers, {
+          stepId: currentStep.id,
+          stepText: currentStep.text,
+          buttonId: selectedButton.id,
+          label: selectedButton.label,
+          answeredAt: checkedAt,
+        }];
+        const nextStep = selectedButton.nextStepId ? getStep(flow, selectedButton.nextStepId) : null;
+        const directUrlStep = selectedButton.url ? buildDirectUrlStep(selectedButton) : null;
+        const stepToSend = nextStep ?? directUrlStep;
+        if (!stepToSend) {
+          await supabase.from("automation_runs").update({
+            conversation_answers: conversationAnswers,
+            conversation_status: "completed",
+            conversation_current_step_id: null,
+          }).eq("id", conversationRun.id);
+          await supabase.from("instagram_message_events").update({
+            outcome: "content_delivered",
+            processed_at: checkedAt,
+          }).eq("id", inserted.id);
+          processed += 1;
+          continue;
+        }
+        const urlStep = isUrlStep(stepToSend);
+        const reply = urlStep
+          ? await sendConversationUrlStep(gateway, connection.instagram_user_id, event.senderScopedId, conversationRun, stepToSend, accessToken)
+          : await gateway.sendTextMessage(
+            connection.instagram_user_id,
+            event.senderScopedId,
+            stepToSend.text,
+            accessToken,
+            { quickReplies: buildQuickReplies(conversationRun.id, stepToSend) },
+          );
+        if (!reply) throw new MetaApiError("O passo final não possui botões de URL válidos.", 400, "INVALID_CONVERSATION_STEP");
+        const finalStatus = conversationRun.public_reply_status === "succeeded"
+          ? "succeeded"
+          : conversationRun.public_reply_status === "ambiguous"
+            ? "ambiguous"
+            : "partial";
+        const { error: updateError } = await supabase.from("automation_runs").update({
+          status: urlStep ? finalStatus : "processing",
+          conversation_status: urlStep ? "completed" : "awaiting_reply",
+          conversation_current_step_id: urlStep ? null : stepToSend.id,
+          conversation_answers: conversationAnswers,
+          dm_delivery_message_id: reply.messageId,
+          dm_attempts: Number(conversationRun.dm_attempts ?? 0) + 1,
+          content_delivered_at: urlStep ? checkedAt : null,
+          completed_at: urlStep ? checkedAt : null,
+          error_code: null,
+          error_message: null,
+        }).eq("id", conversationRun.id);
+        if (updateError) {
+          throw new MetaApiError(
+            "O conteúdo pode ter sido enviado, mas o histórico não confirmou a gravação.",
+            0,
+            "PERSISTENCE_AFTER_SEND",
+            undefined,
+            true,
+          );
+        }
+        await supabase.from("instagram_message_events").update({
+          outcome: urlStep ? "content_delivered" : "received",
+          processed_at: checkedAt,
+        }).eq("id", inserted.id);
+        processed += 1;
+        continue;
+      } catch (error) {
+        const ambiguous = error instanceof MetaApiError && error.ambiguous;
+        const errorCode = error instanceof MetaApiError ? metaDiagnosticCode(error) : "CONVERSATION_STEP_FAILED";
+        const errorMessage = error instanceof MetaApiError
+          ? metaDiagnosticMessage("Fluxo de conversa", error)
+          : "Não foi possível avançar a conversa no direct.";
+        await supabase.from("automation_runs").update({
+          status: ambiguous ? "ambiguous" : "processing",
+          conversation_status: ambiguous ? "awaiting_reply" : "failed",
+          error_code: errorCode,
+          error_message: errorMessage.slice(0, 400),
+        }).eq("id", conversationRun.id);
+        await supabase.from("instagram_message_events").update({
+          outcome: "failed",
+          processed_at: new Date().toISOString(),
+        }).eq("id", inserted.id);
+        processed += 1;
+        continue;
+      }
+    }
+
     const { data: run } = await supabase
       .from("automation_runs")
       .select("*")
@@ -320,14 +538,6 @@ export async function processIncomingMessages(events: InstagramMessageEvent[]) {
       processed += 1;
       continue;
     }
-
-    const accessToken = decryptSecret({
-      ciphertext: connection.token_ciphertext,
-      iv: connection.token_iv,
-      tag: connection.token_tag,
-    });
-    const gateway = instagramGateway();
-    const checkedAt = new Date().toISOString();
 
     try {
       const follows = await gateway.getUserFollowStatus(event.senderScopedId, accessToken);
@@ -355,12 +565,22 @@ export async function processIncomingMessages(events: InstagramMessageEvent[]) {
 
       const { token, hash } = createTrackingToken();
       const trackingUrl = `${env.APP_ORIGIN}/r/${token}`;
-      const reply = await gateway.sendTextMessage(
-        connection.instagram_user_id,
-        event.senderScopedId,
-        `${run.dm_message_snapshot}\n\n${trackingUrl}`,
-        accessToken,
-      );
+      const flow = getConversationFlowSnapshot(run.dm_conversation_flow_snapshot);
+      const firstStep = firstConversationStep(flow);
+      const reply = firstStep
+        ? await gateway.sendTextMessage(
+          connection.instagram_user_id,
+          event.senderScopedId,
+          firstStep.text,
+          accessToken,
+          { quickReplies: isUrlStep(firstStep) ? [] : buildQuickReplies(run.id, firstStep) },
+        )
+        : await gateway.sendTextMessage(
+          connection.instagram_user_id,
+          event.senderScopedId,
+          `${run.dm_message_snapshot}\n\n${trackingUrl}`,
+          accessToken,
+        );
       const finalStatus = run.public_reply_status === "succeeded"
         ? "succeeded"
         : run.public_reply_status === "ambiguous"
@@ -368,13 +588,15 @@ export async function processIncomingMessages(events: InstagramMessageEvent[]) {
           : "partial";
       const { error: updateError } = await supabase.from("automation_runs").update({
         tracking_token_hash: hash,
-        status: finalStatus,
+        status: firstStep ? "processing" : finalStatus,
         follow_status: "verified",
+        conversation_status: firstStep ? "awaiting_reply" : "not_required",
+        conversation_current_step_id: firstStep?.id ?? null,
         follow_checked_at: checkedAt,
         dm_delivery_message_id: reply.messageId,
         dm_attempts: Number(run.dm_attempts ?? 0) + 1,
-        content_delivered_at: checkedAt,
-        completed_at: checkedAt,
+        content_delivered_at: firstStep ? null : checkedAt,
+        completed_at: firstStep ? null : checkedAt,
         error_code: null,
         error_message: null,
       }).eq("id", run.id);
@@ -466,6 +688,8 @@ export async function recoverPendingFollowerMessages(limit = 10) {
         senderScopedId: recipientId,
         recipientId: connection.instagram_user_id,
         text: confirmation.text,
+        quickReplyPayload: null,
+        postbackPayload: null,
         isEcho: false,
       });
     } catch (recoveryError) {

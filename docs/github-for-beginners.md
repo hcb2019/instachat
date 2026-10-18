@@ -1,6 +1,6 @@
 # GitHub para o mantenedor
 
-Este guia explica o que acontece depois que o InstaChat se torna público.
+Este guia explica o que acontece depois que o Vortex se torna público.
 
 ## O que “público” significa
 

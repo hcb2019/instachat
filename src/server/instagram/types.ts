@@ -15,6 +15,8 @@ export interface InstagramMessageEvent {
   senderScopedId: string;
   recipientId: string;
   text: string;
+  quickReplyPayload: string | null;
+  postbackPayload: string | null;
   isEcho: boolean;
 }
 
@@ -35,9 +37,19 @@ export interface InstagramGateway {
   listComments(mediaId: string, accessToken: string, since: Date, limit: number): Promise<Array<{ commentId: string; commenterScopedId: string; commenterUsername: string; text: string; publishedAt: string }>>;
   getMediaInsights(mediaId: string, accessToken: string): Promise<{ comments: number; views: number; reach: number; shares: number; saved: number; totalInteractions: number; raw: Record<string, number> }>;
   replyToComment(commentId: string, message: string, accessToken: string): Promise<{ id: string }>;
-  sendPrivateReply(userId: string, commentId: string, message: string, accessToken: string): Promise<{ recipientId: string; messageId: string }>;
+  sendPrivateReply(userId: string, commentId: string, message: string, accessToken: string, options?: { quickReplies?: Array<{ title: string; payload: string }> }): Promise<{ recipientId: string; messageId: string }>;
   getUserFollowStatus(scopedUserId: string, accessToken: string): Promise<boolean>;
-  sendTextMessage(instagramUserId: string, recipientId: string, message: string, accessToken: string): Promise<{ recipientId: string; messageId: string }>;
+  sendTextMessage(instagramUserId: string, recipientId: string, message: string, accessToken: string, options?: { quickReplies?: Array<{ title: string; payload: string }> }): Promise<{ recipientId: string; messageId: string }>;
+  sendButtonTemplateMessage(
+    instagramUserId: string,
+    recipientId: string,
+    message: string,
+    buttons: Array<
+      | { type: "web_url"; title: string; url: string }
+      | { type: "postback"; title: string; payload: string }
+    >,
+    accessToken: string,
+  ): Promise<{ recipientId: string; messageId: string }>;
   listRecentInboundMessages(
     instagramUserId: string,
     scopedUserId: string,

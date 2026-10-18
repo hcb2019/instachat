@@ -93,9 +93,9 @@ function AppCreationMap() {
 function InstagramSetupMap() {
   const blocks = [
     ["1", "Permissões obrigatórias", "Clique em \"Add all required permissions\". Depois, em Permissões e recursos, adicione instagram_business_manage_insights para o Radar."],
-    ["2", "Gerar tokens de acesso", "Adicione a conta profissional. Não copie o token manual para o InstaChat."],
+    ["2", "Gerar tokens de acesso", "Adicione a conta profissional. Não copie o token manual para o Vortex."],
     ["3", "Configurar webhooks", "Informe a URL de callback e o token de verificação. Assine somente comments."],
-    ["4", "Login da empresa no Instagram", "Clique em Configurar e cadastre as URLs do InstaChat."],
+    ["4", "Login da empresa no Instagram", "Clique em Configurar e cadastre as URLs do Vortex."],
     ["5", "Concluir a análise do app", "Use esta etapa quando for publicar o app ou permitir contas que não são testadoras."],
   ];
   return <section className="meta-block-map" aria-labelledby="meta-block-title">
@@ -150,13 +150,13 @@ export default async function ConnectionGuidePage() {
         <div className={connection ? "setup-status connected" : "setup-status"}>{connection ? <CheckCircle2 size={20} /> : <AtSign size={20} />}</div>
         <span>Estado da sua instalação</span>
         <strong>{connection ? `@${connection.username}` : "Instagram ainda não conectado"}</strong>
-        <p>{isDemoMode ? "O painel está em modo demonstração." : connection ? "A conta já autorizou o InstaChat." : "Complete as oito etapas abaixo."}</p>
+        <p>{isDemoMode ? "O painel está em modo demonstração." : connection ? "A conta já autorizou o Vortex." : "Complete as oito etapas abaixo."}</p>
       </aside>
     </header>
 
     <section className="setup-who-is-this-for">
-      <div><ShieldCheck size={21} /><div><strong>Você instalou ou administra o InstaChat?</strong><p>Este guia é para você. A configuração da Meta e da Vercel é feita uma vez por instalação.</p></div></div>
-      <div><UserRoundCheck size={21} /><div><strong>Você é apenas usuário ou cliente?</strong><p>Você não precisa criar um app na Meta. Quando o administrador terminar esta configuração, basta entrar no InstaChat e clicar em &quot;Conectar Instagram&quot;.</p></div></div>
+      <div><ShieldCheck size={21} /><div><strong>Você instalou ou administra o Vortex?</strong><p>Este guia é para você. A configuração da Meta e da Vercel é feita uma vez por instalação.</p></div></div>
+      <div><UserRoundCheck size={21} /><div><strong>Você é apenas usuário ou cliente?</strong><p>Você não precisa criar um app na Meta. Quando o administrador terminar esta configuração, basta entrar no Vortex e clicar em &quot;Conectar Instagram&quot;.</p></div></div>
     </section>
 
     <GuideProgress stepIds={STEP_IDS} />
@@ -180,7 +180,7 @@ export default async function ConnectionGuidePage() {
       <StepShell id="prepare" number="01" location="Instagram e acessos" title="Separe o que será usado" intro="Antes de abrir a Meta, confirme a conta profissional e os acessos necessários.">
         <TaskList>
           <li>Confirme que a conta do Instagram é <strong>Business ou Creator</strong>. Perfil pessoal não funciona com esta API.</li>
-          <li>Tenha acesso ao Instagram, ao <strong>Meta for Developers</strong> e ao projeto do InstaChat na <strong>Vercel</strong>.</li>
+          <li>Tenha acesso ao Instagram, ao <strong>Meta for Developers</strong> e ao projeto do Vortex na <strong>Vercel</strong>.</li>
           <li>Use uma conta Meta protegida por autenticação em dois fatores.</li>
           <li>Não é necessário vincular uma Página do Facebook. Este projeto usa <strong>Instagram Login</strong>.</li>
         </TaskList>
@@ -213,7 +213,7 @@ export default async function ConnectionGuidePage() {
           <li>No topo da página, localize o <strong>ID do app do Instagram</strong> e a <strong>Chave secreta do app do Instagram</strong>. Eles serão usados na etapa 5.</li>
         </TaskList>
         <PermissionTable />
-        <div className="setup-warning"><AlertTriangle size={17} /><p>Não use o App ID genérico de &quot;Configurações do app → Básico&quot;. O InstaChat precisa das credenciais mostradas dentro da configuração da API do Instagram.</p></div>
+        <div className="setup-warning"><AlertTriangle size={17} /><p>Não use o App ID genérico de &quot;Configurações do app → Básico&quot;. O Vortex precisa das credenciais mostradas dentro da configuração da API do Instagram.</p></div>
         <Expected>A página mostra os cinco blocos numerados e as credenciais específicas do Instagram.</Expected>
       </StepShell>
 
@@ -224,11 +224,11 @@ export default async function ConnectionGuidePage() {
           <li>Entre nessa conta pelo Instagram. Abra <strong>Configurações → Apps e sites → Convites de teste</strong> e aceite o convite.</li>
           <li>Volte ao bloco 2, <strong>Gerar tokens de acesso</strong>, e clique em <strong>Adicionar conta</strong>.</li>
         </TaskList>
-        <div className="setup-dont-token"><KeyRound size={20} /><div><strong>Não use &quot;Gerar token&quot; para conectar o InstaChat</strong><p>Esse token é útil apenas para testes dentro da Meta. O botão &quot;Conectar Instagram&quot; do InstaChat cria e salva o token correto automaticamente.</p></div></div>
-        <Expected>A conta aparece no bloco 2. O botão de assinatura do webhook pode continuar desligado por enquanto; o InstaChat fará a assinatura depois do login.</Expected>
+        <div className="setup-dont-token"><KeyRound size={20} /><div><strong>Não use &quot;Gerar token&quot; para conectar o Vortex</strong><p>Esse token é útil apenas para testes dentro da Meta. O botão &quot;Conectar Instagram&quot; do Vortex cria e salva o token correto automaticamente.</p></div></div>
+        <Expected>A conta aparece no bloco 2. O botão de assinatura do webhook pode continuar desligado por enquanto; o Vortex fará a assinatura depois do login.</Expected>
       </StepShell>
 
-      <StepShell id="server" number="05" location="Vercel → Settings → Environment Variables" title="Salve as credenciais no servidor" intro="Esta é a ponte entre o aplicativo da Meta e o InstaChat. Cada valor tem uma origem definida.">
+      <StepShell id="server" number="05" location="Vercel → Settings → Environment Variables" title="Salve as credenciais no servidor" intro="Esta é a ponte entre o aplicativo da Meta e o Vortex. Cada valor tem uma origem definida.">
         <div className="setup-action-row"><ExternalAction href="https://vercel.com/dashboard">Abrir painel da Vercel</ExternalAction><span>Abra seu projeto e cadastre as variáveis em Production, Preview e Development.</span></div>
         <div className="setup-env-table">
           <div><code>META_APP_ID</code><span>Copie o ID do app do Instagram mostrado na etapa 3.</span></div>
@@ -252,7 +252,7 @@ export default async function ConnectionGuidePage() {
           <div className="setup-plain-instruction"><b>Certificado de cliente</b><p>Deixe a chave desligada. Clique em <strong>Verificar e salvar</strong>.</p></div>
         </section>
         <WebhookFields />
-        <div className="setup-warning"><AlertTriangle size={17} /><p>Deixe <code>comments</code> e <code>messages</code> como &quot;Assinado&quot;. Sem <code>messages</code>, o InstaChat envia a primeira DM, mas não recebe a palavra “pronto”. Os demais campos podem ficar desligados.</p></div>
+        <div className="setup-warning"><AlertTriangle size={17} /><p>Deixe <code>comments</code> e <code>messages</code> como &quot;Assinado&quot;. Sem <code>messages</code>, o Vortex envia a primeira DM, mas não recebe a palavra “pronto”. Os demais campos podem ficar desligados.</p></div>
         <section className="setup-config-panel">
           <header><Link2 size={19} /><div><small>Bloco 4</small><h3>Configurar o login da empresa no Instagram</h3></div></header>
           <p className="setup-panel-intro">Clique em <strong>Configurar</strong>. Na tela que abrir, cadastre estas URLs:</p>
@@ -271,15 +271,15 @@ export default async function ConnectionGuidePage() {
         </div>
         <TaskList>
           <li>Confirme que a política de privacidade e a página de exclusão de dados abrem sem login.</li>
-          <li>No bloco 5, leia os requisitos exibidos para as permissões realmente usadas pelo InstaChat.</li>
+          <li>No bloco 5, leia os requisitos exibidos para as permissões realmente usadas pelo Vortex.</li>
           <li>Para atender contas de clientes, solicite <strong>Advanced Access</strong> e conclua a verificação empresarial quando a Meta pedir.</li>
-          <li>Não solicite revisão de publicação de conteúdo ou mensagens gerais. O InstaChat não usa essas funções.</li>
+          <li>Não solicite revisão de publicação de conteúdo ou mensagens gerais. O Vortex não usa essas funções.</li>
         </TaskList>
         <div className="setup-reference-row"><ExternalAction href={META_INSTAGRAM_DOCS}>Login do Instagram</ExternalAction><ExternalAction href={META_COMMENTS_DOCS}>Webhooks de comentários</ExternalAction><ExternalAction href={META_INSIGHTS_DOCS}>Insights</ExternalAction></div>
         <Expected>Para o primeiro teste, sua conta continua como testadora. Para produção, o painel da Meta não mostra requisitos pendentes.</Expected>
       </StepShell>
 
-      <StepShell id="connect-test" number="08" location="InstaChat → Integração" title="Conecte a conta e faça um teste simples" intro="A partir daqui, o InstaChat assume o trabalho técnico: OAuth, token, assinatura de comments e sincronização dos Reels.">
+      <StepShell id="connect-test" number="08" location="Vortex → Integração" title="Conecte a conta e faça um teste simples" intro="A partir daqui, o Vortex assume o trabalho técnico: OAuth, token, assinatura de comments e sincronização dos Reels.">
         <div className="setup-action-row"><Link className="setup-action" href="/settings">Abrir Integração<ArrowRight size={15} /></Link><span>Use a conta profissional adicionada como testadora.</span></div>
         <TaskList>
           <li>Clique em <strong>Conectar Instagram</strong> e autorize as três permissões solicitadas.</li>
@@ -291,10 +291,10 @@ export default async function ConnectionGuidePage() {
         <div className="setup-test-line" aria-label="Fluxo do teste">
           <span><MessageCircle size={16} /> Segunda conta comenta</span><ChevronRight size={15} />
           <span><Radio size={16} /> Meta envia o webhook</span><ChevronRight size={15} />
-          <span><AtSign size={16} /> InstaChat responde</span><ChevronRight size={15} />
+          <span><AtSign size={16} /> Vortex responde</span><ChevronRight size={15} />
           <span><CheckCircle2 size={16} /> Histórico confirma</span>
         </div>
-        <div className="setup-warning"><AlertTriangle size={17} /><p>Não faça o teste comentando com a própria conta profissional. O InstaChat ignora comentários próprios para evitar respostas em ciclo.</p></div>
+        <div className="setup-warning"><AlertTriangle size={17} /><p>Não faça o teste comentando com a própria conta profissional. O Vortex ignora comentários próprios para evitar respostas em ciclo.</p></div>
         <Expected>O comentário aparece no Histórico e a segunda conta recebe a resposta privada.</Expected>
       </StepShell>
     </main>
@@ -305,7 +305,7 @@ export default async function ConnectionGuidePage() {
         ["A Meta não aceita o webhook", "Confira se o deploy foi feito depois de salvar o token. A URL precisa ser HTTPS e o valor colado na Meta deve ser idêntico ao da Vercel."],
         ["A conta não aparece", "Confirme se ela é profissional, se foi adicionada como Testador do Instagram e se o convite foi aceito dentro do Instagram."],
         ["Aparecem permissões pages_*", "Você abriu Facebook Login. Volte para a configuração com Login do Instagram."],
-        ["O webhook verifica, mas não chega comentário", "Deixe comments assinado. Depois reconecte a conta para o InstaChat executar a assinatura por usuário."],
+        ["O webhook verifica, mas não chega comentário", "Deixe comments assinado. Depois reconecte a conta para o Vortex executar a assinatura por usuário."],
         ["O login volta com erro", "Compare a Valid OAuth Redirect URI com a URL deste guia. HTTPS, caminho e barra final precisam coincidir."],
         ["A DM não chegou", "Use uma segunda conta e confira a pasta Solicitações do Direct. A Meta permite uma private reply por comentário."],
       ].map(([title, answer]) => <details key={title}><summary><CircleHelp size={16} />{title}<ChevronRight size={15} /></summary><p>{answer}</p></details>)}</div>

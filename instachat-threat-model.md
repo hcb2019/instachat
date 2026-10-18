@@ -1,4 +1,4 @@
-# Threat model — InstaChat
+# Threat model — Vortex
 
 ## Executive summary
 

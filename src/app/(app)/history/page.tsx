@@ -21,7 +21,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
       <div className="history-cell history-automation" data-label="Automação"><span>{run.automationName}</span></div>
       <div className="history-cell history-public" data-label="Resposta pública"><StatusBadge status={run.publicReplyStatus} /></div>
       <div className="history-cell history-dm" data-label="Mensagem privada"><StatusBadge status={run.dmStatus} />{run.requireFollow && <small className="run-follow-status"><StatusBadge status={run.followStatus} /></small>}</div>
-      <div className="history-cell history-result" data-label="Resultado"><StatusBadge status={run.status} />{run.contentDeliveredAt && <small>Conteúdo entregue {formatDate(run.contentDeliveredAt)}</small>}{run.errorMessage && <small className="error-copy">{run.errorMessage}</small>}</div>
+      <div className="history-cell history-result" data-label="Resultado"><StatusBadge status={run.status} />{run.conversationAnswers.length > 0 && <small>Respostas: {run.conversationAnswers.map((answer) => answer.label).join(" → ")}</small>}{run.contentDeliveredAt && <small>Conteúdo entregue {formatDate(run.contentDeliveredAt)}</small>}{run.errorMessage && <small className="error-copy">{run.errorMessage}</small>}</div>
       <div className="history-cell history-date" data-label="Data"><span>{formatDate(run.createdAt)}</span></div>
       <div className="history-action">{run.dmStatus === "failed" && <form action={`/api/meta/runs/${run.id}/retry-dm`} method="post"><Button variant="secondary" type="submit"><Send size={14} /> Reenviar DM</Button></form>}</div>
     </article>)}</div>
