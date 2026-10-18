@@ -387,6 +387,10 @@ h1, h2, h3, p { margin-top: 0; }
 .reel-picker legend { margin-bottom: 9px; color: #38362f; font-size: 12px; font-weight: 720; }
 .reel-picker-toolbar { margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .reel-picker-toolbar > span { flex: none; color: var(--muted); font-size: 10px; font-weight: 650; }
+.reel-sync-button { min-height: 38px; padding: 0 11px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: none; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; cursor: pointer; font-size: 10px; font-weight: 800; }
+.reel-sync-button:hover:not(:disabled) { color: var(--coral-dark); border-color: #e5b5a9; background: #fff8f5; }
+.reel-sync-button:disabled { opacity: .6; cursor: not-allowed; }
+.reel-sync-status { margin: 0 0 10px; padding: 8px 10px; font-size: 10px; }
 .reel-search { min-width: 0; flex: 1; position: relative; }
 .reel-search > svg { position: absolute; z-index: 1; left: 12px; top: 50%; color: var(--muted); transform: translateY(-50%); pointer-events: none; }
 .form-section .reel-search input { padding-left: 36px; }
