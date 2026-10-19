@@ -1,6 +1,7 @@
 import { constantTimeTextEqual } from "@/server/crypto";
 import { env, isDemoMode } from "@/lib/env";
 import { renewExpiringInstagramTokens } from "@/server/instagram/token-lifecycle";
+import { processDuePipelinePosts } from "@/server/pipeline";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -15,8 +16,11 @@ function isAuthorized(request: Request) {
 async function run(request: Request) {
   if (!isAuthorized(request)) return Response.json({ error: "Unauthorized" }, { status: 401 });
   if (isDemoMode) return Response.json({ checked: 0, renewed: 0, skipped: 0, failed: 0 });
-  const result = await renewExpiringInstagramTokens();
-  return Response.json(result, { headers: { "Cache-Control": "no-store" } });
+  const [tokenRenewal, pipeline] = await Promise.all([
+    renewExpiringInstagramTokens(),
+    processDuePipelinePosts().catch(() => ({ pipelineProcessed: 0, pipelineFailed: 1 })),
+  ]);
+  return Response.json({ ...tokenRenewal, pipeline }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export const GET = run;

@@ -58,4 +58,26 @@ describe("MetaInstagramGateway token lifecycle", () => {
     expect(refreshUrl.searchParams.get("grant_type")).toBe("ig_refresh_token");
     expect(refreshUrl.searchParams.get("access_token")).toBe("current-long-token");
   });
+
+  it("cria container de Reel, consulta status e publica via media_publish", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: "container-1" }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ status_code: "FINISHED" }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: "media-1" }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const gateway = new MetaInstagramGateway();
+
+    await gateway.createReelContainer("ig-user", "https://cdn.example.com/reel.mp4", "Legenda", "token");
+    await gateway.getMediaContainerStatus("container-1", "token");
+    await gateway.publishMedia("ig-user", "container-1", "token");
+
+    const createBody = fetchMock.mock.calls[0]?.[1]?.body as URLSearchParams;
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain("/ig-user/media");
+    expect(createBody.get("media_type")).toBe("REELS");
+    expect(createBody.get("video_url")).toBe("https://cdn.example.com/reel.mp4");
+    expect(String(fetchMock.mock.calls[1]?.[0])).toContain("/container-1?fields=status_code");
+    const publishBody = fetchMock.mock.calls[2]?.[1]?.body as URLSearchParams;
+    expect(String(fetchMock.mock.calls[2]?.[0])).toContain("/ig-user/media_publish");
+    expect(publishBody.get("creation_id")).toBe("container-1");
+  });
 });

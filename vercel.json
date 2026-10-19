@@ -5,7 +5,8 @@
     "src/app/api/meta/webhook/route.ts": { "maxDuration": 60 },
     "src/app/api/internal/jobs/process/route.ts": { "maxDuration": 60 },
     "src/app/api/internal/jobs/analyze/route.ts": { "maxDuration": 60 },
-    "src/app/api/internal/jobs/maintenance/route.ts": { "maxDuration": 60 }
+    "src/app/api/internal/jobs/maintenance/route.ts": { "maxDuration": 60 },
+    "src/app/api/pipeline/posts/route.ts": { "maxDuration": 60 }
   },
   "crons": [
     {

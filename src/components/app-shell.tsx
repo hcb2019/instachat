@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AtSign, BarChart3, Bolt, BookOpenCheck, Clapperboard, History, Radar, Settings2 } from "lucide-react";
+import { AtSign, BarChart3, Bolt, BookOpenCheck, Clapperboard, History, PlusCircle, Radar, Settings2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { BrandLogo } from "@/components/brand-logo";
 import { isDemoMode } from "@/lib/env";
@@ -8,6 +8,7 @@ const nav = [
   { href: "/dashboard", label: "Visão geral", icon: BarChart3 },
   { href: "/radar", label: "Radar", icon: Radar },
   { href: "/studio", label: "Estúdio", icon: Clapperboard },
+  { href: "/novo-conteudo", label: "Novo conteúdo", icon: PlusCircle },
   { href: "/connection-guide", label: "Guia de conexão", icon: BookOpenCheck },
   { href: "/automations", label: "Automações", icon: Bolt },
   { href: "/history", label: "Histórico", icon: History },
