@@ -1,19 +1,15 @@
 "use server";
 
-import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { requireOwner } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { hashPipelineApiKey } from "@/server/crypto";
 import { createPipelineApiKeySecret } from "@/server/pipeline";
 
 export interface PipelineApiKeyActionState {
   error?: string;
   secret?: string;
   prefix?: string;
-}
-
-function hashApiKey(secret: string) {
-  return createHash("sha256").update(secret).digest("hex");
 }
 
 export async function createPipelineApiKey(_state: PipelineApiKeyActionState, formData: FormData): Promise<PipelineApiKeyActionState> {
@@ -26,7 +22,7 @@ export async function createPipelineApiKey(_state: PipelineApiKeyActionState, fo
   const { error } = await supabase.from("pipeline_api_keys").insert({
     owner_id: owner.id,
     name,
-    key_hash: hashApiKey(secret),
+    key_hash: hashPipelineApiKey(secret),
     prefix,
   });
   if (error) return { error: "Não foi possível criar a chave. Rode a migration do pipeline antes de usar este recurso." };

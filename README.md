@@ -72,6 +72,7 @@ Use `.env.example` apenas como modelo. `.env.local` é ignorado pelo Git.
 
 ```bash
 openssl rand -base64 32 # TOKEN_ENCRYPTION_KEY
+openssl rand -hex 32    # PIPELINE_API_KEY_PEPPER
 openssl rand -hex 32    # WORKER_SECRET
 openssl rand -hex 32    # CRON_SECRET (Vercel)
 openssl rand -hex 32    # META_WEBHOOK_VERIFY_TOKEN

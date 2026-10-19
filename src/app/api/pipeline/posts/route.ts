@@ -1,16 +1,12 @@
-import { createHash } from "node:crypto";
 import { getOwner } from "@/lib/auth";
 import { isDemoMode } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { pipelinePostInputSchema } from "@/lib/pipeline";
+import { hashPipelineApiKey } from "@/server/crypto";
 import { createPipelinePost, PipelineError } from "@/server/pipeline";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
-
-function hashApiKey(secret: string) {
-  return createHash("sha256").update(secret).digest("hex");
-}
 
 function readString(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value : "";
@@ -35,7 +31,7 @@ async function authenticate(request: Request) {
     const { data } = await supabase
       .from("pipeline_api_keys")
       .select("id,owner_id")
-      .eq("key_hash", hashApiKey(bearer))
+      .eq("key_hash", hashPipelineApiKey(bearer))
       .is("revoked_at", null)
       .maybeSingle();
     if (!data) return null;

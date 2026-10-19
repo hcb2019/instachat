@@ -1,5 +1,5 @@
 import "server-only";
-import { createCipheriv, createDecipheriv, createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { env, isDemoMode } from "@/lib/env";
 
 function encryptionKey() {
@@ -9,6 +9,12 @@ function encryptionKey() {
   const key = Buffer.from(raw, "base64");
   if (key.length !== 32) throw new Error("TOKEN_ENCRYPTION_KEY deve conter 32 bytes em base64.");
   return key;
+}
+
+function pipelineApiKeyPepper() {
+  if (env.PIPELINE_API_KEY_PEPPER) return env.PIPELINE_API_KEY_PEPPER;
+  if (isDemoMode) return "vortex-demo-pipeline-api-key-pepper";
+  throw new Error("PIPELINE_API_KEY_PEPPER não configurada.");
 }
 
 export function encryptSecret(plaintext: string) {
@@ -31,6 +37,10 @@ export function createTrackingToken() {
 
 export function hashTrackingToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
+}
+
+export function hashPipelineApiKey(secret: string) {
+  return createHmac("sha256", pipelineApiKeyPepper()).update(secret, "utf8").digest("hex");
 }
 
 export function constantTimeTextEqual(left: string, right: string) {

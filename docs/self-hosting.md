@@ -93,12 +93,13 @@ A chave da OpenAI libera a redação completa por IA no Estúdio. Sem ela, o apl
 Crie os demais segredos com valores diferentes:
 
 ```bash
-openssl rand -base64 32
-openssl rand -hex 32
-openssl rand -hex 32
+openssl rand -base64 32 # TOKEN_ENCRYPTION_KEY
+openssl rand -hex 32    # WORKER_SECRET
+openssl rand -hex 32    # META_WEBHOOK_VERIFY_TOKEN
+openssl rand -hex 32    # PIPELINE_API_KEY_PEPPER
 ```
 
-Use o primeiro resultado em `TOKEN_ENCRYPTION_KEY`, o segundo em `WORKER_SECRET` e o terceiro em `META_WEBHOOK_VERIFY_TOKEN`.
+Use valores diferentes para `TOKEN_ENCRYPTION_KEY`, `WORKER_SECRET`, `META_WEBHOOK_VERIFY_TOKEN` e `PIPELINE_API_KEY_PEPPER`.
 
 Depois:
 
