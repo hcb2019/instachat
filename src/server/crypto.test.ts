@@ -20,7 +20,7 @@ describe("secret encryption", () => {
     expect(value.hash).toHaveLength(64);
   });
 
-  it("hashes pipeline API keys with a keyed digest", () => {
+  it("hashes pipeline API keys with a server-side KDF", () => {
     expect(hashPipelineApiKey("vx_test_secret")).toMatch(/^[0-9a-f]{64}$/);
     expect(hashPipelineApiKey("vx_test_secret")).toBe(hashPipelineApiKey("vx_test_secret"));
     expect(hashPipelineApiKey("vx_other_secret")).not.toBe(hashPipelineApiKey("vx_test_secret"));

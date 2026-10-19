@@ -1,5 +1,5 @@
 import "server-only";
-import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { env, isDemoMode } from "@/lib/env";
 
 function encryptionKey() {
@@ -40,7 +40,7 @@ export function hashTrackingToken(token: string) {
 }
 
 export function hashPipelineApiKey(secret: string) {
-  return createHmac("sha256", pipelineApiKeyPepper()).update(secret, "utf8").digest("hex");
+  return scryptSync(secret, pipelineApiKeyPepper(), 32).toString("hex");
 }
 
 export function constantTimeTextEqual(left: string, right: string) {
