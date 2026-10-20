@@ -59,10 +59,16 @@ for each row execute function public.set_updated_at_and_version();
 alter table public.content_pipeline_posts enable row level security;
 alter table public.pipeline_api_keys enable row level security;
 
-grant select, insert, update, delete on public.content_pipeline_posts to authenticated;
-grant select(id, owner_id, name, prefix, last_used_at, revoked_at, created_at), insert(owner_id, name, key_hash, prefix), update(revoked_at) on public.pipeline_api_keys to authenticated;
-grant all on public.content_pipeline_posts, public.pipeline_api_keys to service_role;
-revoke all on public.content_pipeline_posts, public.pipeline_api_keys from anon;
+revoke all on public.content_pipeline_posts, public.pipeline_api_keys from anon, authenticated;
+
+grant select, insert, update on public.content_pipeline_posts to service_role;
+
+grant select(id, owner_id, name, prefix, last_used_at, revoked_at, created_at),
+  insert(owner_id, name, key_hash, prefix),
+  update(revoked_at)
+  on public.pipeline_api_keys to authenticated;
+grant select(id, owner_id, key_hash), update(last_used_at)
+  on public.pipeline_api_keys to service_role;
 
 create policy owner_all_content_pipeline_posts on public.content_pipeline_posts
 for all to authenticated
