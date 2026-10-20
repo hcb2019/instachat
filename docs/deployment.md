@@ -62,14 +62,15 @@ OPENAI_AUDIENCE_MODEL=gpt-5.6-terra
 Gere:
 
 ```bash
-openssl rand -base64 32
-openssl rand -hex 32
-openssl rand -hex 32
-openssl rand -hex 32
+openssl rand -base64 32 # TOKEN_ENCRYPTION_KEY
+openssl rand -hex 32    # WORKER_SECRET
+openssl rand -hex 32    # CRON_SECRET
+openssl rand -hex 32    # META_WEBHOOK_VERIFY_TOKEN
+openssl rand -hex 32    # PIPELINE_API_KEY_PEPPER
 ```
 
 Use valores independentes para `TOKEN_ENCRYPTION_KEY`, `WORKER_SECRET`,
-`CRON_SECRET` e `META_WEBHOOK_VERIFY_TOKEN`.
+`CRON_SECRET`, `META_WEBHOOK_VERIFY_TOKEN` e `PIPELINE_API_KEY_PEPPER`.
 
 Segredos nunca podem usar prefixo `NEXT_PUBLIC_`.
 

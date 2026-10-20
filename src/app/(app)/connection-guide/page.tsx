@@ -92,7 +92,7 @@ function AppCreationMap() {
 
 function InstagramSetupMap() {
   const blocks = [
-    ["1", "Permissões obrigatórias", "Clique em \"Add all required permissions\". Depois, em Permissões e recursos, adicione instagram_business_manage_insights para o Radar."],
+    ["1", "Permissões obrigatórias", "Clique em \"Add all required permissions\". Depois, em Permissões e recursos, adicione instagram_business_manage_insights para o Radar e instagram_business_content_publish para Novo conteúdo."],
     ["2", "Gerar tokens de acesso", "Adicione a conta profissional. Não copie o token manual para o Vortex."],
     ["3", "Configurar webhooks", "Informe a URL de callback e o token de verificação. Assine somente comments."],
     ["4", "Login da empresa no Instagram", "Clique em Configurar e cadastre as URLs do Vortex."],
@@ -110,6 +110,7 @@ function PermissionTable() {
     <div><code>instagram_business_manage_comments</code><span>Comentários, resposta pública e private reply</span><b>Usada</b></div>
     <div><code>instagram_business_manage_insights</code><span>Métricas usadas pelo Radar</span><b>Usada</b></div>
     <div><code>instagram_business_manage_messages</code><span>Compatibilidade do envio da mensagem privada</span><b>Usada</b></div>
+    <div><code>instagram_business_content_publish</code><span>Publicação de Reels pelo Novo conteúdo</span><b>Usada</b></div>
   </div>;
 }
 
@@ -209,7 +210,7 @@ export default async function ConnectionGuidePage() {
         <InstagramSetupMap />
         <TaskList>
           <li>No bloco 1, clique em <strong>Add all required permissions</strong>.</li>
-          <li>Abra <strong>Permissões e recursos</strong> e adicione <code>instagram_business_manage_insights</code>.</li>
+          <li>Abra <strong>Permissões e recursos</strong> e adicione <code>instagram_business_manage_insights</code> e <code>instagram_business_content_publish</code>.</li>
           <li>No topo da página, localize o <strong>ID do app do Instagram</strong> e a <strong>Chave secreta do app do Instagram</strong>. Eles serão usados na etapa 5.</li>
         </TaskList>
         <PermissionTable />
@@ -282,7 +283,7 @@ export default async function ConnectionGuidePage() {
       <StepShell id="connect-test" number="08" location="Vortex → Integração" title="Conecte a conta e faça um teste simples" intro="A partir daqui, o Vortex assume o trabalho técnico: OAuth, token, assinatura de comments e sincronização dos Reels.">
         <div className="setup-action-row"><Link className="setup-action" href="/settings">Abrir Integração<ArrowRight size={15} /></Link><span>Use a conta profissional adicionada como testadora.</span></div>
         <TaskList>
-          <li>Clique em <strong>Conectar Instagram</strong> e autorize as três permissões solicitadas.</li>
+          <li>Clique em <strong>Conectar Instagram</strong> e autorize as permissões solicitadas.</li>
           <li>Ao voltar, confirme que o painel mostra a conta conectada e os Reels sincronizados.</li>
           <li>Crie uma automação com uma palavra fácil de testar, por exemplo <strong>GUIA2026</strong>.</li>
           <li>Com uma segunda conta, comente exatamente essa palavra em um Reel.</li>

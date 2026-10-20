@@ -19,7 +19,7 @@ test("shows responsive navigation on a small viewport", async ({ page }) => {
   await page.goto("/automations");
   const navigation = page.getByRole("navigation", { name: "Navegação principal" });
   await expect(navigation).toBeVisible();
-  await expect(navigation.getByRole("link")).toHaveCount(7);
+  await expect(navigation.getByRole("link")).toHaveCount(8);
   for (const link of await navigation.getByRole("link").all()) await expect(link).toBeInViewport();
   await expect(page.getByRole("heading", { name: "Automações" })).toBeVisible();
   const widths = await page.evaluate(() => ({
@@ -55,7 +55,7 @@ test("keeps history actions and integration controls accessible on mobile", asyn
 
 test("keeps every main screen inside a compact viewport", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
-  for (const route of ["/dashboard", "/radar", "/studio", "/studio/new", "/connection-guide", "/automations", "/automations/new", "/history", "/settings"]) {
+  for (const route of ["/dashboard", "/radar", "/studio", "/studio/new", "/novo-conteudo", "/connection-guide", "/automations", "/automations/new", "/history", "/settings"]) {
     await page.goto(route);
     if (route === "/radar") await page.getByText(/Ver \d+ evidências?/).first().click();
     const overflow = await page.evaluate(() => {

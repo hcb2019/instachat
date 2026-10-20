@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTrackingToken, decryptSecret, encryptSecret, hashTrackingToken } from "@/server/crypto";
+import { createTrackingToken, decryptSecret, encryptSecret, hashPipelineApiKey, hashTrackingToken } from "@/server/crypto";
 
 describe("secret encryption", () => {
   it("round-trips with authenticated encryption", () => {
@@ -18,5 +18,11 @@ describe("secret encryption", () => {
     expect(value.token).toMatch(/^[A-Za-z0-9_-]{22}$/);
     expect(value.hash).toBe(hashTrackingToken(value.token));
     expect(value.hash).toHaveLength(64);
+  });
+
+  it("hashes pipeline API keys with a server-side KDF", () => {
+    expect(hashPipelineApiKey("vx_test_secret")).toMatch(/^[0-9a-f]{64}$/);
+    expect(hashPipelineApiKey("vx_test_secret")).toBe(hashPipelineApiKey("vx_test_secret"));
+    expect(hashPipelineApiKey("vx_other_secret")).not.toBe(hashPipelineApiKey("vx_test_secret"));
   });
 });

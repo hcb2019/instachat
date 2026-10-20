@@ -16,6 +16,7 @@ const schema = z.object({
   META_GRAPH_API_VERSION: z.string().regex(/^v\d+\.\d+$/).default("v25.0"),
   META_WEBHOOK_VERIFY_TOKEN: z.string().optional(),
   TOKEN_ENCRYPTION_KEY: z.string().optional(),
+  PIPELINE_API_KEY_PEPPER: z.string().min(32).optional(),
   WORKER_SECRET: z.string().optional(),
   CRON_SECRET: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),

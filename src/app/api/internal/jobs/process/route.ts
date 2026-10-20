@@ -2,6 +2,7 @@ import { constantTimeTextEqual } from "@/server/crypto";
 import { env, isDemoMode } from "@/lib/env";
 import { processQueueBatch, recoverPendingFollowerMessages } from "@/server/jobs";
 import { renewExpiringInstagramTokens } from "@/server/instagram/token-lifecycle";
+import { processDuePipelinePosts } from "@/server/pipeline";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -20,5 +21,6 @@ export async function POST(request: Request) {
     processQueueBatch(),
     recoverPendingFollowerMessages(),
   ]);
-  return Response.json({ ...queue, followerReplies, tokenRenewal }, { headers: { "Cache-Control": "no-store" } });
+  const pipeline = await processDuePipelinePosts().catch(() => ({ pipelineProcessed: 0, pipelineFailed: 1 }));
+  return Response.json({ ...queue, followerReplies, tokenRenewal, pipeline }, { headers: { "Cache-Control": "no-store" } });
 }

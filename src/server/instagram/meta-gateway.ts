@@ -185,6 +185,16 @@ function mapReels(data: MetaMediaItem[]) {
     }));
 }
 
+function mapMedia(item: MetaMediaItem) {
+  return {
+    externalId: item.id,
+    caption: item.caption ?? "Reel sem legenda",
+    permalink: item.permalink,
+    thumbnailUrl: item.thumbnail_url ?? null,
+    publishedAt: item.timestamp,
+  };
+}
+
 async function listReelsFromExpandedProfile(accessToken: string) {
   const mediaFields = "id,caption,media_product_type,media_type,permalink,thumbnail_url,timestamp";
   const fields = encodeURIComponent(`media.limit(50){${mediaFields}}`);
@@ -239,6 +249,21 @@ export class MetaInstagramGateway implements InstagramGateway {
     return metaFetch<{ id: string; username: string }>("/me?fields=id,username", { accessToken }).then((data) => ({ userId: data.id, username: data.username }));
   }
 
+  async listGrantedPermissions(accessToken: string) {
+    try {
+      const data = await metaFetch<{ data?: Array<{ permission?: string; status?: string }> }>(
+        "/me/permissions",
+        { accessToken },
+      );
+      return (data.data ?? [])
+        .filter((item) => item.status === "granted" && item.permission)
+        .map((item) => item.permission as string);
+    } catch (error) {
+      if (error instanceof MetaApiError && !error.transient) return null;
+      throw error;
+    }
+  }
+
   async subscribeToComments(userId: string, accessToken: string) {
     const query = "?subscribed_fields=comments,messages";
     try {
@@ -291,6 +316,42 @@ export class MetaInstagramGateway implements InstagramGateway {
       path = data.paging?.next ? normalizeMetaPagingPath(data.paging.next, env.META_GRAPH_API_VERSION) : null;
     }
     return items;
+  }
+
+  async createReelContainer(userId: string, videoUrl: string, caption: string, accessToken: string) {
+    const body = new URLSearchParams({
+      media_type: "REELS",
+      video_url: videoUrl,
+      caption,
+    });
+    return metaFetch<{ id: string }>(
+      `/${encodeURIComponent(userId)}/media`,
+      { method: "POST", accessToken, body, headers: { "Content-Type": "application/x-www-form-urlencoded" } },
+    );
+  }
+
+  async getMediaContainerStatus(containerId: string, accessToken: string) {
+    const data = await metaFetch<{ status_code?: string }>(
+      `/${encodeURIComponent(containerId)}?fields=status_code`,
+      { accessToken },
+    );
+    return { statusCode: data.status_code ?? "UNKNOWN" };
+  }
+
+  async publishMedia(userId: string, creationId: string, accessToken: string) {
+    const body = new URLSearchParams({ creation_id: creationId });
+    return metaFetch<{ id: string }>(
+      `/${encodeURIComponent(userId)}/media_publish`,
+      { method: "POST", accessToken, body, headers: { "Content-Type": "application/x-www-form-urlencoded" } },
+    );
+  }
+
+  async getMedia(mediaId: string, accessToken: string) {
+    const data = await metaFetch<MetaMediaItem>(
+      `/${encodeURIComponent(mediaId)}?fields=id,caption,media_product_type,media_type,permalink,thumbnail_url,timestamp`,
+      { accessToken },
+    );
+    return mapMedia(data);
   }
 
   async listComments(mediaId: string, accessToken: string, since: Date, limit: number) {
