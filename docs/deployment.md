@@ -12,7 +12,7 @@ Este é o caminho com menor manutenção para colocar o Vortex online.
 
 ## 1. Faça seu próprio fork
 
-Abra <https://github.com/hcb2019/instachat> e clique em **Fork**. Conecte esse fork à Vercel. Assim, cada pessoa mantém sua própria instalação e suas próprias credenciais.
+Abra <https://github.com/hcb2019/vortex> e clique em **Fork**. Conecte esse fork à Vercel. Assim, cada pessoa mantém sua própria instalação e suas próprias credenciais.
 
 ## 2. Teste uma demonstração
 
@@ -21,7 +21,7 @@ Configure:
 ```dotenv
 DEMO_MODE=true
 NEXT_PUBLIC_DEMO_MODE=true
-APP_ORIGIN=https://instachat.seudominio.com
+APP_ORIGIN=https://vortex.seudominio.com
 OWNER_EMAIL=seu-email@example.com
 ```
 
@@ -41,7 +41,7 @@ Publique e confirme `/`, `/dashboard`, `/radar` e `/connection-guide`.
 
 4. Em Authentication:
    - configure a Site URL;
-   - adicione `https://instachat.seudominio.com/auth/callback`;
+   - adicione `https://vortex.seudominio.com/auth/callback`;
    - convide o `OWNER_EMAIL`;
    - mantenha cadastro público desativado.
 
@@ -52,7 +52,7 @@ Copie `.env.example` e cadastre os valores no painel da Vercel. Em produção:
 ```dotenv
 DEMO_MODE=false
 NEXT_PUBLIC_DEMO_MODE=false
-APP_ORIGIN=https://instachat.seudominio.com
+APP_ORIGIN=https://vortex.seudominio.com
 OPENAI_API_KEY=sk-...
 OPENAI_AUDIENCE_MODEL=gpt-5.6-terra
 ```

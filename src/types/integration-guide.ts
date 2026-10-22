@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 export interface IntegrationGuideStep {
   id: string;
   number: string;
-  phase: "prepare" | "meta" | "instachat" | "validate" | "publish";
+  phase: "prepare" | "meta" | "vortex" | "validate" | "publish";
   title: string;
   summary: string;
   duration: string;

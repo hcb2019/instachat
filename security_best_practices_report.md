@@ -37,4 +37,4 @@ A preparação para abertura pública também verificou o histórico Git em busc
 - Texto de comentário pode conter PII declarada pelo próprio autor ou tentativa de prompt injection. O piloto deve acompanhar feedback negativo e considerar redação semântica antes de abrir a terceiros.
 - O schema/RLS não pôde ser executado localmente nesta máquina porque o daemon Docker estava desligado; a CI e o primeiro ambiente conectado devem executar migration do zero, testes de isolamento e `supabase db lint`.
 
-O modelo de ameaças completo e os caminhos prioritários estão em `instachat-threat-model.md`.
+O modelo de ameaças completo e os caminhos prioritários estão em `vortex-threat-model.md`.
