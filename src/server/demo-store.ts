@@ -158,11 +158,11 @@ export function demoStore(): DemoState {
     creatorProfile: {
       instagramHandle: "@hernando.ia",
       niche: "Inteligência artificial aplicada a negócios e à vida cotidiana",
-      audience: "Pequenos empresários, profissionais autônomos e criadores que querem começar a usar IA",
-      voice: "Direto, conversado, informal e específico",
-      preferredTerms: ["na prática", "testa isso"],
-      avoidedTerms: ["revolucionário", "jornada"],
-      defaultCta: "Comente a palavra-chave para receber o material no direct.",
+      audience: "Pequenos empresários, profissionais autônomos e criadores que querem começar a usar IA sem virar 'especialista de palco'",
+      voice: "PT-BR casual, cara de áudio de WhatsApp, específico, sem clichê. Mostra o processo, fala de segurança e LGPD, empacota o método. Nunca se chama de dev.",
+      preferredTerms: ["na prática", "testa isso", "vc", "tb", "pq", "comenta VORTEX"],
+      avoidedTerms: ["revolucionário", "jornada", "guru", "dev", "farda"],
+      defaultCta: "Comenta VORTEX que eu te mando no direct.",
     },
     contentProjects: [],
   };

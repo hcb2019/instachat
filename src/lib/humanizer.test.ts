@@ -23,7 +23,7 @@ describe("humanizer", () => {
     const findings = inspectHumanizedText("Não é apenas uma ferramenta, mas também uma jornada transformadora.");
     expect(findings.map(({ pattern }) => pattern)).toContain("paralelismo artificial");
     expect(textPassesHumanizer("Testa isso com um cliente antes de mudar o processo inteiro.")).toBe(true);
-    expect(HUMANIZER_VERSION).toBe("humanizer-v2");
+    expect(HUMANIZER_VERSION).toBe("humanizer-v3");
   });
 
   it("preserva a formatação pronta para colar no Instagram", () => {

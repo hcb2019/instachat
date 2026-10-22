@@ -1,6 +1,7 @@
 import "server-only";
 import { requireOwner } from "@/lib/auth";
 import { contentPackageSchema, parseStoredContentConcepts } from "@/lib/content-studio";
+import { CAPTION_SAMPLES, CREATOR_HANDLE, DEFAULT_AVOIDED_TERMS, DEFAULT_CTA, DEFAULT_PREFERRED_TERMS, mergeCreatorProfile } from "@/lib/creator-identity";
 import { isDemoMode } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { humanizeContentHook } from "@/lib/humanizer";
@@ -8,17 +9,27 @@ import { demoStore } from "@/server/demo-store";
 import type { ContentProject, CreatorProfile } from "@/types/content-studio";
 
 export const DEFAULT_CREATOR_PROFILE: CreatorProfile = {
-  instagramHandle: "@hernando.ia",
+  instagramHandle: CREATOR_HANDLE,
   niche: "Inteligência artificial aplicada a negócios e à vida cotidiana",
-  audience: "Pequenos empresários, profissionais autônomos e criadores que querem começar a usar IA",
-  voice: "Direto, conversado, informal e específico",
-  preferredTerms: [], avoidedTerms: [],
-  defaultCta: "Comente a palavra-chave para receber o material no direct.",
+  audience: "Pequenos empresários, profissionais autônomos e criadores que querem começar a usar IA sem virar 'especialista de palco'",
+  voice: "PT-BR casual, cara de áudio de WhatsApp, específico, sem clichê. Mostra o processo, fala de segurança e LGPD, empacota o método. Nunca se chama de dev.",
+  preferredTerms: DEFAULT_PREFERRED_TERMS,
+  avoidedTerms: DEFAULT_AVOIDED_TERMS,
+  defaultCta: DEFAULT_CTA,
+  captionSamples: CAPTION_SAMPLES,
 };
 
 function mapProfile(row: Record<string, unknown> | null): CreatorProfile {
   if (!row) return DEFAULT_CREATOR_PROFILE;
-  return { instagramHandle: String(row.instagram_handle), niche: String(row.niche), audience: String(row.audience), voice: String(row.voice), preferredTerms: (row.preferred_terms as string[]) ?? [], avoidedTerms: (row.avoided_terms as string[]) ?? [], defaultCta: String(row.default_cta) };
+  return mergeCreatorProfile({
+    instagramHandle: String(row.instagram_handle),
+    niche: String(row.niche),
+    audience: String(row.audience),
+    voice: String(row.voice),
+    preferredTerms: (row.preferred_terms as string[]) ?? [],
+    avoidedTerms: (row.avoided_terms as string[]) ?? [],
+    defaultCta: String(row.default_cta),
+  });
 }
 
 function mapProject(row: Record<string, unknown>, slug: string | null = null): ContentProject {
@@ -45,7 +56,7 @@ function getDeliverableSlug(relation: unknown): string | null {
 
 export async function getCreatorProfile() {
   const owner = await requireOwner();
-  if (isDemoMode) return demoStore().creatorProfile;
+  if (isDemoMode) return mergeCreatorProfile(demoStore().creatorProfile);
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase.from("creator_profiles").select("*").eq("owner_id", owner.id).maybeSingle();
   return mapProfile(data);

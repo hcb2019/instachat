@@ -17,6 +17,7 @@ export interface CreatorProfile {
   preferredTerms: string[];
   avoidedTerms: string[];
   defaultCta: string;
+  captionSamples?: string[];
 }
 
 export interface ContentConcept {
@@ -106,6 +107,7 @@ export interface ContentPackage {
   keywordSuggestions: [string, string, string];
   publicReplies: [string, string, string];
   dmMessages: [string, string, string];
+  hashtags?: string[];
   deliverable: GeneratedDeliverable;
 }
 
