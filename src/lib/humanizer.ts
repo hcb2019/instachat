@@ -4,7 +4,7 @@
  * A primeira camada orienta o modelo. A segunda remove, no servidor, marcas
  * recorrentes de texto artificial antes de o conteúdo chegar ao usuário.
  */
-export const HUMANIZER_VERSION = "humanizer-v2";
+export const HUMANIZER_VERSION = "humanizer-v3";
 
 export const HUMANIZER_PROMPT = `
 REVISÃO EDITORIAL OBRIGATÓRIA (${HUMANIZER_VERSION}):
@@ -12,12 +12,13 @@ REVISÃO EDITORIAL OBRIGATÓRIA (${HUMANIZER_VERSION}):
 - Preserve o sentido, mas use construções simples, específicas e naturais quando lidas em voz alta.
 - Varie o ritmo. Misture frases curtas com frases um pouco mais longas sem criar uma estrutura perfeita demais.
 - Evite grandiosidade, elogios vazios, promessas genéricas, atribuições vagas e conclusões otimistas sem conteúdo.
-- Não use expressões como "é importante destacar", "vale ressaltar", "além disso", "nesse cenário", "jornada", "revolucionário", "transformador", "crucial", "fundamental", "pilar" ou "cenário em constante evolução".
+- Não use expressões como "é importante destacar", "vale ressaltar", "além disso", "nesse cenário", "jornada", "revolucionário", "transformador", "crucial", "fundamental", "pilar", "guru" ou "cenário em constante evolução".
 - Evite "não é apenas... é...", "não se trata apenas...", listas forçadas de três itens e sequências de sinônimos.
 - Não use travessão para dar falsa dramaticidade. Não decore títulos ou frases com emojis; use no máximo um emoji quando ele realmente combinar com uma conversa informal.
 - Não escreva "claro", "com certeza", "espero que ajude", "aqui está" ou "se quiser, posso" como fala de assistente.
-- Não invente experiência pessoal, emoção, dado, prova, autoridade, benefício ou resultado.
-- Use português do Brasil, contrações naturais e o grau de informalidade pedido pelo contexto.
+- Não invente venda, cliente, faturamento, experiência pessoal, dado, prova ou autoridade.
+- Nunca chame o criador de "dev". Não mencione farda, quartel, Exército, rua ou rota pessoal.
+- Use português do Brasil, contrações naturais (vc, tb, pq, pra) e o grau de informalidade pedido pelo contexto.
 - Entregue somente o texto final. Nunca explique que ele foi humanizado.
 `.trim();
 
@@ -41,6 +42,9 @@ const PHRASE_REPLACEMENTS: Array<[RegExp, string]> = [
   [/vale ressaltar que\s*/giu, ""],
   [/\bespero que (?:isso )?ajude[.!]?/giu, ""],
   [/\bse quiser,? posso[^.!?]*[.!?]?/giu, ""],
+  [/\bjornada transformadora\b/giu, "mudança"],
+  [/\bcomo dev\b/giu, "na prática"],
+  [/\beu sou (?:um )?dev\b/giu, "eu construo com IA"],
 ];
 
 function preserveCapitalization(before: string, after: string) {
@@ -138,9 +142,10 @@ export interface HumanizerFinding {
 const AI_PATTERNS: Array<[string, RegExp]> = [
   ["fala de assistente", /\b(?:espero que ajude|se quiser, posso|com certeza|certamente)\b/iu],
   ["ênfase vazia", /\b(?:é importante destacar|vale ressaltar|momento crucial|papel fundamental)\b/iu],
-  ["vocabulário artificial", /\b(?:cenário em constante evolução|jornada transformadora|revolucionário|tapeçaria|pivotal)\b/iu],
+  ["vocabulário artificial", /\b(?:cenário em constante evolução|jornada transformadora|revolucionário|tapeçaria|pivotal|guru)\b/iu],
   ["paralelismo artificial", /\b(?:não é apenas|não se trata apenas|não apenas).{0,100}\b(?:mas também|é)\b/iu],
   ["travessões em excesso", /—.*—/u],
+  ["identidade bloqueada", /\b(?:como dev|eu sou (?:um )?dev|farda|quartel|ex[ée]rcito)\b/iu],
 ];
 
 export function inspectHumanizedText(input: string): HumanizerFinding[] {

@@ -27,3 +27,7 @@
 ## ADR-006 — Inteligência de audiência
 
 O desenho de anonimização, Structured Outputs, evidências, limites de custo e aprovação humana está detalhado em [006-audience-intelligence.md](006-audience-intelligence.md).
+
+## Estúdio de conteúdo
+
+Voz, storytelling, entregáveis por tipo e o limite da Instagram API para ideias automáticas estão em [content-studio.md](../content-studio.md).

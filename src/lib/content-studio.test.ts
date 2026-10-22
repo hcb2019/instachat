@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { zodTextFormat } from "openai/helpers/zod";
-import { contentConceptsOutputSchema, contentPackageSchema, contentProjectInputSchema, openAIContentConceptsOutputSchema, openAIContentPackageSchema, parseStoredContentConcepts, richContentPackageSchema } from "@/lib/content-studio";
+import { contentConceptsOutputSchema, contentPackageSchema, contentProjectInputSchema, openAIContentConceptsOutputSchema, openAIContentPackageSchema, openAIContentPackageSchemaFor, parseStoredContentConcepts, richContentPackageSchema, richContentPackageSchemaFor } from "@/lib/content-studio";
 
 function findTupleItems(value: unknown): boolean {
   if (Array.isArray(value)) return value.some(findTupleItems);
@@ -14,9 +14,11 @@ describe("content studio schemas", () => {
   it("gera schemas compatíveis com Structured Outputs sem tuplas JSON Schema", () => {
     const conceptsFormat = zodTextFormat(openAIContentConceptsOutputSchema, "content_concepts");
     const packageFormat = zodTextFormat(openAIContentPackageSchema, "content_package");
+    const checklistFormat = zodTextFormat(openAIContentPackageSchemaFor("checklist"), "content_package_checklist");
 
     expect(findTupleItems(conceptsFormat.schema)).toBe(false);
     expect(findTupleItems(packageFormat.schema)).toBe(false);
+    expect(findTupleItems(checklistFormat.schema)).toBe(false);
   });
 
   it("aceita um projeto completo e mantém o segundo objetivo opcional", () => {
@@ -110,6 +112,35 @@ describe("content studio schemas", () => {
       },
     });
     expect(richResult.success).toBe(true);
+
+    const checklistSchema = richContentPackageSchemaFor("checklist");
+    expect(checklistSchema.safeParse({
+      ...packageResult.data,
+      deliverable: {
+        authorHandle: "@hernando.ia",
+        title: "Checklist da primeira automação",
+        summary: "Uma lista curta para escolher, testar e validar a primeira tarefa com IA sem inventar dado.",
+        introduction: "Marque cada ação em cima de um caso real. Isso não é um prompt para colar no ChatGPT.",
+        outcome: "Sair com a tarefa conferida item a item, pronta para o próximo teste.",
+        estimatedMinutes: 12,
+        difficulty: "beginner",
+        prerequisites: ["Um caso real da semana"],
+        startHere: "Abra um caso real e vá marcando. Se um item não der, pare nele.",
+        finalArtifact: "Um checklist preenchido da primeira automação, com o que passou e o que trava",
+        completionCriteria: ["Cada item tem um exemplo do caso", "Nenhum item inventa dado", "Existe um próximo teste"],
+        sections: Array.from({ length: 4 }, (_, index) => ({
+          heading: `Bloco ${index + 1}`,
+          body: "Execute a ação no caso real antes de avançar.",
+          items: ["Fazer a ação", "Conferir o resultado", "Registrar o que travou"],
+          practicalTip: "Se o item ficou genérico, volte um passo.",
+          action: "Marque só o que você realmente fez.",
+          completionCriterion: "O item só é marcado quando o caso real já foi usado.",
+        })),
+        pitfalls: [{ mistake: "Tratar item como pergunta", correction: "Reescreva com verbo." }, { mistake: "Pular a trava", correction: "Dado pessoal para o checklist." }],
+        nextSteps: ["Marcar o caso", "Fechar os itens", "Testar na próxima conversa"],
+        closing: "Se um item ficou em aberto, o material ainda não está pronto para usar.",
+      },
+    }).success).toBe(true);
   });
 
   it("recupera ideias antigas quando um texto ultrapassa o limite atual", () => {

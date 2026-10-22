@@ -34,22 +34,35 @@ export default async function StudioProjectPage({ params, searchParams }: { para
   if (!project) notFound();
 
   return <div className="page-shell studio-detail">
+    <ol className="studio-flow-rail" aria-label="Fluxo do Estúdio">
+      <li><span>1</span>Tema</li>
+      <li className={project.contentPackage ? "" : "active"}><span>2</span>3 caminhos</li>
+      <li className={project.contentPackage ? "active" : ""}><span>3</span>Pacote</li>
+    </ol>
     <header className="page-header compact"><div><p className="eyebrow">Projeto de conteúdo</p><h1>{project.title}</h1><p>{project.topic}</p></div><div className="studio-detail-meta"><Badge tone={project.contentPackage ? "success" : "accent"}>{project.contentPackage ? "Pacote pronto" : "Escolha uma ideia"}</Badge><span>{pillarLabel(project.pillar)}</span><span>{goalLabel(project.primaryGoal)}</span></div></header>
     {errorMessage && <p className="form-alert" role="alert">{errorMessage}</p>}
     {!project.contentPackage ? project.concepts.length > 0 ? <>
-      <section className="studio-choice-intro"><Sparkles size={21}/><div><strong>Escolha o caminho que mais parece com você</strong><p>As ideias atacam o mesmo assunto de jeitos diferentes. Nada é definitivo: depois você poderá editar cada linha.</p></div></section>
+      <section className="studio-choice-intro"><Sparkles size={21} /><div><strong>Escolha o caminho que mais parece com você</strong><p>As três ideias atacam o mesmo assunto. Depois você edita cada linha.</p></div></section>
       <div className="studio-concept-grid">{project.concepts.map((concept, index) => <article className={`card studio-concept-card concept-${concept.style}`} key={`${index}-${concept.title}`}>
         <header><span>IDEIA 0{index + 1}</span><Badge tone={concept.style === "safe" ? "success" : concept.style === "strong" ? "danger" : "accent"}>{concept.style === "safe" ? "Educativa" : concept.style === "strong" ? "Forte" : "Provocativa"}</Badge></header>
-        <div className="studio-copy-row"><h2>{concept.hook}</h2><CopyButton value={concept.hook}/></div>
+        <div className="studio-copy-row"><h2>{concept.hook}</h2><CopyButton value={concept.hook} /></div>
         <p>{concept.angle}</p>
-        <dl><div><dt>Dor</dt><dd>{concept.audiencePain}</dd></div><div><dt>Promessa</dt><dd>{concept.promise}</dd></div><div><dt>CTA sugerida</dt><dd><span>{concept.cta}</span><CopyButton value={concept.cta}/></dd></div><div><dt>Gravação</dt><dd>{concept.visualDirection}</dd></div></dl>
-        <div className="studio-concept-delivery"><PackageCheck size={17}/><span>{concept.deliverableIdea}</span></div>
-        <div className="studio-concept-keywords">{concept.keywords.map((keyword) => <span key={keyword}><code>{keyword}</code><CopyButton value={keyword}/></span>)}</div>
-        <form action={generateContentPackage}><input type="hidden" name="id" value={project.id}/><input type="hidden" name="conceptIndex" value={index}/><button className="button button-primary">Escolher e gerar pacote <ArrowRight size={15}/></button></form>
+        <p className="studio-concept-promise"><strong>Promessa</strong> {concept.promise}</p>
+        <div className="studio-concept-keywords">{concept.keywords.map((keyword) => <span key={keyword}><code>{keyword}</code><CopyButton value={keyword} /></span>)}</div>
+        <details className="studio-concept-more">
+          <summary>Ver dor, CTA e gravação</summary>
+          <dl>
+            <div><dt>Dor</dt><dd>{concept.audiencePain}</dd></div>
+            <div><dt>CTA sugerida</dt><dd><span>{concept.cta}</span><CopyButton value={concept.cta} /></dd></div>
+            <div><dt>Gravação</dt><dd>{concept.visualDirection}</dd></div>
+          </dl>
+          <div className="studio-concept-delivery"><PackageCheck size={17} /><span>{concept.deliverableIdea}</span></div>
+        </details>
+        <form action={generateContentPackage}><input type="hidden" name="id" value={project.id} /><input type="hidden" name="conceptIndex" value={index} /><button className="button button-primary">Escolher e gerar pacote <ArrowRight size={15} /></button></form>
       </article>)}</div>
-    </> : <section className="card studio-concepts-empty"><EmptyState title="As ideias não apareceram" body="Seu projeto foi salvo, mas a geração não trouxe ideias válidas. Tente novamente sem precisar preencher tudo outra vez." action={<form action={regenerateContentConcepts}><input type="hidden" name="id" value={project.id}/><button className="button button-primary"><RefreshCw size={15}/>Gerar as ideias novamente</button></form>}/></section> : <>
-      <section className="studio-ready-strip"><CheckCircle2/><div><strong>Campanha pronta para revisar</strong><span>Hook, três legendas, entregável e automação já falam da mesma promessa.</span></div><div><Film size={16}/> {project.mediaId ? "Reel vinculado" : "Reel ainda não vinculado"}</div></section>
-      <PackageEditor project={project} media={media} publicUrl={`${env.APP_ORIGIN}/materiais/${project.deliverableSlug}`}/>
+    </> : <section className="card studio-concepts-empty"><EmptyState title="As ideias não apareceram" body="Seu projeto foi salvo, mas a geração não trouxe ideias válidas. Tente novamente sem precisar preencher tudo outra vez." action={<form action={regenerateContentConcepts}><input type="hidden" name="id" value={project.id} /><button className="button button-primary"><RefreshCw size={15} />Gerar as ideias novamente</button></form>} /></section> : <>
+      <section className="studio-ready-strip"><CheckCircle2 /><div><strong>Campanha pronta para revisar</strong><span>Hook, legendas, entregável e automação já falam da mesma promessa.</span></div><div><Film size={16} /> {project.mediaId ? "Reel vinculado" : "Reel ainda não vinculado"}</div></section>
+      <PackageEditor project={project} media={media} publicUrl={`${env.APP_ORIGIN}/materiais/${project.deliverableSlug}`} />
     </>}
   </div>;
 }

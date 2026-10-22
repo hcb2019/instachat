@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { contentGoals, contentPillars, deliverableTypes, hookIntensities, type ContentConcept } from "@/types/content-studio";
+import { contentGoals, contentPillars, deliverableTypes, hookIntensities, type ContentConcept, type DeliverableType } from "@/types/content-studio";
 
 export const creatorProfileSchema = z.object({
   instagramHandle: z.string().trim().regex(/^@[A-Za-z0-9._]{1,30}$/, "Use um @ válido."),
@@ -9,6 +9,7 @@ export const creatorProfileSchema = z.object({
   preferredTerms: z.array(z.string().trim().min(1).max(50)).max(20).default([]),
   avoidedTerms: z.array(z.string().trim().min(1).max(50)).max(20).default([]),
   defaultCta: z.string().trim().min(3).max(300),
+  captionSamples: z.array(z.string().trim().min(20).max(900)).max(6).optional(),
 });
 
 export const contentProjectInputSchema = z.object({
@@ -94,9 +95,84 @@ const generatedDeliverableSchema = z.object({
   title: z.string().trim().min(2).max(140), summary: z.string().trim().min(5).max(500), introduction: z.string().trim().min(5).max(1200), sections: z.array(deliverableSectionSchema).min(2).max(8), closing: z.string().trim().min(3).max(600),
   authorHandle: z.string().trim().regex(/^@[A-Za-z0-9._]{1,30}$/).optional(), outcome: z.string().trim().min(10).max(600).optional(), estimatedMinutes: z.number().int().min(5).max(90).optional(), difficulty: z.enum(["beginner","intermediate"]).optional(), prerequisites: z.array(z.string().trim().min(3).max(300)).max(8).optional(), examples: z.array(deliverableExampleSchema).max(4).optional(), templates: z.array(deliverableTemplateSchema).max(5).optional(), pitfalls: z.array(deliverablePitfallSchema).max(8).optional(), nextSteps: z.array(z.string().trim().min(3).max(400)).max(8).optional(), startHere: z.string().trim().min(10).max(500).optional(), finalArtifact: z.string().trim().min(10).max(600).optional(), completionCriteria: z.array(z.string().trim().min(5).max(300)).max(8).optional(), executionFlow: z.array(deliverableExecutionStepSchema).max(8).optional(), resultPrompt: z.string().trim().min(5).max(400).optional(), resultPlaceholder: z.string().trim().min(5).max(600).optional(), finalApplication: z.string().trim().min(10).max(700).optional(),
 });
-const richGeneratedDeliverableSchema = z.object({
-  title: z.string().trim().min(2).max(140), summary: z.string().trim().min(40).max(500), introduction: z.string().trim().min(80).max(1200), authorHandle: z.string().trim().regex(/^@[A-Za-z0-9._]{1,30}$/), outcome: z.string().trim().min(30).max(600), estimatedMinutes: z.number().int().min(5).max(90), difficulty: z.enum(["beginner","intermediate"]), prerequisites: z.array(z.string().trim().min(3).max(300)).min(2).max(6), startHere: z.string().trim().min(20).max(500), finalArtifact: z.string().trim().min(20).max(180), completionCriteria: z.array(z.string().trim().min(5).max(300)).min(2).max(6), executionFlow: z.array(deliverableExecutionStepSchema).min(4).max(6), resultPrompt: z.string().trim().min(10).max(400), resultPlaceholder: z.string().trim().min(10).max(600), finalApplication: z.string().trim().min(20).max(700), sections: z.array(deliverableSectionSchema.extend({ items: z.array(z.string().trim().min(5).max(500)).min(2).max(8), practicalTip: z.string().trim().min(10).max(500), objective: z.string().trim().min(10).max(500), action: z.string().trim().min(10).max(700), example: z.string().trim().min(10).max(1000), responsePrompt: z.string().trim().min(10).max(400), responsePlaceholder: z.string().trim().min(10).max(700), completionCriterion: z.string().trim().min(10).max(500) })).min(4).max(7), examples: z.array(deliverableExampleSchema).min(1).max(3), templates: z.array(deliverableTemplateSchema).min(2).max(4), pitfalls: z.array(deliverablePitfallSchema).min(3).max(6), nextSteps: z.array(z.string().trim().min(5).max(400)).min(3).max(6), closing: z.string().trim().min(20).max(600),
+const openAISectionCore = {
+  heading: z.string().trim().min(2).max(100),
+  body: z.string().trim().min(5).max(1200),
+  items: z.array(z.string().trim().min(5).max(500)).min(2).max(8),
+  practicalTip: z.string().trim().min(10).max(500),
+  action: z.string().trim().min(10).max(700),
+};
+const promptSectionSchema = z.object({
+  ...openAISectionCore,
+  objective: z.string().trim().min(10).max(500),
+  example: z.string().trim().min(10).max(1000),
+  responsePrompt: z.string().trim().min(10).max(400),
+  responsePlaceholder: z.string().trim().min(10).max(700),
+  completionCriterion: z.string().trim().min(10).max(500),
 });
+const checklistSectionSchema = z.object({
+  ...openAISectionCore,
+  items: z.array(z.string().trim().min(5).max(500)).min(3).max(8),
+  completionCriterion: z.string().trim().min(10).max(500),
+});
+const guidedSectionSchema = z.object({
+  ...openAISectionCore,
+  objective: z.string().trim().min(10).max(500),
+  example: z.string().trim().min(10).max(1000),
+});
+const packageHashtagsSchema = z.array(z.string().trim().min(1).max(60)).max(5).default([]);
+const richDeliverableBase = {
+  title: z.string().trim().min(2).max(140),
+  summary: z.string().trim().min(40).max(500),
+  introduction: z.string().trim().min(40).max(1200),
+  authorHandle: z.string().trim().regex(/^@[A-Za-z0-9._]{1,30}$/),
+  outcome: z.string().trim().min(20).max(600),
+  estimatedMinutes: z.number().int().min(5).max(90),
+  difficulty: z.enum(["beginner", "intermediate"]),
+  startHere: z.string().trim().min(20).max(500),
+  finalArtifact: z.string().trim().min(20).max(180),
+  closing: z.string().trim().min(20).max(600),
+};
+const promptDeliverableSchema = z.object({
+  ...richDeliverableBase,
+  prerequisites: z.array(z.string().trim().min(3).max(300)).min(1).max(6),
+  completionCriteria: z.array(z.string().trim().min(5).max(300)).min(2).max(6),
+  executionFlow: z.array(deliverableExecutionStepSchema).min(3).max(6),
+  resultPrompt: z.string().trim().min(10).max(400),
+  resultPlaceholder: z.string().trim().min(10).max(600),
+  finalApplication: z.string().trim().min(20).max(700),
+  sections: z.array(promptSectionSchema).min(2).max(5),
+  templates: z.array(deliverableTemplateSchema).min(1).max(3),
+  pitfalls: z.array(deliverablePitfallSchema).min(2).max(5),
+  nextSteps: z.array(z.string().trim().min(5).max(400)).min(2).max(5),
+});
+const checklistDeliverableSchema = z.object({
+  ...richDeliverableBase,
+  prerequisites: z.array(z.string().trim().min(3).max(300)).min(1).max(6),
+  completionCriteria: z.array(z.string().trim().min(5).max(300)).min(3).max(8),
+  sections: z.array(checklistSectionSchema).min(4).max(8),
+  pitfalls: z.array(deliverablePitfallSchema).min(2).max(5),
+  nextSteps: z.array(z.string().trim().min(5).max(400)).min(3).max(6),
+});
+const guideDeliverableSchema = z.object({
+  ...richDeliverableBase,
+  prerequisites: z.array(z.string().trim().min(3).max(300)).min(1).max(6),
+  completionCriteria: z.array(z.string().trim().min(5).max(300)).min(2).max(6),
+  sections: z.array(guidedSectionSchema).min(3).max(6),
+  examples: z.array(deliverableExampleSchema).min(1).max(3),
+  pitfalls: z.array(deliverablePitfallSchema).min(2).max(5),
+  nextSteps: z.array(z.string().trim().min(5).max(400)).min(3).max(6),
+});
+const pageDeliverableSchema = z.object({
+  ...richDeliverableBase,
+  prerequisites: z.array(z.string().trim().min(3).max(300)).min(1).max(6),
+  completionCriteria: z.array(z.string().trim().min(5).max(300)).min(2).max(6),
+  sections: z.array(guidedSectionSchema).min(3).max(6),
+  templates: z.array(deliverableTemplateSchema).max(3),
+  pitfalls: z.array(deliverablePitfallSchema).min(2).max(5),
+  nextSteps: z.array(z.string().trim().min(5).max(400)).min(2).max(5),
+});
+const richGeneratedDeliverableSchema = promptDeliverableSchema;
 export const contentPackageSchema = z.object({
   onScreenHook: z.string().trim().min(12).max(180),
   visualDirection: z.string().trim().min(5).max(500),
@@ -107,14 +183,32 @@ export const contentPackageSchema = z.object({
   keywordSuggestions: z.tuple([z.string().trim().min(2).max(30), z.string().trim().min(2).max(30), z.string().trim().min(2).max(30)]),
   publicReplies: z.tuple([z.string().trim().min(8).max(110), z.string().trim().min(8).max(110), z.string().trim().min(8).max(110)]),
   dmMessages: z.tuple([z.string().trim().min(12).max(150), z.string().trim().min(12).max(150), z.string().trim().min(12).max(150)]),
+  hashtags: packageHashtagsSchema,
   deliverable: generatedDeliverableSchema,
 });
 export const richContentPackageSchema = contentPackageSchema.extend({ deliverable: richGeneratedDeliverableSchema });
-export const openAIContentPackageSchema = richContentPackageSchema.extend({
+const openAIPackageFields = {
   keywordSuggestions: openAIThreeKeywordsSchema,
   publicReplies: z.array(z.string().trim().min(8).max(110)).length(3),
   dmMessages: z.array(z.string().trim().min(12).max(150)).length(3),
-});
+  hashtags: z.array(z.string().trim().min(1).max(60)).max(5),
+};
+export const openAIContentPackageSchema = richContentPackageSchema.extend(openAIPackageFields);
+
+export function richDeliverableSchemaFor(type: DeliverableType) {
+  if (type === "checklist") return checklistDeliverableSchema;
+  if (type === "guide") return guideDeliverableSchema;
+  if (type === "page") return pageDeliverableSchema;
+  return promptDeliverableSchema;
+}
+
+export function richContentPackageSchemaFor(type: DeliverableType) {
+  return contentPackageSchema.extend({ deliverable: richDeliverableSchemaFor(type) });
+}
+
+export function openAIContentPackageSchemaFor(type: DeliverableType) {
+  return richContentPackageSchemaFor(type).extend(openAIPackageFields);
+}
 
 export const pillarLabel = (value: string) => ({ ai_business: "IA para negócios", automation_productivity: "Automação e produtividade", content_sales: "Conteúdo e vendas" }[value] ?? value);
 export const goalLabel = (value: string) => ({ leads: "Gerar comentários e leads", followers: "Ganhar seguidores", saves: "Gerar salvamentos", shares: "Gerar compartilhamentos", education: "Educar a audiência", offer: "Apresentar uma oferta" }[value] ?? value);

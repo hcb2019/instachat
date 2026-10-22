@@ -10,13 +10,16 @@ import { formatInstagramCaption, humanizeText } from "@/lib/humanizer";
 import { getOpenAIErrorDetails, getStudioGenerationError, getStudioGenerationErrorCode } from "@/lib/openai-error";
 import { ensureDatabaseWrite } from "@/lib/persistence";
 import { env, isDemoMode } from "@/lib/env";
+import { dedupeHashtags } from "@/lib/pipeline";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ContentStudioProvider, CONTENT_PROMPT_VERSION } from "@/server/content-studio/provider";
 import { getContentProject, getCreatorProfile } from "@/server/content-studio/data";
+import { generateStudioIdeas } from "@/server/content-studio/ideas";
 import { demoStore, saveDemoAutomation } from "@/server/demo-store";
+import type { StudioIdea } from "@/lib/studio-ideas";
 import type { ContentPackage, ContentProject } from "@/types/content-studio";
 
-export interface StudioActionState { error?: string; fields?: Record<string,string[]> }
+export interface StudioActionState { error?: string; fields?: Record<string,string[]>; ideas?: StudioIdea[]; limitNote?: string; connected?: boolean }
 
 const value = (formData: FormData, key: string) => String(formData.get(key) ?? "");
 
@@ -116,7 +119,7 @@ export async function regenerateContentConcepts(formData: FormData) {
 export async function saveContentPackage(_state: StudioActionState, formData: FormData): Promise<StudioActionState> {
   const owner = await requireOwner(); const id = value(formData,"id"); const project = await getContentProject(id);
   if (!project?.contentPackage) return { error: "Projeto não encontrado." };
-  const next: ContentPackage = { ...project.contentPackage, onScreenHook: humanizeText(value(formData,"onScreenHook")), visualDirection: humanizeText(value(formData,"visualDirection")), shortCaption: formatInstagramCaption(value(formData,"shortCaption")), mediumCaption: formatInstagramCaption(value(formData,"mediumCaption")), fullCaption: formatInstagramCaption(value(formData,"fullCaption")), selectedKeyword: value(formData,"selectedKeyword").normalize("NFKC").toLocaleUpperCase("pt-BR").replace(/[^\p{L}\p{N}]/gu,""), keywordSuggestions: formData.getAll("keywordSuggestions").map((item)=>String(item).normalize("NFKC").toLocaleUpperCase("pt-BR").replace(/[^\p{L}\p{N}]/gu,"")) as [string,string,string], publicReplies: formData.getAll("publicReplies").map((item)=>humanizeText(String(item))) as [string,string,string], dmMessages: formData.getAll("dmMessages").map((item)=>humanizeText(String(item))) as [string,string,string], deliverable: { ...project.contentPackage.deliverable, title: humanizeText(value(formData,"deliverableTitle")), summary: humanizeText(value(formData,"deliverableSummary")) } };
+  const next: ContentPackage = { ...project.contentPackage, onScreenHook: humanizeText(value(formData,"onScreenHook")), visualDirection: humanizeText(value(formData,"visualDirection")), shortCaption: formatInstagramCaption(value(formData,"shortCaption")), mediumCaption: formatInstagramCaption(value(formData,"mediumCaption")), fullCaption: formatInstagramCaption(value(formData,"fullCaption")), selectedKeyword: value(formData,"selectedKeyword").normalize("NFKC").toLocaleUpperCase("pt-BR").replace(/[^\p{L}\p{N}]/gu,""), keywordSuggestions: formData.getAll("keywordSuggestions").map((item)=>String(item).normalize("NFKC").toLocaleUpperCase("pt-BR").replace(/[^\p{L}\p{N}]/gu,"")) as [string,string,string], publicReplies: formData.getAll("publicReplies").map((item)=>humanizeText(String(item))) as [string,string,string], dmMessages: formData.getAll("dmMessages").map((item)=>humanizeText(String(item))) as [string,string,string], hashtags: dedupeHashtags(formData.getAll("hashtags").map((item)=>String(item))).slice(0,5), deliverable: { ...project.contentPackage.deliverable, title: humanizeText(value(formData,"deliverableTitle")), summary: humanizeText(value(formData,"deliverableSummary")) } };
   const parsed = contentPackageSchema.safeParse(next);
   if (!parsed.success) return { error: "Revise os campos do pacote.", fields: parsed.error.flatten().fieldErrors as Record<string,string[]> };
   if (isDemoMode) { project.contentPackage = parsed.data; project.updatedAt = new Date().toISOString(); }
@@ -148,6 +151,18 @@ export async function linkProjectMedia(formData: FormData) {
   if(isDemoMode){ const valid=demoStore().media.some((item)=>item.id===mediaId); if(valid){project.mediaId=mediaId; project.status=project.automationId?"automation_draft":"ready";} }
   else {const supabase=await createSupabaseServerClient(); const {data:media}=await supabase.from("instagram_media").select("id").eq("id",mediaId).eq("owner_id",owner.id).maybeSingle(); if(!media)return; await supabase.from("content_projects").update({media_id:mediaId,status:project.automationId?"automation_draft":"ready"}).eq("id",id).eq("owner_id",owner.id); if(project.automationId)await supabase.from("automations").update({media_id:mediaId}).eq("id",project.automationId).eq("owner_id",owner.id);}
   revalidatePath(`/studio/${id}`); revalidatePath("/studio"); redirect(`/studio/${id}?linked=1`);
+}
+
+export async function suggestStudioIdeas(_state: StudioActionState, formData: FormData): Promise<StudioActionState> {
+  await requireOwner();
+  void formData;
+  try {
+    const result = await generateStudioIdeas();
+    return { ideas: result.ideas, limitNote: result.limitNote, connected: result.connected };
+  } catch (error) {
+    console.error("content_studio_ideas_failed", getOpenAIErrorDetails(error));
+    return { error: getStudioGenerationError(error, "ideias automáticas") };
+  }
 }
 
 export async function saveCreatorProfile(_state: StudioActionState, formData: FormData): Promise<StudioActionState> {

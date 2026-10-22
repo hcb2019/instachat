@@ -55,7 +55,7 @@ test("keeps history actions and integration controls accessible on mobile", asyn
 
 test("keeps every main screen inside a compact viewport", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
-  for (const route of ["/dashboard", "/radar", "/studio", "/studio/new", "/novo-conteudo", "/connection-guide", "/automations", "/automations/new", "/history", "/settings"]) {
+  for (const route of ["/dashboard", "/radar", "/studio", "/studio/new", "/studio/new?mode=ideas", "/novo-conteudo", "/connection-guide", "/automations", "/automations/new", "/history", "/settings"]) {
     await page.goto(route);
     if (route === "/radar") await page.getByText(/Ver \d+ evidências?/).first().click();
     const overflow = await page.evaluate(() => {
@@ -69,6 +69,15 @@ test("keeps every main screen inside a compact viewport", async ({ page }) => {
     expect(overflow.document, route).toBeLessThanOrEqual(overflow.viewport);
     expect(overflow.offenders, route).toBe(0);
   }
+});
+
+test("suggests automatic studio ideas from the connected account", async ({ page }) => {
+  await page.goto("/studio/new?mode=ideas");
+  await expect(page.getByRole("heading", { name: "Escolhe uma ideia pra virar campanha" })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/não entrega Reels de terceiros/i)).toBeVisible();
+  await page.locator(".studio-idea-card").first().click();
+  await expect(page.getByLabel("Assunto do Reel")).not.toHaveValue("");
+  await expect(page.getByRole("button", { name: "Gerar 3 ideias" })).toBeVisible();
 });
 
 test("creates a content package and copies the exact Instagram formatting", async ({ page, context }) => {
