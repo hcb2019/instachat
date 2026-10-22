@@ -32,8 +32,8 @@ git --version
 ## 1. Teste local sem credenciais
 
 ```bash
-git clone https://github.com/hcb2019/instachat.git
-cd instachat
+git clone https://github.com/hcb2019/vortex.git
+cd vortex
 corepack enable
 pnpm install --frozen-lockfile
 cp .env.example .env.local
@@ -130,8 +130,8 @@ Não exponha diretamente PostgreSQL, Supabase Studio ou a porta 3000 à internet
 ### Preparação
 
 ```bash
-git clone https://github.com/hcb2019/instachat.git
-cd instachat
+git clone https://github.com/hcb2019/vortex.git
+cd vortex
 cp .env.example .env.local
 chmod 600 .env.local
 ```
@@ -149,7 +149,7 @@ Construa e inicie:
 ```bash
 docker compose --env-file .env.local up -d --build
 docker compose ps
-docker compose logs --tail=100 instachat
+docker compose logs --tail=100 vortex
 ```
 
 ### HTTPS com Caddy
@@ -157,7 +157,7 @@ docker compose logs --tail=100 instachat
 Instale Caddy no host e use um domínio próprio:
 
 ```caddyfile
-instachat.seudominio.com {
+vortex.seudominio.com {
   reverse_proxy 127.0.0.1:3000
   encode zstd gzip
 }
@@ -165,7 +165,7 @@ instachat.seudominio.com {
 
 No firewall, permita 80/443 e restrinja a porta 3000 ao próprio servidor. Atualize:
 
-- `APP_ORIGIN=https://instachat.seudominio.com`;
+- `APP_ORIGIN=https://vortex.seudominio.com`;
 - URL do site e redirect no Supabase;
 - redirect OAuth e webhook na Meta.
 

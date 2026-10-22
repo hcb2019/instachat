@@ -135,11 +135,11 @@ interface DemoState {
 }
 
 declare global {
-  var __instachatDemoState: DemoState | undefined;
+  var __vortexDemoState: DemoState | undefined;
 }
 
 export function demoStore(): DemoState {
-  globalThis.__instachatDemoState ??= {
+  globalThis.__vortexDemoState ??= {
     connection: {
       id: connectionId,
       ownerId,
@@ -167,9 +167,9 @@ export function demoStore(): DemoState {
     contentProjects: [],
   };
   // Preserve HMR state while safely introducing new demo domains.
-  globalThis.__instachatDemoState.audience ??= structuredClone(createDemoAudienceData(globalThis.__instachatDemoState.media));
-  globalThis.__instachatDemoState.contentProjects ??= [];
-  return globalThis.__instachatDemoState;
+  globalThis.__vortexDemoState.audience ??= structuredClone(createDemoAudienceData(globalThis.__vortexDemoState.media));
+  globalThis.__vortexDemoState.contentProjects ??= [];
+  return globalThis.__vortexDemoState;
 }
 
 export function saveDemoAutomation(input: {

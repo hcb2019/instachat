@@ -4,7 +4,7 @@ import { env, isDemoMode } from "@/lib/env";
 
 function encryptionKey() {
   const raw = env.TOKEN_ENCRYPTION_KEY;
-  if (!raw && isDemoMode) return createHash("sha256").update("instachat-local-demo-key").digest();
+  if (!raw && isDemoMode) return createHash("sha256").update("vortex-local-demo-key").digest();
   if (!raw) throw new Error("TOKEN_ENCRYPTION_KEY não configurada.");
   const key = Buffer.from(raw, "base64");
   if (key.length !== 32) throw new Error("TOKEN_ENCRYPTION_KEY deve conter 32 bytes em base64.");

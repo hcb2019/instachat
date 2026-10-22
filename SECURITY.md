@@ -14,7 +14,7 @@ Use o recurso privado do GitHub:
 2. Entre em **Advisories**.
 3. Clique em **Report a vulnerability**.
 
-Link direto: <https://github.com/hcb2019/instachat/security/advisories/new>
+Link direto: <https://github.com/hcb2019/vortex/security/advisories/new>
 
 Inclua:
 

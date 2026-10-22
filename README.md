@@ -1,14 +1,16 @@
 <p align="center">
-  <img src="public/brand/instachat-logo-concept-v1.png" alt="Vortex" width="360">
+  <img src="public/brand/vortex-symbol-v1.png" alt="Vortex" width="96">
 </p>
+
+<h1 align="center">Vortex</h1>
 
 <p align="center">
   Automação oficial para comentários do Instagram e inteligência de audiência para Reels.
 </p>
 
 <p align="center">
-  <a href="https://github.com/hcb2019/instachat/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/hcb2019/instachat/actions/workflows/ci.yml/badge.svg"></a>
-  <a href="https://github.com/hcb2019/instachat/security/code-scanning"><img alt="CodeQL" src="https://github.com/hcb2019/instachat/actions/workflows/codeql.yml/badge.svg"></a>
+  <a href="https://github.com/hcb2019/vortex/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/hcb2019/vortex/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/hcb2019/vortex/security/code-scanning"><img alt="CodeQL" src="https://github.com/hcb2019/vortex/actions/workflows/codeql.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-17140f"></a>
   <img alt="Node.js 24" src="https://img.shields.io/badge/Node.js-24-43853d">
 </p>
@@ -37,8 +39,8 @@ Stack: Next.js 16, React 19, TypeScript, Supabase, Instagram API with Instagram 
 Requisitos: Node.js 24 e pnpm 11.
 
 ```bash
-git clone https://github.com/hcb2019/instachat.git
-cd instachat
+git clone https://github.com/hcb2019/vortex.git
+cd vortex
 corepack enable
 pnpm install --frozen-lockfile
 cp .env.example .env.local
@@ -93,7 +95,7 @@ Controles principais:
 - dados pessoais com retenção limitada;
 - CodeQL, Dependabot e CI em Pull Requests.
 
-Leia [SECURITY.md](SECURITY.md), o [modelo de ameaças](instachat-threat-model.md) e o [relatório de segurança](security_best_practices_report.md).
+Leia [SECURITY.md](SECURITY.md), o [modelo de ameaças](vortex-threat-model.md) e o [relatório de segurança](security_best_practices_report.md).
 
 ## Desenvolvimento
 

@@ -3,8 +3,8 @@
 import { ArrowRight, Check, Copy, KeyRound, RefreshCw, RotateCcw } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
 
-const STORAGE_KEY = "instachat:connection-guide:v1";
-const PROGRESS_EVENT = "instachat-guide-progress";
+const STORAGE_KEY = "vortex:connection-guide:v1";
+const PROGRESS_EVENT = "vortex-guide-progress";
 
 function subscribeProgress(callback: () => void) {
   window.addEventListener(PROGRESS_EVENT, callback);

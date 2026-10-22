@@ -6,7 +6,7 @@ const optionalUrl = z.string().url().optional().or(z.literal(""));
 const schema = z.object({
   DEMO_MODE: z.enum(["true", "false"]).default("false"),
   APP_ORIGIN: z.string().url().default("http://localhost:3000"),
-  OWNER_EMAIL: z.string().email().default("demo@instachat.local"),
+  OWNER_EMAIL: z.string().email().default("demo@vortex.local"),
   NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
   SUPABASE_SECRET_KEY: z.string().optional(),

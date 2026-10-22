@@ -1,14 +1,14 @@
 services:
-  instachat:
+  vortex:
     build:
       context: .
       args:
         DEMO_MODE: ${DEMO_MODE:-true}
         NEXT_PUBLIC_DEMO_MODE: ${NEXT_PUBLIC_DEMO_MODE:-true}
     env_file:
-      - ${INSTACHAT_ENV_FILE:-.env.local}
+      - ${VORTEX_ENV_FILE:-.env.local}
     ports:
-      - "${INSTACHAT_PORT:-3000}:3000"
+      - "${VORTEX_PORT:-3000}:3000"
     restart: unless-stopped
     init: true
     read_only: true

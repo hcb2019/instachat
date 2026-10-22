@@ -41,7 +41,7 @@ export default async function PublicMaterialPage({ params }: { params: Promise<{
       {prerequisites.length > 0 && <div className="material-prerequisites"><strong>Separe antes de começar</strong><ul>{prerequisites.map((item) => <li key={item}>{item}</li>)}</ul></div>}
       {completionCriteria.length > 0 && <div className="material-completion"><strong><CheckCircle2/>No final, confira estes pontos</strong><ul>{completionCriteria.map((item) => <li key={item}>{item}</li>)}</ul></div>}
     </section>
-    <MaterialChecklist sections={material.sections} storageKey={`instachat-material-${slug}`}/>
+    <MaterialChecklist sections={material.sections} storageKey={`vortex-material-${slug}`}/>
     {examples.length > 0 && <section className="material-examples" id="exemplos"><header><p>EXEMPLO PREENCHIDO</p><h2>Veja a aplicação antes de fazer a sua</h2></header>{examples.map((example) => <article key={example.title}><h3>{example.title}</h3><dl><div><dt>Cenário</dt><dd>{example.scenario}</dd></div><div><dt>Aplicação</dt><dd>{example.application}</dd></div><div><dt>Como validar</dt><dd>{example.result}</dd></div></dl></article>)}</section>}
     {templates.length > 0 && <section className="material-templates" id="modelos"><header><p>OUTROS MODELOS</p><h2>Use se precisar aprofundar</h2><span>As quebras de linha são mantidas ao copiar.</span></header>{templates.map((template, index) => <MaterialTemplateCard template={template} index={index} key={template.title}/>)}</section>}
     {pitfalls.length > 0 && <section className="material-pitfalls"><header><ShieldAlert/><div><p>EVITE ESTES ATALHOS</p><h2>Erros que enfraquecem o resultado</h2></div></header><div>{pitfalls.map((pitfall) => <article key={pitfall.mistake}><strong>{pitfall.mistake}</strong><p>{pitfall.correction}</p></article>)}</div></section>}
@@ -53,7 +53,7 @@ export default async function PublicMaterialPage({ params }: { params: Promise<{
     <div className="material-layout"><aside className="material-toc"><strong>Faça nesta ordem</strong><nav aria-label="Passos do material">{flow.length ? flow.map((step, index) => <span className="material-toc-item" key={step.title}><b>{String(index + 1).padStart(2, "0")}</b>{step.title}</span>) : material.sections.map((section, index) => <a href={`#etapa-${index + 1}`} key={section.heading}><span>{String(index + 1).padStart(2, "0")}</span>{section.heading}</a>)}</nav><div><Sparkles size={17}/><span><small>O que ficará pronto</small><strong>{finalArtifact}</strong></span></div></aside>
       <div className="material-content">{flow.length > 0 && material.resultPrompt && material.resultPlaceholder && material.finalApplication ? <>
         <section className="material-fast-opening"><small>VOCÊ SÓ PRECISA SEGUIR A ORDEM</small><h2>{finalArtifact}</h2><p>{startHere ?? "Comece pelo primeiro cartão e avance somente depois de concluir a ação."}</p></section>
-        <MaterialQuickFlow flow={flow} resultPrompt={material.resultPrompt} resultPlaceholder={material.resultPlaceholder} finalApplication={material.finalApplication} storageKey={`instachat-result-${slug}`}/>
+        <MaterialQuickFlow flow={flow} resultPrompt={material.resultPrompt} resultPlaceholder={material.resultPlaceholder} finalApplication={material.finalApplication} storageKey={`vortex-result-${slug}`}/>
       </> : detailedGuide}</div>
     </div><footer><UserRound size={24}/><div><p>{material.closing}</p><small>Criado por {material.authorHandle ?? "Vortex"} com o Estúdio do Vortex</small></div></footer>
   </article></main>;
